@@ -67,13 +67,13 @@ class DeBruijnAssembler{
 	void writeGraph();
 
 	vector<VERTEX_TYPE> optimizedNextVertices(vector<VERTEX_TYPE>*path,map<VERTEX_TYPE,int>*visits,int C,int l);
-	void contig_From_SINGLE(map<VERTEX_TYPE,int>*visits,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources);
-	vector<VERTEX_TYPE> getWalk(VERTEX_TYPE prefix,vector<VERTEX_TYPE>*path,int length,map<VERTEX_TYPE,int>*visits);
-	vector<VERTEX_TYPE> removeBubblesAndTips(vector<VERTEX_TYPE> vertices,vector<VERTEX_TYPE>*path,map<VERTEX_TYPE,int>*visits);
+	void contig_From_SINGLE(map<int,map<char,int> >*visits,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources);
+	vector<VERTEX_TYPE> getWalk(VERTEX_TYPE prefix,vector<VERTEX_TYPE>*path,int length,map<int,map<char,int> >*currentReadPositions);
+	vector<VERTEX_TYPE> removeBubblesAndTips(vector<VERTEX_TYPE> vertices,vector<VERTEX_TYPE>*path,map<int,map<char,int> >*currentReadPositions);
 	char getLastSymbol(VERTEX_TYPE i);
 	string pathToDNA(vector<VERTEX_TYPE>*path);
 
-	vector<VERTEX_TYPE> nextVertices(vector<VERTEX_TYPE>*path,map<VERTEX_TYPE,int>*visits,int l,int C,bool doOptimization);
+	vector<VERTEX_TYPE> nextVertices(vector<VERTEX_TYPE>*path,map<int,map<char,int> >*currentReadPositions);
 
 	bool passFilter(vector<VERTEX_TYPE>*path,int l,int C);
 	bool passFilter_ShortRead(vector<VERTEX_TYPE>* path,int l,int C);
@@ -107,7 +107,7 @@ public:
 
 	~DeBruijnAssembler();
 	void setBuckets(uint64_t buckets);
-	void run_New_Algorithm_Assembler_20090102();
+	void Algorithm_Assembler_20090121();
 	void setMinimumCoverage(string coverage);
 
 	static string reverseComplement(string a);

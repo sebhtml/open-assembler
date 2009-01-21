@@ -11,3 +11,17 @@ Also to ensure that nothing goes wrong, you should limit the memory usage.
 
 
 ulimit -v  230000000 # in kB
+
+
+
+1. quality analysis, choose minimum coverage
+2. build graph without annotations
+3. find connected parts
+4. for each of them
+	write a annotated graph file
+
+1. process each annotated graph file
+
+1. merge contigs
+
+1. scaffolding

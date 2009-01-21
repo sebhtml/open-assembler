@@ -76,21 +76,13 @@ chromosomes.each do |genome|
 				end
 			end
 			if rand(2)==0
-		puts "@#{readID}_#{start}_#{read_length}_F_#{errorsInRead}"
+		puts ">#{readID}_#{start}_#{read_length}_F_#{errorsInRead}"
 		puts sequence
-		puts "+#{readID}_#{start}_#{read_length}_F_#{errorsInRead}"
 			else
-		puts "@#{readID}_#{start}_#{read_length}_R_#{errorsInRead}"
+		puts ">#{readID}_#{start}_#{read_length}_R_#{errorsInRead}"
 		puts revComp(sequence)
-		puts "+#{readID}_#{start}_#{read_length}_R_#{errorsInRead}"
 			end
 			readID+=1
-	j=0
-			while j<sequence.length
-		print 'F'
-		j+=1
-			end
-	puts ""
 		end
 		position+=readLength
 	end

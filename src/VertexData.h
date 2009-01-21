@@ -47,8 +47,6 @@ class VertexData{
 	vector<AnnotationElement> C_elements;
 	vector<AnnotationElement> G_elements;
 	
-
-	map<uint8_t,vector<int> > m_reads;
 public:
 	vector<VERTEX_TYPE> getChildren(VERTEX_TYPE prefix);
 	vector<VERTEX_TYPE> getParents(VERTEX_TYPE prefix);

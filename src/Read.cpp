@@ -49,7 +49,6 @@ vector<VERTEX_TYPE>Read::getHighQualityMers(int wordSize){
 	for(int j=0;j<(int)sequence.length()-(wordSize+1);j++){
 		string wordFoward=sequence.substr(j,wordSize+1);
 		string wordReverse;
-		bool ok=true;
 		if(!isValidDNA(&wordFoward))
 			continue;
 		wordReverse=DeBruijnAssembler::reverseComplement(wordFoward);

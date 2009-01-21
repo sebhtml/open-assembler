@@ -162,7 +162,7 @@ int main(int argc,char*argv[]){
 	assembler.setAssemblyDirectory(assemblyDirectory);
 	assembler.setPairedInfo(pairedInfo);
 	assembler.buildGraph(&sequenceData);
-	assembler.run_New_Algorithm_Assembler_20090102();
+	assembler.Algorithm_Assembler_20090121();
 
 	assembler.outputContigs();
 

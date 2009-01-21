@@ -723,7 +723,8 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			//m_cout<<m_contig_paths.size()<<" contigs"<<endl;
 			vector<VERTEX_TYPE>path;
 			path.push_back(prefix);
-			contig_From_SINGLE(&visits,&path,&newSources);
+			map<int,map<char,int> >currentReadPositions;
+			contig_From_SINGLE(&currentReadPositions,&path,&newSources);
 			m_cout<<"Vertices: "<<path.size()<<""<<endl;
 			m_contig_paths.push_back(path);
 		}
@@ -749,7 +750,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	streamBuffer.close();
 }
 
-void DeBruijnAssembler::run_New_Algorithm_Assembler_20090102(){
+void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 	Walk_In_GRAPH();
 	vector<vector<VERTEX_TYPE> > largeContigs=Remove_Small_Contigs(m_contig_paths);
 	
@@ -805,16 +806,16 @@ vector<vector<VERTEX_TYPE> > DeBruijnAssembler::Filter_Remove_Smaller_Duplicates
 
 // get a walk from a vertex, with a path, up to maxSize,
 // the path is not added in the walk
-vector<VERTEX_TYPE> DeBruijnAssembler::getWalk(VERTEX_TYPE prefix,vector<VERTEX_TYPE>*path,int length,map<VERTEX_TYPE,int>*visits){
+vector<VERTEX_TYPE> DeBruijnAssembler::getWalk(VERTEX_TYPE prefix,vector<VERTEX_TYPE>*path,int length,map<int,map<char,int> >*currentReadPositions){
 	vector<VERTEX_TYPE> subPath;
 	vector<VERTEX_TYPE> path1=*path;
 	path1.push_back(prefix);
 	subPath.push_back(prefix);
-	vector<VERTEX_TYPE> nextVertices1=nextVertices(&path1,visits,m_default_window,2,false);
+	vector<VERTEX_TYPE> nextVertices1=nextVertices(&path1,currentReadPositions);
 	while((int)nextVertices1.size()==1&&(int)subPath.size()<=length){
 		prefix=nextVertices1[0];
 		path1.push_back(prefix);
-		nextVertices1=nextVertices(&path1,visits,m_default_window,2,false);
+		nextVertices1=nextVertices(&path1,currentReadPositions);
 		subPath.push_back(prefix);
 	}
 	return subPath;
@@ -822,7 +823,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::getWalk(VERTEX_TYPE prefix,vector<VERTEX_
 
 // remove bubble, if any
 // remote tips also..
-vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> vertices,vector<VERTEX_TYPE>*path,map<VERTEX_TYPE,int>*visits){
+vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> vertices,vector<VERTEX_TYPE>*path,map<int,map<char,int> >*currentReadPositions){
 	if(vertices.size()==1)
 		return vertices;
 
@@ -855,8 +856,8 @@ vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> 
 	}*/
 
 	if(vertices.size()==2){
-		vector<VERTEX_TYPE> n1=getWalk(vertices[0],path,maxSize,visits);
-		vector<VERTEX_TYPE> n2=getWalk(vertices[1],path,maxSize,visits);
+		vector<VERTEX_TYPE> n1=getWalk(vertices[0],path,maxSize,currentReadPositions);
+		vector<VERTEX_TYPE> n2=getWalk(vertices[1],path,maxSize,currentReadPositions);
 		set<VERTEX_TYPE> n1_Table;
 		for(int i=0;i<(int)n1.size();i++){
 			n1_Table.insert(n1[i]);
@@ -878,9 +879,9 @@ vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> 
 	if(vertices.size()>1){
 		vector<VERTEX_TYPE> withoutTips;
 		for(int i=0;i<(int)vertices.size();i++){
-			vector<VERTEX_TYPE> subPath=getWalk(vertices[i],path,maxSize,visits);
-			if((int)subPath.size()<2*m_wordSize&&nextVertices(&subPath,visits,2,m_minimumCoverage,true).size()==0){
-				(*m_cout)<<"TIP Length: "<<getWalk(vertices[i],path,maxSize,visits).size()<<endl;
+			vector<VERTEX_TYPE> subPath=getWalk(vertices[i],path,maxSize,currentReadPositions);
+			if((int)subPath.size()<2*m_wordSize&&nextVertices(&subPath,currentReadPositions).size()==0){
+				(*m_cout)<<"TIP Length: "<<getWalk(vertices[i],path,maxSize,currentReadPositions).size()<<endl;
 				//" From: "<<idToWord(vertices[i],m_wordSize)<<endl;
 			}else{
 				withoutTips.push_back(vertices[i]);
@@ -891,17 +892,14 @@ vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> 
 	return vertices;
 }
 
-void DeBruijnAssembler::contig_From_SINGLE(map<VERTEX_TYPE,int>*visits,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources){
+void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources){
 	VERTEX_TYPE prefix=path->at(path->size()-1);
 
-	int l=m_default_window;
-	int C=m_minimumCoverage_for_walk;
-	(*visits)[prefix]++;
 
 	//(*m_cout)<<"Depth: "<<path->size()<<endl;
-	vector<VERTEX_TYPE> prefixNextVertices=removeBubblesAndTips(nextVertices(path,visits,l,C,true),path,visits);
+	vector<VERTEX_TYPE> prefixNextVertices=removeBubblesAndTips(nextVertices(path,currentReadPositions),path,currentReadPositions);
 	while(prefixNextVertices.size()==1){
-		vector<VERTEX_TYPE> children=removeBubblesAndTips(m_data->get(prefix).getChildren(prefix),path,visits);
+		vector<VERTEX_TYPE> children=removeBubblesAndTips(m_data->get(prefix).getChildren(prefix),path,currentReadPositions);
 		for(int i=0;i<(int)children.size();i++){
 			if(children[i]!=prefixNextVertices[0]){
 				(*m_cout)<<"Adding "<<idToWord(children[i],m_wordSize)<<endl;
@@ -909,14 +907,17 @@ void DeBruijnAssembler::contig_From_SINGLE(map<VERTEX_TYPE,int>*visits,vector<VE
 			}
 		}
 		prefix=prefixNextVertices[0];
-		(*visits)[prefix]++;
 		path->push_back(prefix);
+		vector<AnnotationElement>*annotations=m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1));
+		for(int h=0;h<annotations->size();h++){
+			(*currentReadPositions)[annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
+		}
 		if(path->size()%1000==0){
 			//(*m_cout)<<"Vertices: "<<path->size()<<endl;
 		}
-		prefixNextVertices=nextVertices(path,visits,l,C,false);
+		prefixNextVertices=nextVertices(path,currentReadPositions);
 		if(prefixNextVertices.size()>1)
-			prefixNextVertices=removeBubblesAndTips(prefixNextVertices,path,visits);
+			prefixNextVertices=removeBubblesAndTips(prefixNextVertices,path,currentReadPositions);
 	}
 
 	VertexData dataStructure= (m_data->get(prefix));
@@ -983,43 +984,48 @@ void DeBruijnAssembler::contig_From_SINGLE(map<VERTEX_TYPE,int>*visits,vector<VE
 /**
  * \param simple  force passFilter to use passFilter_ShortRead
  */
-// TODO: remove prefix argument
-vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map<VERTEX_TYPE,int>*visits,int l,int C,bool doOptimization){
-	VERTEX_TYPE prefix=(*path)[(*path).size()-1];
-	vector<VERTEX_TYPE> next;
-	int MAX_VISITS=10;
-	//(*m_cout)<<idToWord(prefix,m_wordSize)<<endl;
-	//MAP_TYPE<VERTEX_TYPE,vector<int> >*prefixMap=&(m_graph[prefix]);
-	VertexData dataStructure= (m_data->get(prefix));
-	vector<VERTEX_TYPE>children=dataStructure.getChildren(prefix);
+vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map<int,map<char,int> >*currentReadPositions){
+	vector<VERTEX_TYPE> children=m_data->get(path->at(path->size()-1)).getChildren(path->at(path->size()-1));
+	
+	// start when nothing is done yet
+	if(children.size()==1&&currentReadPositions->size()==0)
+		return children;
 
-
-        //for(MAP_TYPE<VERTEX_TYPE,vector<int> >::iterator i=prefixMap->begin();i!=prefixMap->end();i++){
+	vector<AnnotationElement>*lastEdgeData=m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1));
+	map<int,int> votes;
 	for(int i=0;i<(int)children.size();i++){
-		VERTEX_TYPE suffix=children[i];
-		vector<VERTEX_TYPE> sPath=*path;
-		sPath.push_back(suffix);
-		if((*visits)[suffix]>MAX_VISITS){
-			//(*visits)[suffix]=0;
-			continue;
-		}
-		if(!passFilter(&sPath,l,C))
-			continue;
+		vector<AnnotationElement>*thisEdgeData=m_data->get(path->at(path->size()-1)).getAnnotations(children[i]);
+		for(int k=0;k<lastEdgeData->size();k++){
+			for(int j=0;j<thisEdgeData->size();j++){
+				if(lastEdgeData->at(k).readId==thisEdgeData->at(j).readId // same read
+			&&	lastEdgeData->at(k).readStrand==thisEdgeData->at(j).readStrand // same strand
+			&&	lastEdgeData->at(k).readPosition==thisEdgeData->at(j).readPosition+1 // increasing position
+				// the read has been saw before
+			&&      currentReadPositions->count(lastEdgeData->at(k).readId)>0
 
-		vector<VERTEX_TYPE> parentsLocal=m_data->get(suffix).getParents(suffix);
-		if(parentsLocal.size()>1){
-			(*m_cout)<<"suffix has more than one parent. "<<parentsLocal.size()<<endl;
-			for(vector<VERTEX_TYPE>::iterator j=parentsLocal.begin();j!=parentsLocal.end();j++){
-				(*m_cout)<<idToWord(*j,m_wordSize)<<" -> "<<idToWord(suffix,m_wordSize)<<endl;
-				(*m_cout)<<(*j)<<" -> "<<(suffix)<<endl;
+				// on the same strand of course
+			&&      currentReadPositions[lastEdgeData->at(k).readId].count(thisEdgeData->at(j).readStrand)>0
+			
+				// and the position is the next to the one that was last seen
+			&&	(*currentReadPositions)[lastEdgeData->at(k).readId][lastEdgeData->at(k).readStrand]==thisEdgeData->at(j).readPosition+1){ 
+					votes[i]++;
+				}
 			}
 		}
-		next.push_back(suffix);
 	}
-	if(next.size()>1&&doOptimization)
-		return optimizedNextVertices(path,visits,C,l);
-
-	return next;
+	int max=1;
+	int best=-1;
+	for(map<int,int>::iterator i=votes.begin();i!=votes.end();i++)
+		if(i->second>max){
+			max=i->second;
+			best=i->first;
+		}
+	if(best!=-1){
+		vector<VERTEX_TYPE> output;
+		output.push_back(children[best]);
+		return output;
+	}
+	return children;
 }
 
 bool DeBruijnAssembler::passFilter(vector<VERTEX_TYPE>*path,int l,int C){
@@ -1115,31 +1121,6 @@ DeBruijnAssembler::~DeBruijnAssembler(){
 		return;
 	delete m_data;
 	m_data=NULL;
-}
-
-/**
- * return the optimized list of children of the last vertex in the path
- */
-vector<VERTEX_TYPE> DeBruijnAssembler::optimizedNextVertices(vector<VERTEX_TYPE>*path,map<VERTEX_TYPE,int>*visits,int C,int l){
-	int optimizedL=l;
-	return nextVertices(path,visits,optimizedL,C,false);
-	(*m_cout)<<"optimizing: "<<path->size()<<endl;
-	// try to let go a branch
-	vector<VERTEX_TYPE> nextOptimizedVertices=nextVertices(path,visits,optimizedL,C,false);
-	while(nextOptimizedVertices.size()>1){
-		if(optimizedL>200)
-			break;
-		optimizedL+=4;
-		nextOptimizedVertices=nextVertices(path,visits,optimizedL,C,false);
-	}
-	if(nextOptimizedVertices.size()==0){
-		(*m_cout)<<"Failed, nothing left"<<endl;
-	}else if(nextOptimizedVertices.size()==1){
-		(*m_cout)<<"Success!"<<endl;
-	}else{
-		(*m_cout)<<"Failure, still more than one"<<endl;
-	}
-	return nextOptimizedVertices;
 }
 
 

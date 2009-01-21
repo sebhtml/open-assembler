@@ -88,43 +88,40 @@ vector<AnnotationElement>*VertexData::getAnnotations(VERTEX_TYPE suffix){
 bool VertexData::hasChild(VERTEX_TYPE suffix){
 	string a=DeBruijnAssembler::idToWord(suffix,DeBruijnAssembler::m_WordSize);
 	char symbol=a[DeBruijnAssembler::m_WordSize-1];
-	int position=0;
 	if(symbol=='A'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_A;
+		return A_elements.size()>0;
 	}else if(symbol=='T'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_T;
+		return T_elements.size()>0;
 	}else if(symbol=='C'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_C;
+		return C_elements.size()>0;
 	}else if(symbol=='G'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_G;
+		return G_elements.size()>0;
 	}
-	return m_reads.count(position)>0;
+	return false;
 }
 
 vector<VERTEX_TYPE> VertexData::getChildren(VERTEX_TYPE prefix){
 	string a=DeBruijnAssembler::idToWord(prefix,DeBruijnAssembler::m_WordSize);
-	if(a=="ATTGTAACAAATTCTCCTGCCTCTG"){
-		cout<<"[getChildren] "<<m_reads.size()<<endl;
-	}
 	vector<VERTEX_TYPE> output;
-	//cout<<a<<endl;
-	//cout<<m_reads.size()<<" children"<<endl;
-	for(int i=0;i<4;i++){
-		if(m_reads.count(i)>0){
-			char symbol='A';
-			if(i==0){
-				symbol='A';
-			}else if(i==1){
-				symbol='T';
-			}else if(i==2){
-				symbol='C';
-			}else if(i==3){
-				symbol='G';
-			}
-			string sequence=a.substr(1)+symbol;
-			output.push_back(DeBruijnAssembler::wordId(sequence.c_str()));
-		}
+
+	if(A_elements.size()>0){
+		string sequence=a.substr(1)+"A";
+		output.push_back(DeBruijnAssembler::wordId(sequence.c_str()));
 	}
+	if(T_elements.size()>0){
+		string sequence=a.substr(1)+"T";
+		output.push_back(DeBruijnAssembler::wordId(sequence.c_str()));
+	}
+	if(C_elements.size()>0){
+		string sequence=a.substr(1)+"C";
+		output.push_back(DeBruijnAssembler::wordId(sequence.c_str()));
+	}
+	if(G_elements.size()>0){
+		string sequence=a.substr(1)+"G";
+		output.push_back(DeBruijnAssembler::wordId(sequence.c_str()));
+	}
+
+
 	return output;
 }
 
