@@ -1,0 +1,8 @@
+You need a 64-bit machine.
+Type make.
+
+you need:
+	
+	a c++ compiler (standard: c++98)
+	a UNIX box (mkdir, etc.)
+	
