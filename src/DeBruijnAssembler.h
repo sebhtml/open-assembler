@@ -93,6 +93,9 @@ class DeBruijnAssembler{
 
 	vector<vector<VERTEX_TYPE> > Filter_Remove_Smaller_Duplicates_Cached(vector<vector<VERTEX_TYPE > > largeContigs);
 	void Walk_In_GRAPH();
+
+
+	void indexReadStrand(int readId,char strand,SequenceData*sequenceData);
 public:
 	DeBruijnAssembler(ostream*m_cout);
 	void setPairedInfo(string a);

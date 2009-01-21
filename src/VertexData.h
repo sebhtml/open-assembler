@@ -23,8 +23,10 @@
 #include<map>
 #include<vector>
 #include"Read.h"
+#include"AnnotationElement.h"
 #include<stdint.h>
 using namespace std;
+
 
 class VertexData{
 	// bit    nucleotide
@@ -40,13 +42,19 @@ class VertexData{
 	vector<int> m_distances;
 	vector<VERTEX_TYPE> m_kmer_apart;
 
+	vector<AnnotationElement> A_elements;
+	vector<AnnotationElement> T_elements;
+	vector<AnnotationElement> C_elements;
+	vector<AnnotationElement> G_elements;
+	
+
 	map<uint8_t,vector<int> > m_reads;
 public:
 	vector<VERTEX_TYPE> getChildren(VERTEX_TYPE prefix);
 	vector<VERTEX_TYPE> getParents(VERTEX_TYPE prefix);
-	vector<int> getReads(VERTEX_TYPE suffix);
+	vector<AnnotationElement>*getAnnotations(VERTEX_TYPE suffix);
 	void addParent(VERTEX_TYPE parent);
-	void addRead(VERTEX_TYPE suffix,int read);
+	void addAnnotation(VERTEX_TYPE suffix,uint32_t read,uint16_t position,uint8_t strand);
 	bool hasChild(VERTEX_TYPE suffix);
 	void addPaired(VERTEX_TYPE kmer_apart,int distance);
 	VertexData();

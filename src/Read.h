@@ -29,6 +29,7 @@
 
 #define VERTEX_TYPE unsigned long int
 
+#include<string>
 #include<vector>
 using namespace std;
 
@@ -39,6 +40,7 @@ public:
 	~Read();
 	char*getSeq();
 	vector<VERTEX_TYPE>getHighQualityMers(int wordSize);
+	bool isValidDNA(string*x);
 };
 
 #endif

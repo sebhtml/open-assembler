@@ -30,26 +30,27 @@ VertexData::VertexData(){
 }
 
 
-void VertexData::addRead(VERTEX_TYPE suffix,int read){
+void VertexData::addAnnotation(VERTEX_TYPE suffix,uint32_t read,uint16_t position,uint8_t strand){
 	string a=DeBruijnAssembler::idToWord(suffix,DeBruijnAssembler::m_WordSize);
-	char symbol=a[DeBruijnAssembler::m_WordSize-1];
-	int position=0;
+	char symbol=a[a.length()-1];
+	AnnotationElement element;
+	element.readId=read;
+	element.readPosition=position;
+	element.readStrand=strand;
+
 	if(symbol=='A'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_A;
+		A_elements.push_back(element);
 	}else if(symbol=='T'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_T;
+		T_elements.push_back(element);
 	}else if(symbol=='C'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_C;
+		C_elements.push_back(element);
 	}else if(symbol=='G'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_G;
+		G_elements.push_back(element);
 	}
-	//cout<<"Adding read "<<symbol<<endl;
-	m_reads[position].push_back(read);
 }
 
 void VertexData::addParent(VERTEX_TYPE parent){
 	string a=DeBruijnAssembler::idToWord(parent,DeBruijnAssembler::m_WordSize);
-	//cout<<a<<endl;
 	char symbol=a[0];
 	int position=0;
 	if(symbol=='A'){
@@ -67,24 +68,21 @@ void VertexData::addParent(VERTEX_TYPE parent){
 	//cout<<(int)m_parents<<endl;
 }
 
-vector<int> VertexData::getReads(VERTEX_TYPE suffix){
+vector<AnnotationElement>*VertexData::getAnnotations(VERTEX_TYPE suffix){
 	string a=DeBruijnAssembler::idToWord(suffix,DeBruijnAssembler::m_WordSize);
 	char symbol=a[DeBruijnAssembler::m_WordSize-1];
-	int position=0;
 	if(symbol=='A'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_A;
+		return &A_elements;
 	}else if(symbol=='T'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_T;
+		return &T_elements;
 	}else if(symbol=='C'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_C;
+		return &C_elements;
 	}else if(symbol=='G'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_G;
+		return &G_elements;
 	}
-	if(m_reads.count(position)==0){
-		cout<<"Error "<<a<<" is not a child"<<endl;
-		exit(0);
-	}
-	return m_reads[position];
+	cout<<"Error "<<a<<" is not a child"<<endl;
+	exit(0);
+	return NULL;
 }
 
 bool VertexData::hasChild(VERTEX_TYPE suffix){

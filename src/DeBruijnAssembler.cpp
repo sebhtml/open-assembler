@@ -231,26 +231,9 @@ void DeBruijnAssembler::build_From_Scratch(SequenceData*sequenceData){
 	for(int readId=0;readId<(int)sequenceData->size();readId++){
 		if(readId%10000==0)
 			m_cout<<"Reads: "<<readId<<" / "<<sequenceData->size()<<endl;
-		vector<VERTEX_TYPE>highQualityMers=sequenceData->at(readId)->getHighQualityMers(m_wordSize);
-		for(vector<VERTEX_TYPE>::iterator merIterator=highQualityMers.begin();
-			merIterator!=highQualityMers.end();merIterator++){
-			if(solidMers.find(*merIterator)){
-				VERTEX_TYPE solidMer=*merIterator;
-				string wholeWord=idToWord(solidMer,m_wordSize+1);
-				VERTEX_TYPE prefix=wordId(wholeWord.substr(0,m_wordSize).c_str());
-				VERTEX_TYPE suffix=wordId(wholeWord.substr(1,m_wordSize).c_str());
-				if(!m_data->find(prefix)){
-					VertexData vertexData;
-					m_data->add(prefix,vertexData);
-				}
-				if(!m_data->find(suffix)){
-					VertexData vertexData;
-					m_data->add(suffix,vertexData);
-				}
-				m_data->get(prefix).addRead(suffix,readId);
-				m_data->get(suffix).addParent(prefix);
-			}
-		}
+		indexReadStrand(readId,'F',sequenceData);
+		indexReadStrand(readId,'R',sequenceData);
+	
 	}
 	m_cout<<"Reads: "<<sequenceData->size()<<" / "<<sequenceData->size()<<endl;
 	m_cout<<endl;
@@ -324,12 +307,11 @@ void DeBruijnAssembler::writeGraph(){
 		//for(MAP_TYPE<VERTEX_TYPE,vector<int> >::iterator j=i->second.begin();j!=i->second.end();j++){
 		for(int j=0;j<(int)children.size();j++){
 			VERTEX_TYPE suffix=children[j];
-			vector<int> reads=dataStructure.getReads(suffix);
-			graph<<prefix<<" "<<suffix<<" "<<reads.size();
-			graph2<<idToWord(prefix,m_wordSize)<<" -> "<<idToWord(suffix,m_wordSize)<<" "<<reads.size();
-			for(int k=0;k<(int)reads.size();k++){
-				graph<<" "<<reads[k];
-				graph2<<" "<<reads[k];
+			vector<AnnotationElement>*reads=dataStructure.getAnnotations(suffix);
+			graph<<prefix<<" "<<suffix<<" "<<reads->size();
+			graph2<<idToWord(prefix,m_wordSize)<<" -> "<<idToWord(suffix,m_wordSize)<<" "<<reads->size();
+			for(int k=0;k<(int)reads->size();k++){
+				graph<<" "<<reads->at(k).readId<<" "<<reads->at(k).readPosition<<" "<<reads->at(k).readStrand;
 			}
 			graph<<endl;
 			graph2<<endl;
@@ -369,9 +351,11 @@ void DeBruijnAssembler::load_graphFrom_file(){
 		VertexData*vertexData=&(m_data->get(prefix));
 		for(int j=0;j<reads;j++){
 			int read;
-			graph>>read;
+			int position;
+			char strand;
+			graph>>read>>position>>strand;
 			//theReads->push_back(read);
-			vertexData->addRead(suffix,read);
+			vertexData->addAnnotation(suffix,read,position,strand);
 		}
 	}
 	(*m_cout)<<n<<" / "<<n<<endl;
@@ -459,19 +443,19 @@ void DeBruijnAssembler::outputContigs(){
 			//(m_cout)<<j<<" "<<p<<endl;
 			VERTEX_TYPE prefix=m_contig_paths[i][p];
 			VERTEX_TYPE suffix=m_contig_paths[i][p+1];
-			vector<int>edgeReads=(m_data->get(prefix).getReads(suffix));
-			coverageStream<<j+1<<" "<<edgeReads.size()<<endl;
+			vector<AnnotationElement>*edgeReads=(m_data->get(prefix).getAnnotations(suffix));
+			coverageStream<<j+1<<" "<<edgeReads->size()<<endl;
 		}
 
 		for(int j=0;j<=(int)m_contig_paths[i].size()-2;j++){
 			VERTEX_TYPE prefix=m_contig_paths[i][j];
 			VERTEX_TYPE suffix=m_contig_paths[i][j+1];
-			vector<int>edgeReads=(m_data->get(prefix).getReads(suffix));
+			vector<AnnotationElement>*edgeReads=(m_data->get(prefix).getAnnotations(suffix));
 			outputWalk<<j+1<<endl;
 			outputWalk<<idToWord(prefix,m_wordSize)<<" -> "<<idToWord(suffix,m_wordSize)<<endl;
-			outputWalk<<edgeReads.size()<<" reads"<<endl;
-			for(int k=0;k<(int)edgeReads.size();k++)
-				outputWalk<<edgeReads.at(k)<<" ";
+			outputWalk<<edgeReads->size()<<" reads"<<endl;
+			for(int k=0;k<(int)edgeReads->size();k++)
+				outputWalk<<edgeReads->at(k).readId<<" ";
 			outputWalk<<endl;
 		}
 		int j=0;
@@ -604,9 +588,9 @@ bool DeBruijnAssembler::passFilter_ShortRead(vector<VERTEX_TYPE>*path,int l,int 
 	for(int i=(int)path->size()-l-1;i<=(int)path->size()-2;i++){
 		//vector<int> reads=m_graph[path[i]][path[i+1]];
 		//cout<<"case 1"<<endl;
-		vector<int> reads=m_data->get((*path)[i]).getReads((*path)[i+1]);
-		for(vector<int>::iterator j=reads.begin();j!=reads.end();j++){
-			votes[*j]++;
+		vector<AnnotationElement>*reads=m_data->get((*path)[i]).getAnnotations((*path)[i+1]);
+		for(vector<AnnotationElement>::iterator j=reads->begin();j!=reads->end();j++){
+			votes[(*j).readId]++;
 		}
 	}
 	int ok=0;
@@ -1077,10 +1061,10 @@ bool DeBruijnAssembler::passFilter_LongRead(vector<VERTEX_TYPE>*path,int l,int C
 	int lastIndex=path->size()-1;
 	map<int,int> votes;
 	//cout<<"case 3"<<endl;
-	vector<int> reads=m_data->get((*path)[lastIndex-1]).getReads((*path)[lastIndex]);
-	for(int i=0;i<(int)reads.size();i++){
+	vector<AnnotationElement>*reads=m_data->get((*path)[lastIndex-1]).getAnnotations((*path)[lastIndex]);
+	for(int i=0;i<(int)reads->size();i++){
 		//(*m_cout)<<" "<<reads[i];
-		votes[reads[i]]++;
+		votes[reads->at(i).readId]++;
 	}
 	//(*m_cout)<<endl;
 
@@ -1094,9 +1078,9 @@ bool DeBruijnAssembler::passFilter_LongRead(vector<VERTEX_TYPE>*path,int l,int C
 		//(*m_cout)<<prefixIndex+1<<endl;
 		int suffixIndex=prefixIndex+1;
 		//cout<<"case 4"<<endl;
-		reads=m_data->get((*path)[prefixIndex]).getReads((*path)[suffixIndex]);
-		for(int i=0;i<(int)reads.size();i++)
-			votes2[reads[i]]++;
+		reads=m_data->get((*path)[prefixIndex]).getAnnotations((*path)[suffixIndex]);
+		for(int i=0;i<(int)reads->size();i++)
+			votes2[reads->at(i).readId]++;
 		int coverage=0;
 		for(map<int,int>::iterator i=votes2.begin();i!=votes2.end();i++){
 			if(i->second==2){
@@ -1442,3 +1426,26 @@ void DeBruijnAssembler::setMinimumCoverage(string coverage){
 	m_minimumCoverageParameter=coverage;
 }
 
+void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceData*sequenceData){
+	Read*read=sequenceData->at(readId);
+	string sequence=read->getSeq();
+	if(strand=='R')
+		sequence=reverseComplement(sequence);
+	for(int readPosition=0;readPosition<(int)sequence.length();readPosition++){
+		string wholeWord=sequence.substr(readPosition,m_wordSize+1);
+		if((int)wholeWord.length()==m_wordSize+1&&read->isValidDNA(&wholeWord)){
+			VERTEX_TYPE prefix=wordId(wholeWord.substr(0,m_wordSize).c_str());
+			VERTEX_TYPE suffix=wordId(wholeWord.substr(1,m_wordSize).c_str());
+			if(!m_data->find(prefix)){
+				VertexData vertexData;
+				m_data->add(prefix,vertexData);
+			}
+			if(!m_data->find(suffix)){
+				VertexData vertexData;
+				m_data->add(suffix,vertexData);
+			}
+			m_data->get(prefix).addAnnotation(suffix,readId,readPosition,strand);
+			m_data->get(suffix).addParent(prefix);
+		}
+	}
+}
