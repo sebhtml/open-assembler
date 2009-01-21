@@ -1,0 +1,37 @@
+\documentclass{article}
+
+
+\usepackage{fullpage}
+
+%Package pour le font
+%\usepackage[T1]{fontenc}
+%\usepackage[math]{anttor}
+%\usepackage{times}
+\usepackage[utf8]{ inputenc}
+\usepackage{amsfonts}
+%\usepackage{pxfonts}
+\usepackage{multicol}
+\usepackage{amsmath}
+\begin{document}
+
+\begin{equation}
+V = \{v_1,v_2,\ldots,v_n \}, \ v_i \in \mathbb{N} \ \forall \ i=1,\ldots,n 
+\end{equation}
+
+\begin{equation}
+ E = \{ (p_i,s_i, A_i ): p_i \in V, \ s_i \in V, \ A_i \in \mathbb{N}^{u_i}\}_{i=1,\ldots,t }
+\end{equation}
+
+\begin{equation}
+ G = (V,E) 
+\end{equation}
+
+\begin{multline}
+ P(G,l,C) = \{ \{ (p_{k_1},s_{k_1}, A_{k_1} ),\ldots, (p_{k_w},s_{k_w}, A_{k_w}) \} : 
+ \forall \ i = k_1,\ldots,k_w \ (p_i,s_i, A_i ) \ \in E, \\
+  \forall \ i = k_1,\ldots,k_w  \ \exists \ B \in \mathbb{N}^C \   B \subseteq A_j \ \forall \ j=i,\ldots,i+l -1 \} ,\\
+C,l \in \mathbb{N}
+\end{multline}
+
+Algo pour trouver $P(G,l,C)$ ?
+\end{document}

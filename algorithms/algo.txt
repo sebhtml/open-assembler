@@ -1,0 +1,99 @@
+
+m: 	Sébastien Boisvert <sebastien.boisvert.3@ulaval.ca>
+To: 	François Laviolette <francois.laviolette@ift.ulaval.ca>
+Cc: 	sebastien.boisvert.3@ulaval.ca
+Subject: 	Re: Graphes
+Date: 	Mon, 15 Dec 2008 18:37:48 -0500
+
+
+Salut François,
+
+J'ai un graphe (exemple: http://w3.ift.ulaval.ca/~seboi0/E.txt )
+et je veux assembler les morceaux en morceaux plus grands. Dans mes
+formules, le A_i des arêtes inclut les numéros des morceaux qui
+contiennent cette arête. Le C indique combien j'en veux (de morceaux
+appuyant l'arête) au minimum et le l contraint d'avoir au moins C
+morceaux qui appuient le chemin pendant au moins l arêtes. Si la
+dernière condition tient pour toute la longueur d'un chemin, alors la
+séquence associée est nécessairement dans le génome.
+
+Les algorithmes actuels utilisent plutôt des chemins eulériens (une fois
+chaque arête). Hors, si p ou s (p et s sont des k-mers) est présent
+plusieurs fois dans le génome, alors il y a une fragmentation par
+définition. Particularités: chaque noeud a au plus 4 arêtes sortantes et
+au plus 4 arêtes entrante. En pratique, il y a 1 arête entrante et 1
+arête sortante. Parfois, il y a 2 entrantes et 2 sortantes, mais
+vraiment pas souvent. il y a 2 entrantes et 2 sortantes d'un k-mer (un
+noeud) est en plusieurs exemplaires dans le génome.
+
+On (moi, fred, et jacques) compte bien faire un article avec ça en
+janvier, si ça t'intéresse de nous joindre toi et ton expertise avec les
+graphes.
+
+J'ai trouvé un algo pas pire, mais je l'ai pas testé (ça va aller à
+jeudi). mon algo gère les cycles (régions d'ADN répétés) et est
+récursif, bien sûr. visits est passé par valeur.
+
+G graphe de Bruijn
+l entier (read length)
+C entier (coverage depth)
+
+P(G,l,C)
+  contigs <- empty set
+  remove_Tips(G)
+  remove_Bubbles(G)
+  visits <- empty map
+  for p in find_Without_Parent(G)
+    contigs <- contigs U contigs_From(p,visits)
+  return Filter_by_Size(remove_Reverse_complement_Contigs(contigs))
+
+contigs_From(p,visits)
+  contigs <- empty set
+  for s in children(p)
+    if visits[(p,s)] > T
+      continue
+    visits[(p,s)] ++
+    sContigs <- contigs_From(p,visits)
+    if |sContigs| = 0
+      contigs <- contigs U {{(p,s)}}
+    for contig in sContigs
+      newContig <- {(p,s)} U contig
+      if |newContig| >= l
+        unless passFilter(newContig,l,C)
+          continue
+      contigs <- contigs U {newContig}
+  return Filter_Remove_Smaller_Duplicates(contigs)
+
+
+On Mon, 2008-12-15 at 17:29 -0500, François Laviolette wrote:
+> Hum, je n'ai jamais vraiment vu un problème de ce genre.
+> 
+> Viens me voir, on en discutera. Tu me diras exactement qu'est-ce que  
+> dans ton problème.
+> 
+> A+
+> François
+> 
+> 
+> 
+> 
+> Le 08-12-15 à 13:17, Sébastien Boisvert a écrit :
+> 
+> > Salut François,
+> >
+> > Je  travaille présentement sur un assembleur de Bruijn pour obtenir la
+> > séquence de génomes à partir de sous-séquences de ces génomes. Les
+> > graphes de Bruijn sont de plus en plus utilisés pour cette tâche.
+> >
+> > J'obtiens de très bons résultats jusqu'à maintenant, mais je pense
+> > pouvoir faire mieux. Cependant, je suis bloquer devant un problème.  
+> > J'ai
+> > formulé mathématiquement le problème en pièce jointe.
+> >
+> > As-tu des idées?
+> >
+> > merci
+> >
+> > -s<questionFrancois.pdf>
+> 
+> 

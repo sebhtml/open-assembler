@@ -1,0 +1,19 @@
+http://DeNovoAssembler.sf.net
+
+DNA assembly is now a challenge because of the
+ overwhelming amount of data produced by sequencing
+ facilities. 454 De Novo Assembler is an assembler
+ to perform De Novo assembly with new sequencing 
+technologies (i.g. Titanium).
+
+It takes fastq files and generate an assembly 
+(see http://blog.malde.org/index.php/2008/11/14/454-sequencing-and-parsing-the-sff-binary-format for converting sff to fastq).
+ In theory, 454 De Novo Assembler can assemble reads from any 
+technology as long as the quality is provided 
+(see http://www.bioperl.org/wiki/FASTQ_sequence_format for the format). 
+The algorithm contructs De Bruijn graphs 
+(http://en.wikipedia.org/wiki/De_Bruijn_graph).
+
+example:
+
+454dna reads.fastq
