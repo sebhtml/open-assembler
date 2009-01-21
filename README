@@ -1,0 +1,13 @@
+http://DeNovoAssembler.sf.net
+
+DNA assembly is now a challenge because of the
+ overwhelming amount of data produced by sequencing
+ facilities. De Novo Assembler is an assembler
+ to perform De Novo assembly with new sequencing 
+technologies (i.g. Titanium).
+
+
+Also to ensure that nothing goes wrong, you should limit the memory usage.
+
+
+ulimit -v  230000000 # in kB

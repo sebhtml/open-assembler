@@ -1,0 +1,6 @@
+You need a 64-bit machine.
+you need also a c++ compiler (standard: c++98) 
+and a UNIX box (mkdir, etc.).
+
+If you use GNU/Linux, simply type 'bash scripts/build.sh'. The executables
+will be in build/bin.
