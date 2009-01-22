@@ -908,12 +908,16 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 		}
 		prefix=prefixNextVertices[0];
 		path->push_back(prefix);
+		(*m_cout)<<idToWord(prefix,m_wordSize)<<endl;
 		vector<AnnotationElement>*annotations=m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1));
 		for(int h=0;h<annotations->size();h++){
-			(*currentReadPositions)[annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
+			if((*currentReadPositions).count(annotations->at(h).readId)==0 ||
+			(*currentReadPositions)[annotations->at(h).readId][annotations->at(h).readStrand] < annotations->at(h).readPosition){
+				(*currentReadPositions)[annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
+			}
 		}
 		if(path->size()%1000==0){
-			//(*m_cout)<<"Vertices: "<<path->size()<<endl;
+			(*m_cout)<<"Vertices: "<<path->size()<<endl;
 		}
 		prefixNextVertices=nextVertices(path,currentReadPositions);
 		if(prefixNextVertices.size()>1)
@@ -991,31 +995,28 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 	if(children.size()==1&&currentReadPositions->size()==0)
 		return children;
 
-	vector<AnnotationElement>*lastEdgeData=m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1));
-	map<int,int> votes;
+	map<int,int> scores;
 	for(int i=0;i<(int)children.size();i++){
 		vector<AnnotationElement>*thisEdgeData=m_data->get(path->at(path->size()-1)).getAnnotations(children[i]);
-		for(int k=0;k<lastEdgeData->size();k++){
-			for(int j=0;j<thisEdgeData->size();j++){
-				if(lastEdgeData->at(k).readId==thisEdgeData->at(j).readId // same read
-			&&	lastEdgeData->at(k).readStrand==thisEdgeData->at(j).readStrand // same strand
-			&&	lastEdgeData->at(k).readPosition==thisEdgeData->at(j).readPosition+1 // increasing position
-				// the read has been saw before
-			&&      currentReadPositions->count(lastEdgeData->at(k).readId)>0
-
-				// on the same strand of course
-			&&      currentReadPositions[lastEdgeData->at(k).readId].count(thisEdgeData->at(j).readStrand)>0
-			
-				// and the position is the next to the one that was last seen
-			&&	(*currentReadPositions)[lastEdgeData->at(k).readId][lastEdgeData->at(k).readStrand]==thisEdgeData->at(j).readPosition+1){ 
-					votes[i]++;
-				}
+		int best=0;
+		for(int j=0;j<thisEdgeData->size();j++){
+			if(
+				// the read is there in the path already
+				currentReadPositions->count(thisEdgeData->at(j).readId)>0
+				// the strand is available
+		&&		(*currentReadPositions)[thisEdgeData->at(j).readId].count(thisEdgeData->at(j).readStrand)>0
+				// the position is greater than the one in the database
+		&& 		(*currentReadPositions)[thisEdgeData->at(j).readId][thisEdgeData->at(j).readStrand] < thisEdgeData->at(j).readPosition
+			){
+				if(thisEdgeData->at(j).readPosition>best)
+					best=thisEdgeData->at(j).readPosition;
 			}
 		}
+		scores[i]=best;
 	}
 	int max=1;
 	int best=-1;
-	for(map<int,int>::iterator i=votes.begin();i!=votes.end();i++)
+	for(map<int,int>::iterator i=scores.begin();i!=scores.end();i++)
 		if(i->second>max){
 			max=i->second;
 			best=i->first;
