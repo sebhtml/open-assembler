@@ -64,6 +64,7 @@ void Loader::load(string file,vector<Read*>*reads){
 		ostringstream sequence;
 		string buffer;
 		while(!f.eof()){
+			buffer="";
 			f>>buffer;
 			if(buffer=="")
 				continue;
@@ -149,7 +150,7 @@ void Loader::add(vector<Read*>*reads,string*id,ostringstream*sequence,ostringstr
 		exit(0);
 	}
 	string sequenceStr=sequence->str();
-	Read*read=new Read(sequenceStr.c_str());
+	Read*read=new Read(id->c_str(),sequenceStr.c_str());
 	m_bases+=sequenceStr.length();
 	m_total++;
 	reads->push_back(read);

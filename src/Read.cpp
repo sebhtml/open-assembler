@@ -25,9 +25,12 @@
 
 using namespace  std;
 
-Read::Read(const char*sequence){
+Read::Read(const char*id,const char*sequence){
 	m_sequence=(char*)malloc(strlen(sequence)+1);
+	m_id=(char*)malloc(strlen(id)+1);
 	strcpy(m_sequence,sequence);
+	strcpy(m_id,id);
+	//cout<<strlen(sequence)<<endl;
 }
 
 Read::~Read(){
@@ -35,6 +38,9 @@ Read::~Read(){
 	m_sequence=NULL;
 }
 
+char*Read::getId(){
+	return m_id;
+}
 
 char*Read::getSeq(){
 	return m_sequence;

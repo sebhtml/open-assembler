@@ -1,7 +1,8 @@
 #!/usr/bin/ruby
 
-puts ">"
-10000.times do 
+theLength=10000
+puts ">Random #{theLength}"
+theLength.times do 
 	i=rand(4)
 	if i==0
 		print 'A'

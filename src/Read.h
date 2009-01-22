@@ -34,9 +34,11 @@
 using namespace std;
 
 class Read{
+	char*m_id;
 	char*m_sequence;
 public:
-	Read(const char*sequence);
+	Read(const char*id,const char*sequence);
+	char*getId();
 	~Read();
 	char*getSeq();
 	vector<VERTEX_TYPE>getHighQualityMers(int wordSize);

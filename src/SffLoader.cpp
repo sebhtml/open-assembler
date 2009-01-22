@@ -192,7 +192,7 @@ void SffLoader::load(string file,vector<Read*>*reads){
 			(*m_cout)<<"Not KEY, was "<<sequence.substr(0,key_length)<<" expected "<<key<<endl;
 			continue;
 		}
-		Read*read=new Read(sequence.substr(first-1,last-first+1).c_str());
+		Read*read=new Read(Name,sequence.substr(first-1,last-first+1).c_str());
 		reads->push_back(read);
 		m_bases+=strlen(read->getSeq());
 		delete[]Name;

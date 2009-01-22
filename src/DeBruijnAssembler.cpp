@@ -90,7 +90,7 @@ string DeBruijnAssembler::reverseComplement(string a){
 			cout<<a<<" "<<b<<endl;
 			exit(0);
 		}
-		i<< complement(a[p]);
+		i<< b;
 	}
 	return i.str();
 }
@@ -231,8 +231,8 @@ void DeBruijnAssembler::build_From_Scratch(SequenceData*sequenceData){
 	for(int readId=0;readId<(int)sequenceData->size();readId++){
 		if(readId%10000==0)
 			m_cout<<"Reads: "<<readId<<" / "<<sequenceData->size()<<endl;
-		indexReadStrand(readId,'F',sequenceData);
-		indexReadStrand(readId,'R',sequenceData);
+		indexReadStrand(readId,'F',sequenceData,&solidMers);
+		indexReadStrand(readId,'R',sequenceData,&solidMers);
 	
 	}
 	m_cout<<"Reads: "<<sequenceData->size()<<" / "<<sequenceData->size()<<endl;
@@ -908,9 +908,10 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 		}
 		prefix=prefixNextVertices[0];
 		path->push_back(prefix);
-		(*m_cout)<<idToWord(prefix,m_wordSize)<<endl;
+
+		//(*m_cout)<<idToWord(prefix,m_wordSize)<<endl;
 		vector<AnnotationElement>*annotations=m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1));
-		for(int h=0;h<annotations->size();h++){
+		for(int h=0;h<(int)annotations->size();h++){
 			if((*currentReadPositions).count(annotations->at(h).readId)==0 ||
 			(*currentReadPositions)[annotations->at(h).readId][annotations->at(h).readStrand] < annotations->at(h).readPosition){
 				(*currentReadPositions)[annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
@@ -920,6 +921,10 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 			(*m_cout)<<"Vertices: "<<path->size()<<endl;
 		}
 		prefixNextVertices=nextVertices(path,currentReadPositions);
+		if(idToWord(prefix,m_wordSize)=="ACATTTTGTTTGAAGAGTATAGTCA"){
+			(*m_cout)<<prefixNextVertices.size()<<" children"<<endl;
+		}
+
 		if(prefixNextVertices.size()>1)
 			prefixNextVertices=removeBubblesAndTips(prefixNextVertices,path,currentReadPositions);
 	}
@@ -990,16 +995,16 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
  */
 vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map<int,map<char,int> >*currentReadPositions){
 	vector<VERTEX_TYPE> children=m_data->get(path->at(path->size()-1)).getChildren(path->at(path->size()-1));
-	
+
 	// start when nothing is done yet
-	if(children.size()==1&&currentReadPositions->size()==0)
+	if(currentReadPositions->size()==0)
 		return children;
 
 	map<int,int> scores;
 	for(int i=0;i<(int)children.size();i++){
 		vector<AnnotationElement>*thisEdgeData=m_data->get(path->at(path->size()-1)).getAnnotations(children[i]);
 		int best=0;
-		for(int j=0;j<thisEdgeData->size();j++){
+		for(int j=0;j<(int)thisEdgeData->size();j++){
 			if(
 				// the read is there in the path already
 				currentReadPositions->count(thisEdgeData->at(j).readId)>0
@@ -1016,8 +1021,10 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 	}
 	int max=1;
 	int best=-1;
+	int semiMax=1;
 	for(map<int,int>::iterator i=scores.begin();i!=scores.end();i++)
 		if(i->second>max){
+			semiMax=max;
 			max=i->second;
 			best=i->first;
 		}
@@ -1408,14 +1415,20 @@ void DeBruijnAssembler::setMinimumCoverage(string coverage){
 	m_minimumCoverageParameter=coverage;
 }
 
-void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceData*sequenceData){
+void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceData*sequenceData,CustomMap<int>*solidMers){
 	Read*read=sequenceData->at(readId);
 	string sequence=read->getSeq();
+
 	if(strand=='R')
 		sequence=reverseComplement(sequence);
+
 	for(int readPosition=0;readPosition<(int)sequence.length();readPosition++){
 		string wholeWord=sequence.substr(readPosition,m_wordSize+1);
-		if((int)wholeWord.length()==m_wordSize+1&&read->isValidDNA(&wholeWord)){
+		if(readPosition>10000){
+			//(*m_cout)<<"WTF "<<sequence.length()<<" "<<strlen(read->getSeq())<<strand<<endl;
+		}
+		if((int)wholeWord.length()==m_wordSize+1&&read->isValidDNA(&wholeWord)
+		&&solidMers->find(wordId(wholeWord.c_str()))){
 			VERTEX_TYPE prefix=wordId(wholeWord.substr(0,m_wordSize).c_str());
 			VERTEX_TYPE suffix=wordId(wholeWord.substr(1,m_wordSize).c_str());
 			if(!m_data->find(prefix)){

@@ -56,10 +56,10 @@ chromosomes.each do |genome|
 			if start<0
 				start=0
 			end
-			sequence=genome[start..(start+read_length)]
-			if sequence.nil?
+			if start>=gSize
 				next
 			end
+			sequence=genome[start..(start+read_length)]
 			errorsInRead=errors+rand(4)-2
 			errorsInRead.times do
 				break
@@ -70,17 +70,17 @@ chromosomes.each do |genome|
 				elsif n==1
 					sequence[p..p]='T'
 				elsif n==2
-			sequence[p..p]='C'
-		elsif n==3
-			sequence[p..p]='G'
+					sequence[p..p]='C'
+				elsif n==3
+					sequence[p..p]='G'
 				end
 			end
 			if rand(2)==0
-		puts ">#{readID}_#{start}_#{read_length}_F_#{errorsInRead}"
-		puts sequence
+				puts ">#{readID}_#{start}_#{read_length}_F_#{errorsInRead}"
+				puts sequence
 			else
-		puts ">#{readID}_#{start}_#{read_length}_R_#{errorsInRead}"
-		puts revComp(sequence)
+				puts ">#{readID}_#{start}_#{read_length}_R_#{errorsInRead}"
+				puts revComp(sequence)
 			end
 			readID+=1
 		end

@@ -95,7 +95,7 @@ class DeBruijnAssembler{
 	void Walk_In_GRAPH();
 
 
-	void indexReadStrand(int readId,char strand,SequenceData*sequenceData);
+	void indexReadStrand(int readId,char strand,SequenceData*sequenceData,CustomMap<int>*solidMers);
 public:
 	DeBruijnAssembler(ostream*m_cout);
 	void setPairedInfo(string a);
