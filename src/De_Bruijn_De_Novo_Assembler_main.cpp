@@ -102,7 +102,7 @@ int main(int argc,char*argv[]){
 
 	buffer<<endl;
 	buffer<<endl;
-	buffer<<"dna -assemblyDirectory "<<assemblyDirectory<<" -minimumCoverage "<<m_minimumCoverageParameter<<" -buckets "<<buckets<<" -pairedInfo "<<pairedInfo<<  " -wordSize "<<wordSize <<" -minimumContigSize "<<minimumContigSize;
+	buffer<<"dna -assemblyDirectory "<<assemblyDirectory<<" -minimumCoverage "<<m_minimumCoverageParameter<<" -buckets "<<buckets<<" -pairedInfo "<<pairedInfo<<  " -wordSize "<<wordSize ;
 	for(int i=0;i<(int)inputFiles.size();i++)
 		buffer<<" "<<inputFiles[i];
 	buffer<<endl;

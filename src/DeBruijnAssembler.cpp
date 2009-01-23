@@ -470,8 +470,8 @@ void DeBruijnAssembler::outputContigs(){
 	coverageStream.close();
 	outputWalk.close();
 	m_cout<<endl;
-	int averageContigLength=totalLength/(m_contig_paths.size());
 /*
+	int averageContigLength=totalLength/(m_contig_paths.size());
 	m_cout<<"Asssembly statistics"<<endl;
 	m_cout<<"Estimated genome size (total contig bases): "<<totalLength<<endl;
 	m_cout<<"Average contig size: "<<averageContigLength<<endl;
@@ -912,9 +912,15 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 		path->push_back(prefix);
 
 		//(*m_cout)<<idToWord(prefix,m_wordSize)<<endl;
+		int cumulativeCoverage=0;
 		vector<AnnotationElement>*annotations=m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1));
 		for(int h=0;h<(int)annotations->size();h++){
-			if((*currentReadPositions).count(annotations->at(h).readId)==0 ||
+			if((*currentReadPositions).count(annotations->at(h).readId)==0){
+				if(cumulativeCoverage<m_minimumCoverage){ // add at most a given amount of "new reads" to avoid depletion
+					(*currentReadPositions)[annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
+					cumulativeCoverage++;
+				}
+			}else if(
 			(*currentReadPositions)[annotations->at(h).readId][annotations->at(h).readStrand] < annotations->at(h).readPosition){
 				(*currentReadPositions)[annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
 			}
