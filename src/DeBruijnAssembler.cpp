@@ -880,7 +880,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> 
 		for(int i=0;i<(int)vertices.size();i++){
 			vector<VERTEX_TYPE> subPath=getWalk(vertices[i],path,maxSize,currentReadPositions);
 			if((int)subPath.size()<2*m_wordSize&&nextVertices(&subPath,currentReadPositions).size()==0){
-				(*m_cout)<<"TIP Length: "<<getWalk(vertices[i],path,maxSize,currentReadPositions).size()<<endl;
+				(*m_cout)<<"TIP Length: "<<subPath.size()<<endl;
 				//" From: "<<idToWord(vertices[i],m_wordSize)<<endl;
 			}else{
 				withoutTips.push_back(vertices[i]);
@@ -907,7 +907,6 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 		}
 		prefix=prefixNextVertices[0];
 		path->push_back(prefix);
-
 		//(*m_cout)<<idToWord(prefix,m_wordSize)<<endl;
 		int cumulativeCoverage=0;
 		vector<AnnotationElement>*annotations=m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1));
@@ -918,7 +917,7 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 					cumulativeCoverage++;
 				}
 			}else if(
-			(*currentReadPositions)[annotations->at(h).readId][annotations->at(h).readStrand] < annotations->at(h).readPosition){
+			(*currentReadPositions)[annotations->at(h).readId][annotations->at(h).readStrand] +1 ==  annotations->at(h).readPosition){
 				(*currentReadPositions)[annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
 			}
 		}
@@ -1004,9 +1003,10 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 
 
 	map<int,int > scores;
+	ostringstream debugBuffer;
 	//(*m_cout)<<"Children"<<endl;
 	for(int i=0;i<(int)children.size();i++){
-		//(*m_cout)<<idToWord(children[i],m_wordSize)<<endl;
+		debugBuffer<<"Child "<<idToWord(children[i],m_wordSize)<<endl;
 		vector<AnnotationElement>*thisEdgeData=m_data->get(path->at(path->size()-1)).getAnnotations(children[i]);
 		for(int j=0;j<(int)thisEdgeData->size();j++){
 			uint32_t readId=thisEdgeData->at(j).readId;
@@ -1016,22 +1016,20 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 				// the strand is available
 		&&		(*currentReadPositions)[readId].count(thisEdgeData->at(j).readStrand)>0
 				// the position is greater than the one in the database
-		&& 		(*currentReadPositions)[readId][thisEdgeData->at(j).readStrand] < thisEdgeData->at(j).readPosition
+		&& 		(*currentReadPositions)[readId][thisEdgeData->at(j).readStrand] +1==thisEdgeData->at(j).readPosition
 			){
 					if(thisEdgeData->at(j).readPosition>scores[i])
 						scores[i]=thisEdgeData->at(j).readPosition;
-/*
-					(*m_cout)<<m_sequenceData->at(readId)->getId()<<" "<<thisEdgeData->at(j).readStrand<<endl;
+					debugBuffer<<m_sequenceData->at(readId)->getId()<<" "<<thisEdgeData->at(j).readStrand<<endl;
 
 					if(thisEdgeData->at(j).readStrand=='F')
-						(*m_cout)<<m_sequenceData->at(readId)->getSeq()<<endl;
+						debugBuffer<<m_sequenceData->at(readId)->getSeq()<<endl;
 					else
-						(*m_cout)<<reverseComplement(m_sequenceData->at(readId)->getSeq())<<endl;
+						debugBuffer<<reverseComplement(m_sequenceData->at(readId)->getSeq())<<endl;
 
 					for(int h=0;h<thisEdgeData->at(j).readPosition;h++)
-						(*m_cout)<<" ";
-					(*m_cout)<<"*"<<endl;
-*/
+						debugBuffer<<" ";
+					debugBuffer<<"*"<<endl;
 			}
 		}
 	}
@@ -1043,7 +1041,11 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 
 	//(*m_cout)<<"Children"<<endl;
 
-	
+	if(scores.size()==1){
+		vector<VERTEX_TYPE> output;
+		output.push_back(children[scores.begin()->first]);
+		return output;
+	}
 
 	int best=-1;
 	for(map<int,int>::iterator i=scores.begin();i!=scores.end();i++){
@@ -1052,7 +1054,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 		for(map<int,int>::iterator j=scores.begin();j!=scores.end();j++){
 			if(i->first==j->first)
 				continue;
-			if(i->second>2*j->second){
+			if(i->second> 2* j->second){
 			}else{
 				isBest=false;
 			}
@@ -1065,6 +1067,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 		output.push_back(children[best]);
 		return output;
 	}
+	(*m_cout)<<debugBuffer.str()<<endl;
 	return children;
 }
 
