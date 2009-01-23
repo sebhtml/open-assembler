@@ -923,7 +923,7 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 			}
 		}
 		if(path->size()%1000==0){
-			(*m_cout)<<"Vertices: "<<path->size()<<endl;
+			//(*m_cout)<<"Vertices: "<<path->size()<<endl;
 		}
 		prefixNextVertices=nextVertices(path,currentReadPositions);
 
@@ -1002,8 +1002,6 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 	if(currentReadPositions->size()==0)
 		return children;
 
-	if(children.size()==1)
-		return children;
 
 	map<int,int > scores;
 	//(*m_cout)<<"Children"<<endl;
@@ -1038,13 +1036,18 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 		}
 	}
 
-	(*m_cout)<<"Children"<<endl;
+	if(scores.size()==0){
+		vector<VERTEX_TYPE> output;
+		return output;
+	}
+
+	//(*m_cout)<<"Children"<<endl;
 
 	
 
 	int best=-1;
 	for(map<int,int>::iterator i=scores.begin();i!=scores.end();i++){
-		(*m_cout)<<i->second<<endl;
+		//(*m_cout)<<i->second<<endl;
 		bool isBest=true;
 		for(map<int,int>::iterator j=scores.begin();j!=scores.end();j++){
 			if(i->first==j->first)
