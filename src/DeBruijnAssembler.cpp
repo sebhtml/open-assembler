@@ -123,8 +123,6 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	m_cout<<"Reads: "<<sequenceData->size()<<" / "<<sequenceData->size()<<endl;
 	m_cout<<"Mers: "<<words.size()<<endl;
 
-	if(m_longReadAvailable)
-		m_cout<<"[longRead available]"<<endl;
 
 	int processed=0;
 	int solid=0;
