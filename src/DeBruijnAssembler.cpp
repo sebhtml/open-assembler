@@ -471,12 +471,14 @@ void DeBruijnAssembler::outputContigs(){
 	outputWalk.close();
 	m_cout<<endl;
 	int averageContigLength=totalLength/(m_contig_paths.size());
+/*
 	m_cout<<"Asssembly statistics"<<endl;
 	m_cout<<"Estimated genome size (total contig bases): "<<totalLength<<endl;
 	m_cout<<"Average contig size: "<<averageContigLength<<endl;
 	m_cout<<"Smallest contig size: "<<stat_minimumContigSize<<endl;
 	m_cout<<"Largest contig size: "<<stat_maximumContigSize<<endl;
 	m_cout<<"Contigs: "<<m_contig_paths.size()<<endl;
+*/
 	int cumulativeSize=0;
 	set<int> stat_nx_done;
 	for(multiset<int>::reverse_iterator i=contigSizes.rbegin();i!=contigSizes.rend();i++){
@@ -484,7 +486,7 @@ void DeBruijnAssembler::outputContigs(){
 		for(int j=50;j<=50;j+=10){
 			if(cumulativeSize>=totalLength*j/100.0&&stat_nx_done.count(j)==0){
 				stat_nx_done.insert(j);
-				m_cout<<"N"<<j<<" size: "<<*i<<endl;
+				//m_cout<<"N"<<j<<" size: "<<*i<<endl;
 				break;
 			}
 		}
@@ -752,13 +754,13 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 
 void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 	Walk_In_GRAPH();
-	vector<vector<VERTEX_TYPE> > largeContigs=Remove_Small_Contigs(m_contig_paths);
+	//vector<vector<VERTEX_TYPE> > largeContigs=Remove_Small_Contigs(m_contig_paths);
 	
-	vector<vector<VERTEX_TYPE> > mergedContigs=Filter_Remove_Smaller_Duplicates_Cached(largeContigs);
+	//vector<vector<VERTEX_TYPE> > mergedContigs=Filter_Remove_Smaller_Duplicates_Cached(largeContigs);
 
-	vector<vector<VERTEX_TYPE> > finalContigs=ExtendReverseComplements(mergedContigs);
-	finalContigs=mergedContigs;
-	m_contig_paths=finalContigs;
+	//vector<vector<VERTEX_TYPE> > finalContigs=ExtendReverseComplements(mergedContigs);
+	//finalContigs=mergedContigs;
+	//m_contig_paths=finalContigs;
 }
 
 vector<vector<VERTEX_TYPE> > DeBruijnAssembler::Filter_Remove_Smaller_Duplicates_Cached(vector<vector<VERTEX_TYPE > > largeContigs){
@@ -1021,10 +1023,8 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 	}
 	int max=1;
 	int best=-1;
-	int semiMax=1;
 	for(map<int,int>::iterator i=scores.begin();i!=scores.end();i++)
-		if(i->second>max){
-			semiMax=max;
+		if(i->second>=2*max){
 			max=i->second;
 			best=i->first;
 		}

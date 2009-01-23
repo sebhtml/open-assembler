@@ -58,8 +58,8 @@ int main(int argc,char*argv[]){
 	buffer<<" -minimumCoverage     default: auto (with depletion curve)"<<endl;
 	
 	int minimumContigSize=500;
-	buffer<<" -minimumContigSize   default: "<<minimumContigSize<<endl;
-	buffer<<"                      description: the minimum length of contigs generated with the graph."<<endl;
+	//buffer<<" -minimumContigSize   default: "<<minimumContigSize<<endl;
+	//buffer<<"                      description: the minimum length of contigs generated with the graph."<<endl;
 	uint64_t buckets=100000000;
 	buffer<<" -buckets             default: "<<buckets<<endl;
 	buffer<<"                      description: number of buckets"<<endl;
@@ -157,7 +157,7 @@ int main(int argc,char*argv[]){
 	// to avoid palindromes
 	assembler.setBuckets(buckets);
 	assembler.setWordSize(wordSize);
-	assembler.setMinimumContigSize(minimumContigSize);
+	//assembler.setMinimumContigSize(minimumContigSize);
 	assembler.setMinimumCoverage(m_minimumCoverageParameter);
 	assembler.setAssemblyDirectory(assemblyDirectory);
 	assembler.setPairedInfo(pairedInfo);
