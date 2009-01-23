@@ -880,6 +880,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> 
 			if((int)subPath.size()<2*m_wordSize&&nextVertices(&subPath,currentReadPositions).size()==0){
 				(*m_cout)<<"TIP Length: "<<subPath.size()<<endl;
 				(*m_cout)<<" From: "<<idToWord(vertices[i],m_wordSize)<<endl;
+				(*m_cout)<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
 			}else{
 				withoutTips.push_back(vertices[i]);
 			}
@@ -904,6 +905,9 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 			}
 		}
 		prefix=prefixNextVertices[0];
+		if(prefix==path->at(path->size()-1)){
+			break;
+		}
 		path->push_back(prefix);
 		//(*m_cout)<<idToWord(prefix,m_wordSize)<<endl;
 		int cumulativeCoverage=0;
