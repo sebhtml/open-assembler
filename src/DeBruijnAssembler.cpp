@@ -79,17 +79,13 @@ char DeBruijnAssembler::complement(char a){
 		return 'G';
 	if(a=='G')
 		return 'C';
-	return 'E';
+	return a;
 }
 
 string DeBruijnAssembler::reverseComplement(string a){
 	ostringstream i;
 	for(int p=a.length()-1;p>=0;p--){
 		char b=complement(a[p]);
-		if(b=='E'){
-			cout<<a<<" "<<b<<endl;
-			exit(0);
-		}
 		i<< b;
 	}
 	return i.str();
