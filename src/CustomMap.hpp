@@ -1,7 +1,7 @@
 /*
 	dna: De Novo Assembler
     Copyright (C) 2008, 2009 Sébastien Boisvert
-	$Id: CustomMap.hpp 304 2009-01-17 23:44:24Z sebhtml $
+	$Id$
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

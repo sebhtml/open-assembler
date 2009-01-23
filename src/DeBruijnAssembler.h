@@ -1,7 +1,7 @@
 /*
 	dna: De Novo Assembler
     Copyright (C) 2008, 2009 Sébastien Boisvert
-	$Id: DeBruijnAssembler.h 300 2009-01-17 05:14:24Z sebhtml $
+	$Id$
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
