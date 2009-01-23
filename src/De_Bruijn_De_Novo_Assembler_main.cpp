@@ -20,6 +20,7 @@
 #include<iostream>
 #include"Read.h"
 #include"SequenceData.h"
+#include"SequenceDataFull.h"
 #include"Loader.h"
 #include"DeBruijnAssembler.h"
 #include"CustomMap.hpp"
@@ -135,7 +136,7 @@ int main(int argc,char*argv[]){
 	// to avoid loading all files in memory (only 1 at any moment)
 	m_cout<<"Indexing files"<<endl;
 	m_cout<<endl;
-	SequenceData sequenceData(&inputFiles,&m_cout);
+	SequenceDataFull sequenceData(&inputFiles,&m_cout);
 
 	if(sequenceData.size()==0){
 		m_cout<<"Error: no reads provided."<<endl;

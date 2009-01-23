@@ -96,7 +96,7 @@ string DeBruijnAssembler::reverseComplement(string a){
 }
 
 
-void DeBruijnAssembler::build_From_Scratch(SequenceData*sequenceData){
+void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	ostream&m_cout=*(this->m_cout);
 	m_cout<<endl;
 	m_cout<<endl;
@@ -362,7 +362,8 @@ void DeBruijnAssembler::load_graphFrom_file(){
 	graph.close();
 }
 
-void DeBruijnAssembler::buildGraph(SequenceData*sequenceData){
+void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
+	m_sequenceData=sequenceData;
 	ostream&m_cout=*(this->m_cout);
 	bool debug=true;
 	bool useCache=false;
@@ -915,8 +916,8 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 		int cumulativeCoverage=0;
 		vector<AnnotationElement>*annotations=m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1));
 		for(int h=0;h<(int)annotations->size();h++){
-			if((*currentReadPositions).count(annotations->at(h).readId)==0){
-				if(cumulativeCoverage<m_minimumCoverage){ // add at most a given amount of "new reads" to avoid depletion
+			if((*currentReadPositions).count(annotations->at(h).readId)==0){// add a read when it starts at its beginning...
+				if(cumulativeCoverage<m_minimumCoverage&&annotations->at(h).readPosition==0){ // add at most a given amount of "new reads" to avoid depletion
 					(*currentReadPositions)[annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
 					cumulativeCoverage++;
 				}
@@ -929,9 +930,6 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 			(*m_cout)<<"Vertices: "<<path->size()<<endl;
 		}
 		prefixNextVertices=nextVertices(path,currentReadPositions);
-		if(idToWord(prefix,m_wordSize)=="ACATTTTGTTTGAAGAGTATAGTCA"){
-			(*m_cout)<<prefixNextVertices.size()<<" children"<<endl;
-		}
 
 		if(prefixNextVertices.size()>1)
 			prefixNextVertices=removeBubblesAndTips(prefixNextVertices,path,currentReadPositions);
@@ -1008,32 +1006,61 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 	if(currentReadPositions->size()==0)
 		return children;
 
-	map<int,int> scores;
+	if(children.size()==1)
+		return children;
+
+	map<int,int > scores;
+	//(*m_cout)<<"Children"<<endl;
 	for(int i=0;i<(int)children.size();i++){
+		//(*m_cout)<<idToWord(children[i],m_wordSize)<<endl;
 		vector<AnnotationElement>*thisEdgeData=m_data->get(path->at(path->size()-1)).getAnnotations(children[i]);
-		int best=0;
 		for(int j=0;j<(int)thisEdgeData->size();j++){
+			uint32_t readId=thisEdgeData->at(j).readId;
 			if(
 				// the read is there in the path already
-				currentReadPositions->count(thisEdgeData->at(j).readId)>0
+				currentReadPositions->count(readId)>0
 				// the strand is available
-		&&		(*currentReadPositions)[thisEdgeData->at(j).readId].count(thisEdgeData->at(j).readStrand)>0
+		&&		(*currentReadPositions)[readId].count(thisEdgeData->at(j).readStrand)>0
 				// the position is greater than the one in the database
-		&& 		(*currentReadPositions)[thisEdgeData->at(j).readId][thisEdgeData->at(j).readStrand] < thisEdgeData->at(j).readPosition
+		&& 		(*currentReadPositions)[readId][thisEdgeData->at(j).readStrand] < thisEdgeData->at(j).readPosition
 			){
-				if(thisEdgeData->at(j).readPosition>best)
-					best=thisEdgeData->at(j).readPosition;
+					if(thisEdgeData->at(j).readPosition>scores[i])
+						scores[i]=thisEdgeData->at(j).readPosition;
+/*
+					(*m_cout)<<m_sequenceData->at(readId)->getId()<<" "<<thisEdgeData->at(j).readStrand<<endl;
+
+					if(thisEdgeData->at(j).readStrand=='F')
+						(*m_cout)<<m_sequenceData->at(readId)->getSeq()<<endl;
+					else
+						(*m_cout)<<reverseComplement(m_sequenceData->at(readId)->getSeq())<<endl;
+
+					for(int h=0;h<thisEdgeData->at(j).readPosition;h++)
+						(*m_cout)<<" ";
+					(*m_cout)<<"*"<<endl;
+*/
 			}
 		}
-		scores[i]=best;
 	}
-	int max=1;
+
+	(*m_cout)<<"Children"<<endl;
+
+	
+
 	int best=-1;
-	for(map<int,int>::iterator i=scores.begin();i!=scores.end();i++)
-		if(i->second>=1.2*max){
-			max=i->second;
-			best=i->first;
+	for(map<int,int>::iterator i=scores.begin();i!=scores.end();i++){
+		(*m_cout)<<i->second<<endl;
+		bool isBest=true;
+		for(map<int,int>::iterator j=scores.begin();j!=scores.end();j++){
+			if(i->first==j->first)
+				continue;
+			if(i->second>2*j->second){
+			}else{
+				isBest=false;
+			}
 		}
+		if(isBest)
+			best=i->first;
+	}
 	if(best!=-1){
 		vector<VERTEX_TYPE> output;
 		output.push_back(children[best]);
@@ -1421,7 +1448,7 @@ void DeBruijnAssembler::setMinimumCoverage(string coverage){
 	m_minimumCoverageParameter=coverage;
 }
 
-void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceData*sequenceData,CustomMap<int>*solidMers){
+void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData,CustomMap<int>*solidMers){
 	Read*read=sequenceData->at(readId);
 	string sequence=read->getSeq();
 

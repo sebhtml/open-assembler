@@ -25,6 +25,7 @@
 #define SOFTWARE_VERSION "dna-0.0.0-pre-alpha-dev"
 
 #include"SequenceData.h"
+#include"SequenceDataFull.h"
 #include"VertexData.h"
 #include"Read.h"
 #include<map>
@@ -52,6 +53,8 @@ class DeBruijnAssembler{
 	int m_default_window;
 	uint64_t m_solidMers;
 	CustomMap<VertexData>*m_data;
+
+	SequenceDataFull*m_sequenceData;
 	// map edges to reads
 
 	// stock directly a vector of vertices
@@ -63,7 +66,7 @@ class DeBruijnAssembler{
 	string m_assemblyDirectory;
 
 	void load_graphFrom_file();
-	void build_From_Scratch(SequenceData*sequenceData);
+	void build_From_Scratch(SequenceDataFull*sequenceData);
 	void writeGraph();
 
 	vector<VERTEX_TYPE> optimizedNextVertices(vector<VERTEX_TYPE>*path,map<VERTEX_TYPE,int>*visits,int C,int l);
@@ -95,12 +98,12 @@ class DeBruijnAssembler{
 	void Walk_In_GRAPH();
 
 
-	void indexReadStrand(int readId,char strand,SequenceData*sequenceData,CustomMap<int>*solidMers);
+	void indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData,CustomMap<int>*solidMers);
 public:
 	DeBruijnAssembler(ostream*m_cout);
 	void setPairedInfo(string a);
 	void setWordSize(int k);
-	void buildGraph(SequenceData*sequenceData);
+	void buildGraph(SequenceDataFull*sequenceData);
 	void setAssemblyDirectory(string assemblyDirectory);
 	void setMinimumContigSize(int minimumContigSize);
 	void outputContigs();
