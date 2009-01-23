@@ -43,7 +43,7 @@ chromosomes<< seq
 f.close
 
 coverage=25
-readLength=250
+readLength=36
 errors=4
 readID=1
 chromosomes.each do |genome|
@@ -51,7 +51,7 @@ chromosomes.each do |genome|
 	position=0
 	while position<gSize
 		coverage.times do |t|
-			read_length=readLength+rand(100)-50
+			read_length=readLength
 			start=position+rand(read_length)-read_length/2
 			if start<0
 				start=0
