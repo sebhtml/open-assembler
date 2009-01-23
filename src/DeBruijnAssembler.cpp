@@ -1054,7 +1054,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 		for(map<int,int>::iterator j=scores.begin();j!=scores.end();j++){
 			if(i->first==j->first)
 				continue;
-			if(i->second>  j->second){
+			if(i->second> 1.2* j->second){
 			}else{
 				isBest=false;
 			}
