@@ -6,7 +6,7 @@ VertexData.h VertexData.cpp SequenceData.h SequenceData.cpp SequenceDataFull.h S
 
 dna_DeBruijnSplitter_SOURCES = splitter_main.cpp
 
-dna_Merger_SOURCES = merger_main.cpp
+dna_Merger_SOURCES = merger_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp
 
 dna_Scaffolder_SOURCES = scaffolder_main.cpp
 

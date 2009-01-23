@@ -43,7 +43,7 @@ int main(int argc,char*argv[]){
 	buffer<<"License: GPLv3 (see http://fsf.org/)"<<endl;
 	buffer<<endl;
 	buffer<<"Usage:"<<endl;
-	buffer<<"dna [options] <files (fasta, sff, or fastq)>"<<endl;
+	buffer<<"dna_DeBruijnAssembler [options] <files (fasta, sff, or fastq)>"<<endl;
 
 	// show options
 	buffer<<" OPTIONS"<<endl;
@@ -103,7 +103,7 @@ int main(int argc,char*argv[]){
 
 	buffer<<endl;
 	buffer<<endl;
-	buffer<<"dna -assemblyDirectory "<<assemblyDirectory<<" -minimumCoverage "<<m_minimumCoverageParameter<<" -buckets "<<buckets<<" -pairedInfo "<<pairedInfo<<  " -wordSize "<<wordSize ;
+	buffer<<"dna_DeBruijnAssembler -assemblyDirectory "<<assemblyDirectory<<" -minimumCoverage "<<m_minimumCoverageParameter<<" -buckets "<<buckets<<" -pairedInfo "<<pairedInfo<<  " -wordSize "<<wordSize ;
 	for(int i=0;i<(int)inputFiles.size();i++)
 		buffer<<" "<<inputFiles[i];
 	buffer<<endl;
