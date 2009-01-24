@@ -24,7 +24,6 @@
 
 #define SOFTWARE_VERSION "dna-0.0.0-pre-alpha-dev"
 
-#include"SequenceData.h"
 #include"SequenceDataFull.h"
 #include"VertexData.h"
 #include"Read.h"
@@ -78,10 +77,6 @@ class DeBruijnAssembler{
 
 	vector<VERTEX_TYPE> nextVertices(vector<VERTEX_TYPE>*path,map<int,map<char,int> >*currentReadPositions);
 
-	bool passFilter(vector<VERTEX_TYPE>*path,int l,int C);
-	bool passFilter_ShortRead(vector<VERTEX_TYPE>* path,int l,int C);
-	bool passFilter_Paired(vector<VERTEX_TYPE>*path,int l,int C);
-	bool passFilter_LongRead(vector<VERTEX_TYPE>*path,int l,int C);
 
 	VERTEX_TYPE reverseComplement_VERTEX(VERTEX_TYPE a);
 

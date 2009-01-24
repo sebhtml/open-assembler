@@ -306,6 +306,7 @@ void DeBruijnAssembler::writeGraph(){
 			graph2<<idToWord(prefix,m_wordSize)<<" -> "<<idToWord(suffix,m_wordSize)<<" "<<reads->size();
 			for(int k=0;k<(int)reads->size();k++){
 				graph<<" "<<reads->at(k).readId<<" "<<reads->at(k).readPosition<<" "<<reads->at(k).readStrand;
+				graph2<<" "<<reads->at(k).readId<<" "<<reads->at(k).readPosition<<" "<<reads->at(k).readStrand;
 			}
 			graph<<endl;
 			graph2<<endl;
@@ -383,9 +384,7 @@ void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
 
 }
 
-void DeBruijnAssembler::setMinimumContigSize(int minimumContigSize){
-	m_minimumContigSize=minimumContigSize;
-}
+
 
 string DeBruijnAssembler::pathToDNA(vector<VERTEX_TYPE>*path){
 	ostringstream contigSequence;
@@ -570,99 +569,9 @@ void DeBruijnAssembler::setAssemblyDirectory(string assemblyDirectory){
 	m_graphFile=name.str();
 }
 
-/**
- * check that the last l edges of path have at least C reads in common
- */
-bool DeBruijnAssembler::passFilter_ShortRead(vector<VERTEX_TYPE>*path,int l,int C){
-	//(*m_cout)<<"Using short reads "<<path->size()<<endl;
-	MAP_TYPE<int,int> votes;
-	l=min(l,path->size()-1); // size of verification
-/*
 
-         0     1      2      3     4     5    6    7     8      9     10
-					<---------  l: 5 edges  ------->
-*/
-	for(int i=(int)path->size()-l-1;i<=(int)path->size()-2;i++){
-		//vector<int> reads=m_graph[path[i]][path[i+1]];
-		//cout<<"case 1"<<endl;
-		vector<AnnotationElement>*reads=m_data->get((*path)[i]).getAnnotations((*path)[i+1]);
-		for(vector<AnnotationElement>::iterator j=reads->begin();j!=reads->end();j++){
-			votes[(*j).readId]++;
-		}
-	}
-	int ok=0;
-	for(MAP_TYPE<int,int>::iterator i=votes.begin();i!=votes.end();i++){
-		if(i->second>=l)
-			ok++;
-	}
-	//bool res=ok>=C;
-	//(*m_cout)<<"Short "<<res<<endl;
-	return ok>=C;
-}
 
-vector<vector<VERTEX_TYPE> >DeBruijnAssembler::Filter_Remove_Smaller_Duplicates(vector<vector<VERTEX_TYPE> > contigs){
-	(*m_cout)<<"[Filter_Remove_Smaller_Duplicates] "<<contigs.size()<<endl;
-	if(contigs.size()==1)
-		return contigs;
-	vector<vector<VERTEX_TYPE> >filteredContigs;
-	MAP_TYPE<int,set<VERTEX_TYPE> > dictionnary;
-	CustomMap<vector<int > > walksIndex(m_buckets);
-	set<int> eliminatedContigs;
-	// fill dictionnary
-	(*m_cout)<<"Indexing.."<<endl;
-	for(int id=0;id<(int)contigs.size();id++){
-		vector<VERTEX_TYPE> contig=contigs[id];
-		for(vector<VERTEX_TYPE>::iterator k=contig.begin();k!=contig.end();k++){
-			dictionnary[id].insert(*k);
-			dictionnary[id].insert(wordId(reverseComplement(idToWord(*k,m_wordSize)).c_str()));
-			vector<int> theIndex;
-			VERTEX_TYPE reverseNode=wordId(reverseComplement(idToWord(*k,m_wordSize)).c_str());
-			if(!walksIndex.find(*k))
-				walksIndex.add(*k,theIndex);
-			if(!walksIndex.find(reverseNode))
-				walksIndex.add(reverseNode,theIndex);
 
-			walksIndex.get(*k).push_back(id);
-			walksIndex.get(reverseNode).push_back(id);
-		}
-	}
-
-	(*m_cout)<<"Done.."<<endl;
-	for(int progress=0;progress<(int)contigs.size();progress++){
-		vector<VERTEX_TYPE>contig=contigs[progress];
-		if(progress%400==0)
-			(*m_cout)<<progress<<" / "<<contigs.size()<<endl;
-		bool isDuplicate=false;
-		VERTEX_TYPE toCheck=contig[contig.size()/2]; // the middle one
-		vector<int> contigsToCheck=walksIndex.get(toCheck);
-		for(vector<int> ::iterator j=contigsToCheck.begin();j!=contigsToCheck.end();j++){
-			int otherContig=*j;
-			set<VERTEX_TYPE>*otherContigIndex=&dictionnary[otherContig];
-			if(otherContig!=progress&&eliminatedContigs.count(otherContig)==0
-			&&contigs[progress].size()<=contigs[otherContig].size()){
-				int notFound=0;
-				for(vector<VERTEX_TYPE>::iterator k=contig.begin();k!=contig.end();k++){
-					if(otherContigIndex->count(*k)==0){
-						notFound++;
-					}
-				}
-				isDuplicate=(notFound<=m_longReadMode_threshold);
-				if(isDuplicate){
-					(*m_cout)<<"Vertices not found: "<<notFound<<" / "<<contig.size()<<progress<<" is the same as "<<otherContig<<endl;
-					break;
-				}
-			}
-		}
-		if(isDuplicate){
-			eliminatedContigs.insert(progress);
-		}else{
-			filteredContigs.push_back(contig);
-		}
-	}
-	(*m_cout)<<contigs.size()<<" / "<<contigs.size()<<endl;
-	(*m_cout)<<contigs.size()<<" -> "<<filteredContigs.size()<<endl;
-	return filteredContigs;
-}
 
 void DeBruijnAssembler::Walk_In_GRAPH(){
 	string walksRawFile=m_assemblyDirectory+"/RawWalks";
@@ -749,57 +658,9 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 
 void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 	Walk_In_GRAPH();
-	//vector<vector<VERTEX_TYPE> > largeContigs=Remove_Small_Contigs(m_contig_paths);
-	
-	//vector<vector<VERTEX_TYPE> > mergedContigs=Filter_Remove_Smaller_Duplicates_Cached(largeContigs);
-
-	//vector<vector<VERTEX_TYPE> > finalContigs=ExtendReverseComplements(mergedContigs);
-	//finalContigs=mergedContigs;
-	//m_contig_paths=finalContigs;
 }
 
-vector<vector<VERTEX_TYPE> > DeBruijnAssembler::Filter_Remove_Smaller_Duplicates_Cached(vector<vector<VERTEX_TYPE > > largeContigs){
-	string mergedContigsFile=m_assemblyDirectory+"/MergedContigs";
-	ifstream f(mergedContigsFile.c_str());
-	if(f){
-		vector<vector<VERTEX_TYPE> > mergedContigs;
-		(*m_cout)<<"Reading cached data from "<<mergedContigsFile<<endl;
-		int numberOfWalks;
-		f>>numberOfWalks;
-		for(int i=0;i<numberOfWalks;i++){
-			int numberOfVertices;
-			vector<VERTEX_TYPE> path;
-			f>> numberOfVertices;
-			for(int j=0;j<numberOfVertices;j++){
-				VERTEX_TYPE a;
-				f>>a;
-				path.push_back(a);
-			}
-			mergedContigs.push_back(path);
-		}
-		f.close();
-		return mergedContigs;
-	}else{
-		f.close();
-	}
 
-	vector<vector<VERTEX_TYPE> > mergedContigs=Filter_Remove_Smaller_Duplicates(largeContigs);
-	while(mergedContigs.size()<largeContigs.size()){
-		largeContigs=mergedContigs;
-		mergedContigs=Filter_Remove_Smaller_Duplicates(largeContigs);
-	}
-	ofstream streamBuffer(mergedContigsFile.c_str());
-	streamBuffer<<mergedContigs.size()<<endl;
-	for(int i=0;i<(int)mergedContigs.size();i++){
-		streamBuffer<<mergedContigs[i].size()<<endl;
-		for(int j=0;j<(int)mergedContigs[i].size();j++)
-			streamBuffer<<mergedContigs[i][j]<<" ";
-		streamBuffer<<endl;
-	}
-	streamBuffer.close();
-
-	return mergedContigs;
-}
 
 // get a walk from a vertex, with a path, up to maxSize,
 // the path is not added in the walk
@@ -825,33 +686,6 @@ vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> 
 		return vertices;
 
 	int maxSize=200;
-/*
-	if(vertices.size()==2){ // 454 HOMOPOLYMER  DETECTION
-		string word1=idToWord(vertices[0],m_wordSize);
-		string word2=idToWord(vertices[1],m_wordSize);
-		if(word1[m_wordSize-1]==word1[m_wordSize-2]||word2[m_wordSize-1]==word2[m_wordSize-2]){
-			int homopolymerLength=0;
-			while(m_wordSize-2-homopolymerLength>=0
-			&&word1[m_wordSize-2-homopolymerLength]==word1[m_wordSize-2]
-			&&word1[m_wordSize-2-homopolymerLength]==word2[m_wordSize-2-homopolymerLength])
-				homopolymerLength++;
-
-			if(homopolymerLength>=2){
-				int votes1=m_data->get(path[path.size()-1]).getReads(vertices[0]).size();
-				int votes2=m_data->get(path[path.size()-1]).getReads(vertices[1]).size();
-				vector<VERTEX_TYPE> withoutHomopolymer;
-				if(votes1>votes2)
-					withoutHomopolymer.push_back(vertices[0]);
-				else
-					withoutHomopolymer.push_back(vertices[1]);
-				(*m_cout)<<word1<<" "<<votes1<<endl;
-				(*m_cout)<<word2<<" "<<votes2<<endl;
-				(*m_cout)<<"454 Homopolymer "<<homopolymerLength<<endl;
-				return withoutHomopolymer;
-			}
-		}
-	}*/
-
 	if(vertices.size()==2){
 		vector<VERTEX_TYPE> n1=getWalk(vertices[0],path,maxSize,currentReadPositions);
 		vector<VERTEX_TYPE> n2=getWalk(vertices[1],path,maxSize,currentReadPositions);
@@ -879,8 +713,8 @@ vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> 
 			vector<VERTEX_TYPE> subPath=getWalk(vertices[i],path,maxSize,currentReadPositions);
 			if((int)subPath.size()<2*m_wordSize&&nextVertices(&subPath,currentReadPositions).size()==0){
 				(*m_cout)<<"TIP Length: "<<subPath.size()<<endl;
-				(*m_cout)<<" From: "<<idToWord(vertices[i],m_wordSize)<<endl;
-				(*m_cout)<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
+				//(*m_cout)<<" From: "<<idToWord(vertices[i],m_wordSize)<<endl;
+				//(*m_cout)<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
 			}else{
 				withoutTips.push_back(vertices[i]);
 			}
@@ -905,9 +739,6 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 			}
 		}
 		prefix=prefixNextVertices[0];
-		if(prefix==path->at(path->size()-1)){
-			break;
-		}
 		path->push_back(prefix);
 		//(*m_cout)<<idToWord(prefix,m_wordSize)<<endl;
 		int cumulativeCoverage=0;
@@ -924,7 +755,7 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 			}
 		}
 		if(path->size()%1000==0){
-			//(*m_cout)<<"Vertices: "<<path->size()<<endl;
+			(*m_cout)<<"Vertices: "<<path->size()<<endl;
 		}
 		prefixNextVertices=nextVertices(path,currentReadPositions);
 
@@ -952,44 +783,6 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 
 
 
-
-/*
-	// show path
-	for(int i=path->size()-20;i<=(int)path->size()-2;i++){
-		if(i<0){
-			continue;
-		}
-		int aIndex=i;
-		int bIndex=aIndex+1;
-		VERTEX_TYPE a=path->at(aIndex);
-		VERTEX_TYPE b=path->at(bIndex);
-		(*m_cout)<<idToWord(a,m_wordSize)<<" -> "<<idToWord(b,m_wordSize)<<" ";
-		//vector<int>*theReads=&(m_graph[a][b]);
-		//cout<<"case 2"<<endl;
-		vector<int> theReads= (m_data->get(a).getReads(b));
-		(*m_cout)<<theReads.size();
-		for(int j=0;j<(int)theReads.size();j++){
-			(*m_cout)<<" "<<(theReads)[j];
-		}
-		(*m_cout)<<endl;
-	
-	}
-	(*m_cout)<<children.size()<<" CHOICES"<<endl;
-	//MAP_TYPE<VERTEX_TYPE,vector<int> >* dataStructure=&(m_graph[prefix]);
-	//for(MAP_TYPE<VERTEX_TYPE,vector<int> >::iterator i=dataStructure->begin();i!=dataStructure->end();i++){
-	for(int i=0;i<(int)children.size();i++){
-		VERTEX_TYPE suffix=children[i];
-		//(*m_cout)<<idToWord(prefix,m_wordSize)<<" -> "<<idToWord(i->first,m_wordSize)<<" ";
-		(*m_cout)<<idToWord(prefix,m_wordSize)<<" -> "<<idToWord(suffix,m_wordSize)<<" ";
-		vector<int> theReads= (dataStructure.getReads(suffix));
-		(*m_cout)<<theReads.size();
-		for(int j=0;j<(int)theReads.size();j++){
-			(*m_cout)<<" "<<( theReads)[j];
-		}
-		(*m_cout)<<endl;
-		
-	}
-*/
 	return ;
 }
 
@@ -1008,10 +801,8 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 	ostringstream debugBuffer;
 	//(*m_cout)<<"Children"<<endl;
 	for(int i=0;i<(int)children.size();i++){
-		if(children[i]==path->at(path->size()-1))
-			continue;
 
-		debugBuffer<<"Child "<<idToWord(children[i],m_wordSize)<<endl;
+		//debugBuffer<<"Child "<<idToWord(children[i],m_wordSize)<<endl;
 		vector<AnnotationElement>*thisEdgeData=m_data->get(path->at(path->size()-1)).getAnnotations(children[i]);
 		for(int j=0;j<(int)thisEdgeData->size();j++){
 			uint32_t readId=thisEdgeData->at(j).readId;
@@ -1025,6 +816,8 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 			){
 					if(thisEdgeData->at(j).readPosition>scores[i])
 						scores[i]=thisEdgeData->at(j).readPosition;
+
+/*
 					debugBuffer<<m_sequenceData->at(readId)->getId()<<" "<<thisEdgeData->at(j).readStrand<<endl;
 
 					if(thisEdgeData->at(j).readStrand=='F')
@@ -1035,6 +828,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 					for(int h=0;h<thisEdgeData->at(j).readPosition;h++)
 						debugBuffer<<" ";
 					debugBuffer<<"*"<<endl;
+*/
 			}
 		}
 	}
@@ -1072,86 +866,11 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 		output.push_back(children[best]);
 		return output;
 	}
-	(*m_cout)<<debugBuffer.str()<<endl;
+	//(*m_cout)<<debugBuffer.str()<<endl;
 	return children;
 }
 
-bool DeBruijnAssembler::passFilter(vector<VERTEX_TYPE>*path,int l,int C){
-	//(*m_cout)<<"simple "<<simple<<endl;
-	if(l!=m_default_window){
-		//(*m_cout)<<"Forcing passFilter_ShortRead"<<endl;
-		return passFilter_ShortRead(path,l,C);
-	}
-	if((int)path->size()>m_longReadMode_threshold&&m_pairedAvailable){
-		if(passFilter_Paired(path,l,C))
-			return true;
-	}
 
-	if((int)path->size()>m_longReadMode_threshold&&m_longReadAvailable){
-		if(passFilter_LongRead(path,l,C))
-			return true;
-	}
-	return passFilter_ShortRead(path,l,C);
-}
-
-// TODO
-bool DeBruijnAssembler::passFilter_Paired(vector<VERTEX_TYPE>*path,int l,int C){
-	return false;
-}
-
-bool DeBruijnAssembler::passFilter_LongRead(vector<VERTEX_TYPE>*path,int l,int C){
-	//(*m_cout)<<"Using long reads"<<endl;
-/*
-	for(int i=0;i<(int)path->size()-1;i++){
-		//(*m_cout)<<i+1<<" "<<idToWord(path->at(i),m_wordSize)<<" -> "<<idToWord(path->at(i+1),m_wordSize)<<" ";
-		vector<int> reads=m_data->get((*path)[i]).getReads((*path)[i+1]);
-		//(*m_cout)<<reads.size();
-		for(int j=0;j<(int)reads.size();j++){
-			//(*m_cout)<<" "<<reads[j];
-		}
-		//(*m_cout)<<endl;
-	}
-*/
-	int lastIndex=path->size()-1;
-	map<int,int> votes;
-	//cout<<"case 3"<<endl;
-	vector<AnnotationElement>*reads=m_data->get((*path)[lastIndex-1]).getAnnotations((*path)[lastIndex]);
-	for(int i=0;i<(int)reads->size();i++){
-		//(*m_cout)<<" "<<reads[i];
-		votes[reads->at(i).readId]++;
-	}
-	//(*m_cout)<<endl;
-
-	int MAX_DISTANCE=500;
-	//for(int firstIndex=m_wordSize+1;firstIndex<min(path->size(),400);firstIndex+=m_wordSize+1){
-	for(int firstIndex=(int)path->size()-MAX_DISTANCE;firstIndex<=(int)path->size()-m_longReadMode_threshold;firstIndex+=m_wordSize+1){
-		if(firstIndex<0)
-			continue;
-		map<int,int> votes2=votes;
-		int prefixIndex=firstIndex;
-		//(*m_cout)<<prefixIndex+1<<endl;
-		int suffixIndex=prefixIndex+1;
-		//cout<<"case 4"<<endl;
-		reads=m_data->get((*path)[prefixIndex]).getAnnotations((*path)[suffixIndex]);
-		for(int i=0;i<(int)reads->size();i++)
-			votes2[reads->at(i).readId]++;
-		int coverage=0;
-		for(map<int,int>::iterator i=votes2.begin();i!=votes2.end();i++){
-			if(i->second==2){
-				coverage++;
-			}
-			//(*m_cout)<<i->first<<" "<<i->second<<endl;
-		}
-
-		//(*m_cout)<<C<<" "<<prefixIndex+1<<" "<<coverage<<endl;
-		if(coverage>=C){
-			//(*m_cout)<<"match!"<<endl;
-			return true;
-		}
-	}
-	//(*m_cout)<<"No match found"<<endl;
-	return false;
-}
 
 
 void DeBruijnAssembler::setPairedInfo(string a){
@@ -1173,282 +892,11 @@ DeBruijnAssembler::~DeBruijnAssembler(){
 
 
 
-// join
-vector<vector<VERTEX_TYPE> > DeBruijnAssembler::ExtendReverseComplements(vector<vector<VERTEX_TYPE> > contigs){
-	(*m_cout)<<endl;
-	(*m_cout)<<"[DeBruijnAssembler::ExtendReverseComplements>>"<<endl;
-	vector<vector<VERTEX_TYPE> >enhancedContigs=contigs;
-	bool joiningOccured=true;
-	while(joiningOccured==true){
-		joiningOccured=false;
-
-		vector<vector<VERTEX_TYPE> >newContigs;
-		set<int>contigsProcessed;
-
-		// -------------------------------------->
-		// ----->                          ---->
-		// forward_start                       forward_end
-		//
-		// <-----                          <-----
-		// reverse_start                  reverse_end
-		//
-
-		map<VERTEX_TYPE,vector<int> > forward_start;
-		map<VERTEX_TYPE,vector<int> > forward_end;
-		map<VERTEX_TYPE,vector<int> > reverse_start;
-		map<VERTEX_TYPE,vector<int> > reverse_end;
-		
-		// index
-		for(int i=0;i<(int)enhancedContigs.size();i++){
-			vector<VERTEX_TYPE>contig=enhancedContigs[i];
-			forward_start[contig[0]].push_back(i);
-			forward_end[contig[contig.size()-1]].push_back(i);
-			reverse_start[reverseComplement_VERTEX(contig[0])].push_back(i);
-			reverse_end[reverseComplement_VERTEX(contig[contig.size()-1])].push_back(i);
-		}
-
-		// Join ends
-		for(int i=0;i<(int)enhancedContigs.size();i++){
-
-			if(contigsProcessed.count(i)>0)
-				continue;
-			if(i%100==0)
-				(*m_cout)<<i<<" / "<<enhancedContigs.size()<<endl;
-			vector<VERTEX_TYPE>contig=enhancedContigs[i];
-			
-
-			vector<int> start_Matches_Foward;
-			vector<int> start_Matches_Reverse;
-			vector<int> end_Matches_Reverse;
-			
-			for(int l=0;l<(int)contig.size();l++){
-				VERTEX_TYPE vertex=contig[l];
-				if(forward_start.count(vertex)>0){
-					vector<int> toAdd=not_Processed(forward_start[vertex],contigsProcessed,i);
-					for(int o=0;o<(int)toAdd.size();o++)
-						start_Matches_Foward.push_back(toAdd[o]);
-				}
-				if(reverse_start.count(vertex)>0){
-					vector<int> toAdd=not_Processed(reverse_start[vertex],contigsProcessed,i);
-					for(int o=0;o<(int)toAdd.size();o++)
-						start_Matches_Reverse.push_back(toAdd[o]);
-				}
-				if(reverse_end.count(vertex)>0){
-					vector<int> toAdd=not_Processed(reverse_end[vertex],contigsProcessed,i);
-					for(int o=0;o<(int)toAdd.size();o++)
-						end_Matches_Reverse.push_back(toAdd[o]);
-				}
-			}
-/*
-* 		start_Matches_Foward
- *
- *			---------------------------------------------->       Contig A
- *			<----------------------------------------------
- *                                                            -------------------------------------->  Contig B
- *                                                            <--------------------------------------
- */
-
-			int WINDOW_SIZE=500;
-			if(start_Matches_Foward.size()>0){
-				//(*m_cout)<<"start_Matches_Foward"<<endl;
-				if(start_Matches_Foward.size()==1){
-					//(*m_cout)<<"Exactly 1"<<endl;
-					int otherContigId=start_Matches_Foward[0];
-					vector<VERTEX_TYPE>otherContig=contigs[otherContigId];
-					VERTEX_TYPE vertex=otherContig[0];
-					vector<VERTEX_TYPE> newContig;
-					for(int u=0;u<(int)contig.size();u++){
-						VERTEX_TYPE otherVertex=contig[u];
-						if(otherVertex==vertex)
-							break;
-						newContig.push_back(otherVertex);
-					}
-					bool correct=true;
-					int windowForJoin=0;
-					for(int u=0;u<(int)otherContig.size();u++){
-						if(newContig.size()==0){
-							newContig.push_back(otherContig[u]);
-							continue;
-						}
-						(*m_cout)<<"newContig.size "<<newContig.size()<<endl;
-						if((newContig.size()-1)>=0&&!(m_data->find(newContig[newContig.size()-1]))){
-							correct=false;
-							break;
-						}
-						if((newContig.size()-1)>=0&&!(m_data->get(
-							newContig[newContig.size()-1])
-							.hasChild(otherContig[u]))){
-							correct=false;
-							break;
-						}
-						newContig.push_back(otherContig[u]);
-						if(windowForJoin<=WINDOW_SIZE
-						&&!passFilter(&newContig,m_default_window,m_minimumCoverage_for_walk)){
-							correct=false;
-							break;
-						}
-						windowForJoin++;
-					}
-
-
-					if(correct&&addNewContig(&newContigs,&newContig,i,otherContigId,&contigsProcessed))
-						joiningOccured=true;
-				}
-/* *  		start_Matches_Reverse
-*              	---------------------------------------------->    Contig A
-*		<----------------------------------------------
-*   ------------------->
-*   <-------------------		Contig B
-*/
-			}else if(start_Matches_Reverse.size()>0){ 
-				//(*m_cout)<<"start_Matches_Reverse"<<endl;
-				if(start_Matches_Reverse.size()==1){
-					//(*m_cout)<<"Exactly 1"<<endl;
-					int otherContigId=start_Matches_Reverse[0];
-					vector<VERTEX_TYPE>otherContig=contigs[otherContigId];
-					VERTEX_TYPE vertex=reverseComplement_VERTEX(otherContig[0]);
-					vector<VERTEX_TYPE> newContig;
-	
-					for(int u=otherContig.size()-1;u>=0;u--){
-						newContig.push_back(reverseComplement_VERTEX(otherContig[u]));
-					}
-					bool ok=false;
-					bool correct=true;
-					int windowForJoin=0;
-					for(int u=0;u<(int)contig.size();u++){
-						if(ok){
-							if((newContig.size()-1)>=0&&!(m_data->get(newContig[newContig.size()-1]).hasChild(contig[u]))){
-								correct=false;
-								break;
-							}
-							newContig.push_back(contig[u]);
-							windowForJoin++;
-						}
-						if(contig[u]==vertex)
-							ok=true;
-						if(ok&&windowForJoin<=WINDOW_SIZE&&!passFilter(&newContig,m_default_window,m_minimumCoverage_for_walk)){
-							correct=false;
-							break;
-						}
-					}
-
-
-					if(correct&&addNewContig(&newContigs,&newContig,i,otherContigId,&contigsProcessed))
-						joiningOccured=true;
-				}
-/*
-*  		end_Matches_Reverse
-*  			
-*  		--------------------------------------------------> Contig A
-*  		<--------------------------------------------------
-*
-*  							------------------------------------>
-*  							<------------------------------------ Contig B
-*/
-
-			}else if(end_Matches_Reverse.size()>0){ 
-				//(*m_cout)<<"end_Matches_Reverse"<<endl;
-				if(end_Matches_Reverse.size()==1){
-					//(*m_cout)<<"Exactly 1"<<endl;
-					int otherContigId=end_Matches_Reverse[0];
-					vector<VERTEX_TYPE>otherContig=contigs[otherContigId];
-					VERTEX_TYPE vertex=reverseComplement_VERTEX(otherContig[otherContig.size()-1]);
-					vector<VERTEX_TYPE> newContig;
-
-					for(int u=0;u<(int)contig.size();u++){
-						VERTEX_TYPE otherVertex=contig[u];
-						if(otherVertex==vertex)
-							break;
-						newContig.push_back(otherVertex);
-						//(*m_cout)<<u<<" "<<idToWord(otherVertex,m_wordSize)<<endl;
-					}
-					bool correct=true;
-					int windowForJoin=0;
-					for(int u=otherContig.size()-1;u>=0;u--){
-						if(newContig.size()==0){
-							newContig.push_back(reverseComplement_VERTEX(otherContig[u]));
-							continue;
-						}
-						if((newContig.size()-1)>=0&&
-			!(m_data->get(newContig[newContig.size()-1]).hasChild(reverseComplement_VERTEX(otherContig[u])))){
-							correct=false;
-							break;
-						}
-
-						newContig.push_back(reverseComplement_VERTEX(otherContig[u]));
-						//(*m_cout)<<u<<" "<<idToWord(reverseComplement_VERTEX(otherContig[u]),m_wordSize)<<endl;
-						if(windowForJoin<=WINDOW_SIZE
-					&&!passFilter(&newContig,m_default_window,m_minimumCoverage_for_walk)){
-							correct=false;
-							break;
-						}
-						windowForJoin++;
-					}
-
-					if(correct&&addNewContig(&newContigs,&newContig,i,otherContigId,&contigsProcessed))
-						joiningOccured=true;
-				}
-			}
-
-			if(contigsProcessed.count(i)==0){
-				newContigs.push_back(contig);
-				contigsProcessed.insert(i);
-			}
-		}
-		(*m_cout)<<enhancedContigs.size()<<" / "<<enhancedContigs.size()<<endl;
-		(*m_cout)<<enhancedContigs.size()<<" -> "<<newContigs.size()<<endl;
-		enhancedContigs=newContigs;
-	}
-	return enhancedContigs;
-}
-
 VERTEX_TYPE DeBruijnAssembler::reverseComplement_VERTEX(VERTEX_TYPE a){
 	return wordId(reverseComplement(idToWord(a,m_wordSize)).c_str());
 }
 
-vector<int> DeBruijnAssembler::not_Processed(vector<int>contigs,set<int>processed,int self){
-	vector<int> out;
-	for(int i=0;i<(int)contigs.size();i++)
-		if(processed.count(contigs[i])==0&& contigs[i]!=self)
-			out.push_back(contigs[i]);
-	return out;
-}
 
-vector<vector<VERTEX_TYPE> >DeBruijnAssembler::Remove_Small_Contigs(vector<vector<VERTEX_TYPE> > contigs){
-	vector<vector<VERTEX_TYPE> > largeContigs;
-	for(int i=0;i<(int)contigs.size();i++){
-		int nucleotides=m_contig_paths[i].size()+m_wordSize-1;
-		if(nucleotides<m_minimumContigSize)
-			continue;
-		largeContigs.push_back(m_contig_paths[i]);
-	}
-	(*m_cout)<<"Remove_Small_Contigs] "<<contigs.size()<<" -> "<<largeContigs.size()<<endl;
-	(*m_cout)<<endl;
-	return largeContigs;
-}
-
-bool DeBruijnAssembler::addNewContig(vector<vector<VERTEX_TYPE> >*newContigs,vector<VERTEX_TYPE>*newContig,int currentContigId,int otherContigId,
-	set<int>*contigsProcessed){
-	bool isValid=true;
-	for(int u=0;u<(int)newContig->size()-1;u++){
-		if(!m_data->get(newContig->at(u)).hasChild(newContig->at(u+1))){
-			isValid=false;
-			//(*m_cout)<<"incorrect path"<<endl;
-			for(int y=0;y<(int)newContig->size()-1;y++){
-				//(*m_cout)<<idToWord(newContig->at(y),m_wordSize)<<" -> "<<idToWord(newContig->at(y+1),m_wordSize)<<endl;
-			}
-			break;
-		}
-	}
-	if(isValid){
-		newContigs->push_back(*newContig);
-		contigsProcessed->insert(currentContigId);
-		contigsProcessed->insert(otherContigId);
-		//(*m_cout)<<"Joining"<<endl;
-		return true;
-	}
-	return false;
-}
 
 
 void DeBruijnAssembler::setMinimumCoverage(string coverage){

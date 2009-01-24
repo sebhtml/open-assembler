@@ -19,7 +19,6 @@
 #include<cstdlib>
 #include<iostream>
 #include"Read.h"
-#include"SequenceData.h"
 #include"SequenceDataFull.h"
 #include"Loader.h"
 #include"DeBruijnAssembler.h"
