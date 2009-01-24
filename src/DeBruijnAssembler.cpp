@@ -519,7 +519,7 @@ VERTEX_TYPE DeBruijnAssembler::wordId(const char*a){
 
 string DeBruijnAssembler::idToWord(VERTEX_TYPE i,int wordSize){
 	string a="";
-	int maxSize=sizeof(long int)*8/2; // 32
+	int maxSize=sizeof(VERTEX_TYPE)*8/2; // 32
 	for(int p=0;p<wordSize;p++){
 		VERTEX_TYPE j=i;
 		for(int k=0;k<(maxSize-p-2);k++){

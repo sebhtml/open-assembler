@@ -109,7 +109,7 @@ public:
 	void setMinimumCoverage(string coverage);
 
 	static string reverseComplement(string a);
-	static unsigned long int wordId(const char*a);
+	static VERTEX_TYPE wordId(const char*a);
 	static string idToWord(VERTEX_TYPE i,int wordSize);
 	static char complement(char a);
 	static int m_WordSize;

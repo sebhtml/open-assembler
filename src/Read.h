@@ -27,7 +27,8 @@
  *  			for 32-bit machines, allows wordSize<=15
  */
 
-#define VERTEX_TYPE unsigned long int
+//#define VERTEX_TYPE unsigned long int
+#define VERTEX_TYPE uint32_t
 
 #include<string>
 #include<vector>

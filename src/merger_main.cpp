@@ -25,7 +25,7 @@
 #include"Loader.h"
 #include"DeBruijnAssembler.h"
 
-#define wordSize 21
+#define wordSize 15
 
 using namespace std;
 
