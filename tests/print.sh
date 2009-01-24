@@ -1,6 +1,6 @@
 for i in $(ls|grep D)
 do
 	echo $i
-	cat $i/Log.txt|ruby parse.rb
+	cat $i/Assembly.fa|grep '>'|wc -l
 	echo ""
 done

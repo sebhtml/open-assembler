@@ -743,6 +743,7 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 		//(*m_cout)<<idToWord(prefix,m_wordSize)<<endl;
 		int cumulativeCoverage=0;
 		vector<AnnotationElement>*annotations=m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1));
+		// TODO start with the smallest positions for a read.
 		for(int h=0;h<(int)annotations->size();h++){
 			if((*currentReadPositions).count(annotations->at(h).readId)==0){// add a read when it starts at its beginning...
 				if(cumulativeCoverage<m_minimumCoverage&&annotations->at(h).readPosition==0){ // add at most a given amount of "new reads" to avoid depletion
@@ -847,13 +848,14 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 	}
 
 	int best=-1;
+	double factor=1.2;
 	for(map<int,int>::iterator i=scores.begin();i!=scores.end();i++){
 		//(*m_cout)<<i->second<<endl;
 		bool isBest=true;
 		for(map<int,int>::iterator j=scores.begin();j!=scores.end();j++){
 			if(i->first==j->first)
 				continue;
-			if(i->second> 1.2* j->second){
+			if(i->second> factor*  j->second){
 			}else{
 				isBest=false;
 			}

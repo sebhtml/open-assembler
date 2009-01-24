@@ -51,7 +51,7 @@ int main(int argc,char*argv[]){
 	string assemblyDirectory="Assembly";
 	buffer<<" -assemblyDirectory   default: "<<assemblyDirectory<<endl;
 	buffer<<"                      description: the directory where files will be written."<<endl;
-	int wordSize=25;
+	int wordSize=21;
 	buffer<<" -wordSize            default: "<<wordSize<<" (maximum: 31)"<<endl;
 	buffer<<"                      description: the length of strings inside vertices, edges will be defined for words of length <wordSize>+1."<<endl;
 	string m_minimumCoverageParameter="auto";

@@ -25,7 +25,7 @@
 #include"Loader.h"
 #include"DeBruijnAssembler.h"
 
-#define wordSize 25
+#define wordSize 21
 
 using namespace std;
 
@@ -54,76 +54,82 @@ vector<string> merge(vector<string> contigSequences){
 		set<int> contigsDone;
 		cout<<"Merging"<<endl;
 		for(int i=0;i<contigSequences.size();i++){
+			set<int>otherContigs;
+			set<int>otherRevContigs;
 			for(int j=0;j<contigSequences[i].length();j++){
 				if(contigsDone.count(i)!=0)
 					break;
 				string word=contigSequences[i].substr(j,wordSize);
 				if(word.length()!=wordSize)
 					continue;
-				vector<int> otherContigs=indexOfWords[DeBruijnAssembler::wordId(word.c_str())];
-				vector<int> otherRevContigs=indexOfRevWords[DeBruijnAssembler::wordId(word.c_str())];
+				vector<int> otherContigs2=indexOfWords[DeBruijnAssembler::wordId(word.c_str())];
+				for(int k=0;k<otherContigs2.size();k++)
+					otherContigs.insert(otherContigs2[k]);
 
-				for(int matchContig=0;matchContig<otherRevContigs.size();matchContig++){
-					if(i!=otherRevContigs[matchContig]&&
-		contigSequences[i].length()<=contigSequences[otherRevContigs[matchContig]].length()
-		&&contigsDone.count(otherRevContigs[matchContig])==0 &&
-		contigsDone.count(i)==0){
-						cout<<"Possible match (Reverse Complement)"<<endl;
-						set<VERTEX_TYPE> otherIndex;
-						for(int k=0;k<contigSequences[otherRevContigs[matchContig]].length();k++){
-							string word=contigSequences[otherRevContigs[matchContig]].substr(k,wordSize);
-							if(word.length()!=wordSize)
-								continue;
-							otherIndex.insert(DeBruijnAssembler::wordId(word.c_str()));
-						}
-						int notFound=0;
-						for(int k=0;k<contigSequences[i].length();k++){
-							string word=DeBruijnAssembler::reverseComplement(contigSequences[i].substr(k,wordSize));
-							if(word.length()!=wordSize)
-								continue;
-							if(otherIndex.count(DeBruijnAssembler::wordId(word.c_str()))==0)
-								notFound++;
-						}
-						if(notFound<2*wordSize){
-							contigsDone.insert(i);
-							contigsDone.insert(otherRevContigs[matchContig]);
-							nextGeneration.push_back(contigSequences[otherRevContigs[matchContig]]);
-							cout<<"Merging (notFound="<<notFound<<")"<<endl;
-						}
-					}
-				}
-
-				for(int matchContig=0;matchContig<otherContigs.size();matchContig++){
-					if(i!=otherContigs[matchContig]&&
-		contigSequences[i].length()<=contigSequences[otherContigs[matchContig]].length()
-		&&contigsDone.count(otherContigs[matchContig])==0 &&
-		contigsDone.count(i)==0){
-						cout<<"Possible match (Foward)"<<endl;
-						set<VERTEX_TYPE> otherIndex;
-						for(int k=0;k<contigSequences[otherContigs[matchContig]].length();k++){
-							string word=contigSequences[otherContigs[matchContig]].substr(k,wordSize);
-							if(word.length()!=wordSize)
-								continue;
-							otherIndex.insert(DeBruijnAssembler::wordId(word.c_str()));
-						}
-						int notFound=0;
-						for(int k=0;k<contigSequences[i].length();k++){
-							string word=(contigSequences[i].substr(k,wordSize));
-							if(word.length()!=wordSize)
-								continue;
-							if(otherIndex.count(DeBruijnAssembler::wordId(word.c_str()))==0)
-								notFound++;
-						}
-						if(notFound<2*wordSize){
-							contigsDone.insert(i);
-							contigsDone.insert(otherContigs[matchContig]);
-							nextGeneration.push_back(contigSequences[otherContigs[matchContig]]);
-							cout<<"Merging (notFound="<<notFound<<")"<<endl;
-						}
-					}
-				}
-
+				vector<int> otherRevContigs2=indexOfRevWords[DeBruijnAssembler::wordId(word.c_str())];
+				for(int k=0;k<otherRevContigs2.size();k++)
+					otherRevContigs.insert(otherRevContigs2[k]);
 			}
+			for(set<int>::iterator matchContig=otherRevContigs.begin();matchContig!=otherRevContigs.end();matchContig++){
+				if(i!=*matchContig&&
+			contigSequences[i].length()<=contigSequences[*matchContig].length()
+			&&contigsDone.count(*matchContig)==0 &&
+			contigsDone.count(i)==0){
+					cout<<"Possible match (Reverse Complement)"<<endl;
+					set<VERTEX_TYPE> otherIndex;
+					for(int k=0;k<contigSequences[*matchContig].length();k++){
+						string word=contigSequences[*matchContig].substr(k,wordSize);
+						if(word.length()!=wordSize)
+							continue;
+						otherIndex.insert(DeBruijnAssembler::wordId(word.c_str()));
+					}
+					int notFound=0;
+					for(int k=0;k<contigSequences[i].length();k++){
+						string word=DeBruijnAssembler::reverseComplement(contigSequences[i].substr(k,wordSize));
+						if(word.length()!=wordSize)
+							continue;
+						if(otherIndex.count(DeBruijnAssembler::wordId(word.c_str()))==0)
+							notFound++;
+					}
+					if(notFound<2*wordSize){
+						contigsDone.insert(i);
+						contigsDone.insert(*matchContig);
+						nextGeneration.push_back(contigSequences[*matchContig]);
+						cout<<"Merging (notFound="<<notFound<<")"<<endl;
+					}
+				}
+			}
+
+			for(set<int>::iterator matchContig=otherContigs.begin();matchContig!=otherContigs.end();matchContig++){
+				if(i!=*matchContig&&
+			contigSequences[i].length()<=contigSequences[*matchContig].length()
+			&&contigsDone.count(*matchContig)==0 &&
+			contigsDone.count(i)==0){
+					cout<<"Possible match (Foward)"<<endl;
+					set<VERTEX_TYPE> otherIndex;
+					for(int k=0;k<contigSequences[*matchContig].length();k++){
+						string word=contigSequences[*matchContig].substr(k,wordSize);
+						if(word.length()!=wordSize)
+							continue;
+						otherIndex.insert(DeBruijnAssembler::wordId(word.c_str()));
+					}
+					int notFound=0;
+					for(int k=0;k<contigSequences[i].length();k++){
+						string word=(contigSequences[i].substr(k,wordSize));
+						if(word.length()!=wordSize)
+							continue;
+						if(otherIndex.count(DeBruijnAssembler::wordId(word.c_str()))==0)
+							notFound++;
+					}
+					if(notFound<2*wordSize){
+						contigsDone.insert(i);
+						contigsDone.insert(*matchContig);
+						nextGeneration.push_back(contigSequences[*matchContig]);
+						cout<<"Merging (notFound="<<notFound<<")"<<endl;
+					}
+				}
+			}
+
 		}
 
 		for(int i=0;i<contigSequences.size();i++){
