@@ -92,6 +92,7 @@ class DeBruijnAssembler{
 	vector<vector<VERTEX_TYPE> > Filter_Remove_Smaller_Duplicates_Cached(vector<vector<VERTEX_TYPE > > largeContigs);
 	void Walk_In_GRAPH();
 
+	vector<AnnotationElement>annotationsWithCurrent(vector<AnnotationElement>*elements,map<int,map<char,int> >*currentReadPositions);
 
 	void indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData,CustomMap<int>*solidMers);
 public:
