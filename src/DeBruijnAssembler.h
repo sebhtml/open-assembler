@@ -95,6 +95,9 @@ class DeBruijnAssembler{
 	vector<AnnotationElement>annotationsWithCurrent(vector<AnnotationElement>*elements,map<int,map<char,int> >*currentReadPositions);
 
 	void indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData,CustomMap<int>*solidMers);
+
+
+	vector<VERTEX_TYPE> nextVertices_OLD(vector<VERTEX_TYPE>*path,map<int,map<char,int> >*currentReadPositions);
 public:
 	DeBruijnAssembler(ostream*m_cout);
 	void setPairedInfo(string a);

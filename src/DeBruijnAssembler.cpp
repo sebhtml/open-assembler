@@ -577,7 +577,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	string walksRawFile=m_assemblyDirectory+"/RawWalks";
 	ifstream f(walksRawFile.c_str());
 
-	if(f){
+	if(f&&false){
 		(*m_cout)<<"Reading cached data from "<<walksRawFile<<endl;
 		int numberOfWalks;
 		f>>numberOfWalks;
@@ -597,6 +597,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	}else{
 		f.close();
 	}
+	(*m_cout)<<endl;
 	(*m_cout)<<"Collecting sources"<<endl;
 	vector<VERTEX_TYPE> withoutParents;
 	//for(MAP_TYPE<VERTEX_TYPE,MAP_TYPE<VERTEX_TYPE,vector<int> > >::iterator i=m_graph.begin();i!=m_graph.end();i++){
@@ -783,27 +784,22 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 			//(*m_cout)<<"Removing"<<endl;
 			prefixNextVertices=removeBubblesAndTips(prefixNextVertices,path,currentReadPositions);
 		}
+		if(prefixNextVertices.size()!=1){
+			(*m_cout)<<"Stopping criterion reached, break!. "<<prefixNextVertices.size()<<endl;
+			prefixNextVertices=removeBubblesAndTips(nextVertices_OLD(path,currentReadPositions),path,currentReadPositions);
+		}
 	}
 
 	VertexData dataStructure= (m_data->get(prefix));
 	vector<VERTEX_TYPE>children=dataStructure.getChildren(prefix);
 
 
-	//(*m_cout)<<"Prefix "<<idToWord(prefix,m_wordSize)<<" "<<children.size()<<endl;
+	(*m_cout)<<"Prefix "<<idToWord(prefix,m_wordSize)<<" "<<children.size()<<endl;
 	// add newSources
 	for(int j=0;j<(int)children.size();j++){
 		(*m_cout)<<"Adding "<<idToWord(children[j],m_wordSize)<<endl;
 		newSources->push_back(children[j]);
 	}
-
-
-
-	if(children.size()==0){
-		//(*m_cout)<<"DEAD END"<<endl;
-		return ;
-	}
-
-
 
 	return ;
 }
@@ -856,7 +852,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 
 	if(scores.size()==0){
 		vector<VERTEX_TYPE> output;
-		//(*m_cout)<<"Nothing scored."<<endl;
+		(*m_cout)<<"Nothing scored."<<endl;
 		//(*m_cout)<<children.size()<<" children"<<endl;
 		return output;
 	}
@@ -891,6 +887,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 		return output;
 	}
 	//(*m_cout)<<debugBuffer.str()<<endl;
+	(*m_cout)<<"IT failed."<<endl;
 	return children;
 }
 
@@ -976,5 +973,90 @@ vector<AnnotationElement>DeBruijnAssembler::annotationsWithCurrent(vector<Annota
 	for(map<int,AnnotationElement>::iterator i=minimumEncountered.begin();i!=minimumEncountered.end();i++)
 		output.push_back(i->second);
 	return output;
+
+}
+
+vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices_OLD(vector<VERTEX_TYPE>*path,map<int,map<char,int> >*currentReadPositions){
+
+	vector<VERTEX_TYPE> children=m_data->get(path->at(path->size()-1)).getChildren(path->at(path->size()-1));
+
+	// start when nothing is done yet
+	if(currentReadPositions->size()==0)
+		return children;
+
+	map<int,int > scores;
+	ostringstream debugBuffer;
+	//(*m_cout)<<"Children"<<endl;
+	for(int i=0;i<(int)children.size();i++){
+
+		//debugBuffer<<"Child "<<idToWord(children[i],m_wordSize)<<endl;
+		vector<AnnotationElement> thisEdgeData=annotationsWithCurrent(m_data->get(path->at(path->size()-1)).getAnnotations(children[i]),currentReadPositions);
+		for(int j=0;j<(int)thisEdgeData.size();j++){
+			uint32_t readId=thisEdgeData.at(j).readId;
+			if(
+				// the read is there in the path already
+				currentReadPositions->count(readId)>0
+				// the strand is available
+		&&		(*currentReadPositions)[readId].count(thisEdgeData.at(j).readStrand)>0
+				// the position is greater than the one in the database
+		&& 		(*currentReadPositions)[readId][thisEdgeData.at(j).readStrand] < thisEdgeData.at(j).readPosition
+			){
+					if(thisEdgeData.at(j).readPosition>scores[i])
+						scores[i]=thisEdgeData.at(j).readPosition;
+
+/*
+					debugBuffer<<m_sequenceData->at(readId)->getId()<<" "<<thisEdgeData->at(j).readStrand<<endl;
+
+					if(thisEdgeData->at(j).readStrand=='F')
+						debugBuffer<<m_sequenceData->at(readId)->getSeq()<<endl;
+					else
+						debugBuffer<<reverseComplement(m_sequenceData->at(readId)->getSeq())<<endl;
+
+					for(int h=0;h<thisEdgeData->at(j).readPosition;h++)
+						debugBuffer<<" ";
+					debugBuffer<<"*"<<endl;
+*/
+			}
+		}
+	}
+
+	if(scores.size()==0){
+		vector<VERTEX_TYPE> output;
+		//(*m_cout)<<"Nothing scored."<<endl;
+		//(*m_cout)<<children.size()<<" children"<<endl;
+		return output;
+	}
+
+	//(*m_cout)<<"Children"<<endl;
+
+	if(scores.size()==1){
+		vector<VERTEX_TYPE> output;
+		output.push_back(children[scores.begin()->first]);
+		return output;
+	}
+
+	int best=-1;
+	double factor=1;
+	for(map<int,int>::iterator i=scores.begin();i!=scores.end();i++){
+		//(*m_cout)<<i->second<<endl;
+		bool isBest=true;
+		for(map<int,int>::iterator j=scores.begin();j!=scores.end();j++){
+			if(i->first==j->first)
+				continue;
+			if(i->second> factor*  j->second){
+			}else{
+				isBest=false;
+			}
+		}
+		if(isBest)
+			best=i->first;
+	}
+	if(best!=-1){
+		vector<VERTEX_TYPE> output;
+		output.push_back(children[best]);
+		return output;
+	}
+	//(*m_cout)<<debugBuffer.str()<<endl;
+	return children;
 
 }
