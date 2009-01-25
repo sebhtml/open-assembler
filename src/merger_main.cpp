@@ -41,6 +41,8 @@ vector<string> merge(vector<string> contigSequences){
 		map<VERTEX_TYPE,vector<int> > indexOfRevWords;
 		cout<<"Indexing"<<endl;
 		for(int i=0;i<contigSequences.size();i++){
+			if(i%1000==0)
+				cout<<i<<" / "<<contigSequences.size()<<endl;
 			for(int j=0;j<contigSequences[i].length();j++){
 				string word=contigSequences[i].substr(j,wordSize);
 				if(word.length()!=wordSize)
@@ -50,10 +52,15 @@ vector<string> merge(vector<string> contigSequences){
 				indexOfRevWords[DeBruijnAssembler::wordId(revWord.c_str())].push_back(i);
 			}
 		}
+
+		cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
 		vector<string> nextGeneration;
 		set<int> contigsDone;
 		cout<<"Merging"<<endl;
 		for(int i=0;i<contigSequences.size();i++){
+
+			if(i%1000==0)
+				cout<<i<<" / "<<contigSequences.size()<<endl;
 			set<int>otherContigs;
 			set<int>otherRevContigs;
 			for(int j=0;j<contigSequences[i].length();j++){
@@ -132,6 +139,7 @@ vector<string> merge(vector<string> contigSequences){
 
 		}
 
+		cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
 		for(int i=0;i<contigSequences.size();i++){
 			if(contigsDone.count(i)==0)
 				nextGeneration.push_back(contigSequences[i]);
