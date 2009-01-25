@@ -151,14 +151,18 @@ int main(int argc,char*argv[]){
 		cout<<"dna_Merger contigs.fa mergedContig.fa"<<endl;
 		return 0;
 	}
+	int minimumContigSize=500;
 	string contigsFile=argv[1];
 	string outputFile=argv[2];
 	vector<Read*> contigs;
 	Loader loader(&cout);
 	loader.load(contigsFile,&contigs);
 	vector<string> contigSequences;
-	for(int i=0;i<contigs.size();i++)
+	for(int i=0;i<contigs.size();i++){
+		if(strlen(contigs[i]->getSeq())<minimumContigSize)
+			continue;
 		contigSequences.push_back(contigs[i]->getSeq());
+	}
 
 	contigSequences=merge(contigSequences);
 	cout<<endl;
