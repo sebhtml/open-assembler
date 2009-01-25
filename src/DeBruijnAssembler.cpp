@@ -714,11 +714,16 @@ vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> 
 			if((int)subPath.size()<2*m_wordSize&&nextVertices(&subPath,currentReadPositions).size()==0){
 				(*m_cout)<<"TIP Length: "<<subPath.size()<<endl;
 				(*m_cout)<<" From: "<<idToWord(vertices[i],m_wordSize)<<endl;
-				(*m_cout)<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
+				if(path->size()>=3){
+					(*m_cout)<<idToWord(path->at(path->size()-3),m_wordSize)<<endl;
+					(*m_cout)<<idToWord(path->at(path->size()-2),m_wordSize)<<endl;
+					(*m_cout)<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
+				}
 			}else{
 				withoutTips.push_back(vertices[i]);
 			}
 		}
+		(*m_cout)<<"Exiting"<<endl;
 		return withoutTips;
 	}
 	return vertices;
@@ -730,6 +735,7 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 
 	//(*m_cout)<<"Depth: "<<path->size()<<endl;
 	vector<VERTEX_TYPE> prefixNextVertices=removeBubblesAndTips(nextVertices(path,currentReadPositions),path,currentReadPositions);
+	int numberOfZeroAdded=0;
 	while(prefixNextVertices.size()==1){
 		vector<VERTEX_TYPE> children=removeBubblesAndTips(m_data->get(prefix).getChildren(prefix),path,currentReadPositions);
 		for(int i=0;i<(int)children.size();i++){
@@ -744,7 +750,6 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 		int cumulativeCoverage=0;
 		int added=0;
 		vector<AnnotationElement> annotations=annotationsWithCurrent(m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1)),currentReadPositions);
-		// TODO start with the smallest positions for a read.
 		for(int h=0;h<(int)annotations.size();h++){
 			if((*currentReadPositions).count(annotations.at(h).readId)==0){
 					// add a read when it starts at its beginning...
@@ -754,19 +759,30 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 					added++;
 				}
 			}else if(
-			(*currentReadPositions)[annotations.at(h).readId][annotations.at(h).readStrand] +1==  annotations.at(h).readPosition){
+			(*currentReadPositions)[annotations.at(h).readId][annotations.at(h).readStrand] +1 ==  annotations.at(h).readPosition){
 				(*currentReadPositions)[annotations.at(h).readId][annotations.at(h).readStrand]=annotations.at(h).readPosition;
 				added++;
 			}
 		}
 		//(*m_cout)<<"added "<<added<<endl;
+		if(added==0)
+			numberOfZeroAdded++;
+		else
+			numberOfZeroAdded=0;
+
+		if(numberOfZeroAdded>200){
+			break;
+		}
+
 		if(path->size()%1000==0){
-			(*m_cout)<<"Vertices: "<<path->size()<<endl;
+			//(*m_cout)<<"Vertices: "<<path->size()<<endl;
 		}
 		prefixNextVertices=nextVertices(path,currentReadPositions);
-
-		if(prefixNextVertices.size()>1)
+		//(*m_cout)<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
+		if(prefixNextVertices.size()>1){
+			//(*m_cout)<<"Removing"<<endl;
 			prefixNextVertices=removeBubblesAndTips(prefixNextVertices,path,currentReadPositions);
+		}
 	}
 
 	VertexData dataStructure= (m_data->get(prefix));
@@ -802,7 +818,6 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 	if(currentReadPositions->size()==0)
 		return children;
 
-
 	map<int,int > scores;
 	ostringstream debugBuffer;
 	//(*m_cout)<<"Children"<<endl;
@@ -818,7 +833,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 				// the strand is available
 		&&		(*currentReadPositions)[readId].count(thisEdgeData.at(j).readStrand)>0
 				// the position is greater than the one in the database
-		&& 		(*currentReadPositions)[readId][thisEdgeData.at(j).readStrand] +1== thisEdgeData.at(j).readPosition
+		&& 		(*currentReadPositions)[readId][thisEdgeData.at(j).readStrand] + 1== thisEdgeData.at(j).readPosition
 			){
 					if(thisEdgeData.at(j).readPosition>scores[i])
 						scores[i]=thisEdgeData.at(j).readPosition;
@@ -841,6 +856,8 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 
 	if(scores.size()==0){
 		vector<VERTEX_TYPE> output;
+		(*m_cout)<<"Nothing scored."<<endl;
+		(*m_cout)<<children.size()<<" children"<<endl;
 		return output;
 	}
 

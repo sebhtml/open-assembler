@@ -75,7 +75,7 @@ vector<string> merge(vector<string> contigSequences){
 			contigSequences[i].length()<=contigSequences[*matchContig].length()
 			&&contigsDone.count(*matchContig)==0 &&
 			contigsDone.count(i)==0){
-					cout<<"Possible match (Reverse Complement)"<<endl;
+					//cout<<"Possible match (Reverse Complement)"<<endl;
 					set<VERTEX_TYPE> otherIndex;
 					for(int k=0;k<contigSequences[*matchContig].length();k++){
 						string word=contigSequences[*matchContig].substr(k,wordSize);
@@ -105,7 +105,7 @@ vector<string> merge(vector<string> contigSequences){
 			contigSequences[i].length()<=contigSequences[*matchContig].length()
 			&&contigsDone.count(*matchContig)==0 &&
 			contigsDone.count(i)==0){
-					cout<<"Possible match (Foward)"<<endl;
+					//cout<<"Possible match (Foward)"<<endl;
 					set<VERTEX_TYPE> otherIndex;
 					for(int k=0;k<contigSequences[*matchContig].length();k++){
 						string word=contigSequences[*matchContig].substr(k,wordSize);

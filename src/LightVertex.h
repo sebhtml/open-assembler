@@ -1,7 +1,7 @@
 /*
 	dna: De Novo Assembler
     Copyright (C) 2008, 2009 Sébastien Boisvert
-	$Id$
+	$Id: splitter_main.cpp 11 2009-01-23 00:57:32Z boiseb01 $
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,34 +17,23 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _Read
-#define _Read
+#ifndef _LightVertex
+#define _LightVertex
 
-/*
- *  unsigned long int
- *			for 64-bit machines, allows wordSize<=31
- *  unsigned int
- *  			for 32-bit machines, allows wordSize<=15
- */
-
-//#define VERTEX_TYPE unsigned long int
-//#define VERTEX_TYPE uint32_t
-#define VERTEX_TYPE uint64_t
-
-#include<string>
+#include"Read.h"
 #include<vector>
 using namespace std;
 
-class Read{
-	char*m_id;
-	char*m_sequence;
+class LightVertex{
+	uint8_t m_children;
+	uint32_t m_color;
 public:
-	Read(const char*id,const char*sequence);
-	char*getId();
-	~Read();
-	char*getSeq();
-	vector<VERTEX_TYPE>getHighQualityMers(int wordSize);
-	bool isValidDNA(string*x);
+	LightVertex();
+	vector<VERTEX_TYPE> getChildren(VERTEX_TYPE prefix,int wordSize);
+	void addChild(VERTEX_TYPE suffix,int wordSize);
+	void setColor(uint32_t c);
+	uint32_t getColor();
 };
 
 #endif
+
