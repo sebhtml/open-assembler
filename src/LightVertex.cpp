@@ -58,13 +58,13 @@ void LightVertex::addChild(VERTEX_TYPE suffix,int wordSize){
 	char a=v[wordSize-1];
 	uint8_t toAdd=1;
 	if(a=='A'){
-		toAdd<<0;
+		toAdd=toAdd<<0;
 	}else if(a=='T'){
-		toAdd<<1;
+		toAdd=toAdd<<1;
 	}else if(a=='C'){
-		toAdd<<2;
+		toAdd=toAdd<<2;
 	}else if(a=='G'){
-		toAdd<<3;
+		toAdd=toAdd<<3;
 	}
 	m_children|=toAdd;
 }
@@ -109,13 +109,13 @@ void LightVertex::addParent(VERTEX_TYPE parent,int wordSize){
 	char a=v[0];
 	uint8_t toAdd=1;
 	if(a=='A'){
-		toAdd<<0;
+		toAdd=toAdd<<0;
 	}else if(a=='T'){
-		toAdd<<1;
+		toAdd=toAdd<<1;
 	}else if(a=='C'){
-		toAdd<<2;
+		toAdd=toAdd<<2;
 	}else if(a=='G'){
-		toAdd<<3;
+		toAdd=toAdd<<3;
 	}
 	m_parents|=toAdd;
 }

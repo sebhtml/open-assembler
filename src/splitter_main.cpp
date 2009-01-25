@@ -18,6 +18,7 @@
 */
 
 #include"CustomMap.hpp"
+#include<sstream>
 #include"LightVertex.h"
 #include<vector>
 #include"DeBruijnAssembler.h"
@@ -30,13 +31,26 @@
 using namespace std;
 
 void applyColor(VERTEX_TYPE v,CustomMap<LightVertex>*graph,int color,int wordSize){
-	cout<<"Coloring "<<v <<" "<<color<<endl;
 	graph->get(v).setColor(color);
 	vector<VERTEX_TYPE>parents=graph->get(v).getParents(v,wordSize);
 	vector<VERTEX_TYPE>children=graph->get(v).getChildren(v,wordSize);
+
+	//cout<<DeBruijnAssembler::idToWord(v,wordSize)<<"    "<<color<<endl;
 	//cout<<parents.size()<<" parents"<<endl;
-	//cout<<children.size()<<" children"<<endl;
 	for(int k=0;k<parents.size();k++){
+		//cout<<DeBruijnAssembler::idToWord(parents[k],wordSize)<<endl;
+	}
+	//cout<<children.size()<<" children"<<endl;
+
+	for(int k=0;k<children.size();k++){
+		//cout<<DeBruijnAssembler::idToWord(children[k],wordSize)<<endl;
+	}
+	if(parents.size()==0&&children.size()==0){
+		cout<<DeBruijnAssembler::idToWord(v,wordSize)<<endl;
+		cout<<"ERROR"<<endl;
+	}
+	for(int k=0;k<parents.size();k++){
+		
 		if(graph->get(parents[k]).getColor()==color)
 			continue;
 		applyColor(parents[k],graph,color,wordSize);
@@ -163,6 +177,7 @@ int main(int argc,char*argv[]){
 	}
 
 	CustomMap<LightVertex> graphWithoutData(buckets);
+	int edges=0;
 	for(CustomMap<int>::iterator i=wordCount.begin();i!=wordCount.end();i++){
 		if(i.second()>=m_minimumCoverage){
 			VERTEX_TYPE mer=i.first();
@@ -181,9 +196,10 @@ int main(int argc,char*argv[]){
 			}
 			graphWithoutData.get(prefixInteger).addChild(suffixInteger,wordSize);
 			graphWithoutData.get(suffixInteger).addParent(prefixInteger,wordSize);
+			edges++;
 		}
 	}
-	
+	cout<<"Total: "<<edges<<" edges."<<endl;
 	// find connected components, but how?
 	int color=1;
 	for(CustomMap<LightVertex>::iterator i=graphWithoutData.begin();i!=graphWithoutData.end();i++){
@@ -192,7 +208,64 @@ int main(int argc,char*argv[]){
 		applyColor(i.first(),&graphWithoutData,color,wordSize);
 		color++;
 	}
+	color--;
 	cout<<color<<" colors"<<endl;
+	map<int,int> colorSizes;
+	for(CustomMap<LightVertex>::iterator i=graphWithoutData.begin();i!=graphWithoutData.end();i++){
+		colorSizes[i.second().getColor()]++;
+	}
+	for(map<int,int>::iterator i=colorSizes.begin();i!=colorSizes.end();i++){
+		cout<<i->first<<" "<<i->second<<endl;
+	}
+	cout<<"Creating "<<outputDirectory<<endl;
+	string command = "mkdir -p "+outputDirectory;
+	system(command.c_str());
+	for(int i=1;i<=color;i++){
+		ostringstream command;
+		command<<"mkdir -p "<<outputDirectory<<"/";
+		command<<i;
+		system(command.str().c_str());
+	}
+
+	map<string,FILE*> fileStreams;
+
+	for(int i=0;i<inputFiles.size();i++){
+		vector<Read*> reads;
+		Loader loader(&cout);
+		loader.load(inputFiles[i],&reads);
+		for(int j=0;j<reads.size();j++){
+			string sequence=reads.at(j)->getSeq();
+			string word=sequence.substr(0,wordSize);
+			if(!reads.at(j)->isValidDNA(&word))
+				continue;
+			VERTEX_TYPE mer=DeBruijnAssembler::wordId(sequence.substr(0,wordSize).c_str());
+			VERTEX_TYPE revMer=DeBruijnAssembler::wordId(DeBruijnAssembler::reverseComplement(DeBruijnAssembler::idToWord(mer,wordSize)).c_str());
+			if(graphWithoutData.find(mer)){
+				ostringstream file;
+				file<<outputDirectory<<"/"<<graphWithoutData.get(mer).getColor()<<"/"<<inputFiles[i]<<".fasta";
+				if(fileStreams.count(file.str())==0){
+					//cout<<"adding "<<file.str()<<endl;
+					FILE*fp=fopen(file.str().c_str(),"w+");
+					fileStreams[file.str()]=fp;
+				}
+				fprintf(fileStreams[file.str()],"%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
+			}
+			if(graphWithoutData.find(revMer)){
+				ostringstream file;
+				file<<outputDirectory<<"/"<<graphWithoutData.get(revMer).getColor()<<"/"<<inputFiles[i]<<".fasta";
+				if(fileStreams.count(file.str())==0){
+					FILE*fp=fopen(file.str().c_str(),"w+");
+					fileStreams[file.str()]=fp;
+				}
+				fprintf(fileStreams[file.str()],"%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
+			}
+		}
+	}
+
+	for(map<string,FILE*>::iterator i=fileStreams.begin();i!=fileStreams.end();i++){
+		fclose(i->second);
+	}
+
 	return 0;
 }
 

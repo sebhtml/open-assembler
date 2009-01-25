@@ -713,17 +713,17 @@ vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> 
 			vector<VERTEX_TYPE> subPath=getWalk(vertices[i],path,maxSize,currentReadPositions);
 			if((int)subPath.size()<2*m_wordSize&&nextVertices(&subPath,currentReadPositions).size()==0){
 				(*m_cout)<<"TIP Length: "<<subPath.size()<<endl;
-				(*m_cout)<<" From: "<<idToWord(vertices[i],m_wordSize)<<endl;
+				//(*m_cout)<<" From: "<<idToWord(vertices[i],m_wordSize)<<endl;
 				if(path->size()>=3){
-					(*m_cout)<<idToWord(path->at(path->size()-3),m_wordSize)<<endl;
-					(*m_cout)<<idToWord(path->at(path->size()-2),m_wordSize)<<endl;
-					(*m_cout)<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
+					//(*m_cout)<<idToWord(path->at(path->size()-3),m_wordSize)<<endl;
+					//(*m_cout)<<idToWord(path->at(path->size()-2),m_wordSize)<<endl;
+					//(*m_cout)<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
 				}
 			}else{
 				withoutTips.push_back(vertices[i]);
 			}
 		}
-		(*m_cout)<<"Exiting"<<endl;
+		//(*m_cout)<<"Exiting"<<endl;
 		return withoutTips;
 	}
 	return vertices;
@@ -856,8 +856,8 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 
 	if(scores.size()==0){
 		vector<VERTEX_TYPE> output;
-		(*m_cout)<<"Nothing scored."<<endl;
-		(*m_cout)<<children.size()<<" children"<<endl;
+		//(*m_cout)<<"Nothing scored."<<endl;
+		//(*m_cout)<<children.size()<<" children"<<endl;
 		return output;
 	}
 

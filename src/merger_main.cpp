@@ -25,7 +25,7 @@
 #include"Loader.h"
 #include"DeBruijnAssembler.h"
 
-#define wordSize 15
+#define wordSize 21
 
 using namespace std;
 
@@ -43,7 +43,7 @@ vector<string> merge(vector<string> contigSequences){
 		for(int i=0;i<contigSequences.size();i++){
 			if(i%1000==0)
 				cout<<i<<" / "<<contigSequences.size()<<endl;
-			for(int j=0;j<contigSequences[i].length();j++){
+			for(int j=0;j<contigSequences[i].length();j+=wordSize){
 				string word=contigSequences[i].substr(j,wordSize);
 				if(word.length()!=wordSize)
 					continue;
@@ -52,20 +52,20 @@ vector<string> merge(vector<string> contigSequences){
 				indexOfRevWords[DeBruijnAssembler::wordId(revWord.c_str())].push_back(i);
 			}
 		}
-
+		int maxNotFound=2*wordSize;
 		cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
 		vector<string> nextGeneration;
 		set<int> contigsDone;
 		cout<<"Merging"<<endl;
 		for(int i=0;i<contigSequences.size();i++){
-
-			if(i%1000==0)
+			if(i%100==0)
 				cout<<i<<" / "<<contigSequences.size()<<endl;
+
+			if(contigsDone.count(i)!=0)
+				continue;
 			set<int>otherContigs;
 			set<int>otherRevContigs;
-			for(int j=0;j<contigSequences[i].length();j++){
-				if(contigsDone.count(i)!=0)
-					break;
+			for(int j=0;j<contigSequences[i].length();j+=7){
 				string word=contigSequences[i].substr(j,wordSize);
 				if(word.length()!=wordSize)
 					continue;
@@ -92,17 +92,19 @@ vector<string> merge(vector<string> contigSequences){
 					}
 					int notFound=0;
 					for(int k=0;k<contigSequences[i].length();k++){
+						if(notFound>maxNotFound)
+							break;
 						string word=DeBruijnAssembler::reverseComplement(contigSequences[i].substr(k,wordSize));
 						if(word.length()!=wordSize)
 							continue;
 						if(otherIndex.count(DeBruijnAssembler::wordId(word.c_str()))==0)
 							notFound++;
 					}
-					if(notFound<2*wordSize){
+					if(notFound<=maxNotFound){
 						contigsDone.insert(i);
 						contigsDone.insert(*matchContig);
 						nextGeneration.push_back(contigSequences[*matchContig]);
-						cout<<"Merging (notFound="<<notFound<<")"<<endl;
+						//cout<<"Merging (notFound="<<notFound<<")"<<endl;
 					}
 				}
 			}
@@ -122,17 +124,19 @@ vector<string> merge(vector<string> contigSequences){
 					}
 					int notFound=0;
 					for(int k=0;k<contigSequences[i].length();k++){
+						if(notFound>maxNotFound)
+							break;
 						string word=(contigSequences[i].substr(k,wordSize));
 						if(word.length()!=wordSize)
 							continue;
 						if(otherIndex.count(DeBruijnAssembler::wordId(word.c_str()))==0)
 							notFound++;
 					}
-					if(notFound<2*wordSize){
+					if(notFound<=maxNotFound){
 						contigsDone.insert(i);
 						contigsDone.insert(*matchContig);
 						nextGeneration.push_back(contigSequences[*matchContig]);
-						cout<<"Merging (notFound="<<notFound<<")"<<endl;
+						//cout<<"Merging (notFound="<<notFound<<")"<<endl;
 					}
 				}
 			}
