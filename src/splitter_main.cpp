@@ -31,6 +31,7 @@
 using namespace std;
 
 void applyColor(VERTEX_TYPE v,CustomMap<LightVertex>*graph,int color,int wordSize){
+	cout<<color<<endl;
 	graph->get(v).setColor(color);
 	vector<VERTEX_TYPE>parents=graph->get(v).getParents(v,wordSize);
 	vector<VERTEX_TYPE>children=graph->get(v).getChildren(v,wordSize);
@@ -95,7 +96,10 @@ int main(int argc,char*argv[]){
 			inputFiles.push_back(argv[i]);
 		}
 	}
-
+	if(inputFiles.size()==0){
+		cout<<"No files provided."<<endl;
+		return 0;
+	}
 	CustomMap<int> wordCount(buckets);
 	
 	for(int i=0;i<inputFiles.size();i++){

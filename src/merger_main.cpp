@@ -65,7 +65,7 @@ vector<string> merge(vector<string> contigSequences){
 				continue;
 			set<int>otherContigs;
 			set<int>otherRevContigs;
-			for(int j=0;j<contigSequences[i].length();j+=7){
+			for(int j=contigSequences[i].length()/2-3*wordSize;j<contigSequences[i].length()/2+3*wordSize;j+=1){
 				string word=contigSequences[i].substr(j,wordSize);
 				if(word.length()!=wordSize)
 					continue;
@@ -132,6 +132,7 @@ vector<string> merge(vector<string> contigSequences){
 						if(otherIndex.count(DeBruijnAssembler::wordId(word.c_str()))==0)
 							notFound++;
 					}
+					//cout<<"Not found"<<endl;
 					if(notFound<=maxNotFound){
 						contigsDone.insert(i);
 						contigsDone.insert(*matchContig);

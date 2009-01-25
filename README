@@ -18,10 +18,14 @@ ulimit -v  230000000 # in kB
 2. build graph without annotations
 3. find connected parts
 4. for each of them
-	write a annotated graph file
+	quality analysis
+	build graph, with annotations
+	assemble graph
+	merge contigs
+	assemble contigs
+	merge meta-contigs
 
-1. process each annotated graph file
-
-1. merge contigs
+assemble meta-contigs
+merge meta-contigs
 
 1. scaffolding
