@@ -23,13 +23,14 @@
 
 LightVertex::LightVertex(){
 	m_children=0;
+	m_parents=0;
 	m_color=-1;
 }
 
 vector<VERTEX_TYPE> LightVertex::getChildren(VERTEX_TYPE prefix,int wordSize){
 	vector<VERTEX_TYPE> output;
 	string self=DeBruijnAssembler::idToWord(prefix,wordSize);
-	string thePart=self.substr(1);
+	string thePart=self.substr(1,wordSize-1);
 	for(int i=0;i<4;i++){
 		//     7 6 5 4 3 2 1 0
 		
@@ -76,3 +77,47 @@ void LightVertex::setColor(uint32_t c){
 uint32_t LightVertex::getColor(){
 	return m_color;
 }
+
+vector<VERTEX_TYPE> LightVertex::getParents(VERTEX_TYPE prefix,int wordSize){
+	vector<VERTEX_TYPE> output;
+	string self=DeBruijnAssembler::idToWord(prefix,wordSize);
+	string thePart=self.substr(0,wordSize-1);
+	for(int i=0;i<4;i++){
+		//     7 6 5 4 3 2 1 0
+		
+		int v=((m_parents<<(7-i))>>7);
+		if(v==1){
+			char a='A';
+			if(i==0){
+				a='A';
+			}else if(i==1){
+				a='T';
+			}else if(i==2){
+				a='C';
+			}else if(i==3){
+				a='G';
+			}
+			string b=a+thePart;
+			output.push_back(DeBruijnAssembler::wordId(b.c_str()));
+		}
+	}
+	return output;
+}
+
+void LightVertex::addParent(VERTEX_TYPE parent,int wordSize){
+	string v=DeBruijnAssembler::idToWord(parent,wordSize);
+	char a=v[0];
+	uint8_t toAdd=1;
+	if(a=='A'){
+		toAdd<<0;
+	}else if(a=='T'){
+		toAdd<<1;
+	}else if(a=='C'){
+		toAdd<<2;
+	}else if(a=='G'){
+		toAdd<<3;
+	}
+	m_parents|=toAdd;
+}
+
+

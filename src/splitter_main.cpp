@@ -29,6 +29,26 @@
 #include<iostream>
 using namespace std;
 
+void applyColor(VERTEX_TYPE v,CustomMap<LightVertex>*graph,int color,int wordSize){
+	cout<<"Coloring "<<v <<" "<<color<<endl;
+	graph->get(v).setColor(color);
+	vector<VERTEX_TYPE>parents=graph->get(v).getParents(v,wordSize);
+	vector<VERTEX_TYPE>children=graph->get(v).getChildren(v,wordSize);
+	//cout<<parents.size()<<" parents"<<endl;
+	//cout<<children.size()<<" children"<<endl;
+	for(int k=0;k<parents.size();k++){
+		if(graph->get(parents[k]).getColor()==color)
+			continue;
+		applyColor(parents[k],graph,color,wordSize);
+	}
+	
+	for(int k=0;k<children.size();k++){
+		if(graph->get(children[k]).getColor()==color)
+			continue;
+		applyColor(children[k],graph,color,wordSize);
+	}
+}
+
 int main(int argc,char*argv[]){
 	cout<<"usage"<<endl;
 	cout<<"dna_DeBruijnSplitter [-outputDirectory parts] [-wordSize 21] [-buckets 100000000] [-minimumCoverage auto] <sequence files>"<<endl;
@@ -155,14 +175,24 @@ int main(int argc,char*argv[]){
 				LightVertex vertex;
 				graphWithoutData.add(prefixInteger,vertex);
 			}
+			if(!graphWithoutData.find(suffixInteger)){
+				LightVertex vertex;
+				graphWithoutData.add(suffixInteger,vertex);
+			}
 			graphWithoutData.get(prefixInteger).addChild(suffixInteger,wordSize);
+			graphWithoutData.get(suffixInteger).addParent(prefixInteger,wordSize);
 		}
 	}
 	
 	// find connected components, but how?
+	int color=1;
 	for(CustomMap<LightVertex>::iterator i=graphWithoutData.begin();i!=graphWithoutData.end();i++){
+		if(graphWithoutData.get(i.first()).getColor()!=-1)
+			continue;
+		applyColor(i.first(),&graphWithoutData,color,wordSize);
+		color++;
 	}
-	
+	cout<<color<<" colors"<<endl;
 	return 0;
 }
 

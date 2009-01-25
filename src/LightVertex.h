@@ -26,11 +26,14 @@ using namespace std;
 
 class LightVertex{
 	uint8_t m_children;
+	uint8_t m_parents;
 	uint32_t m_color;
 public:
 	LightVertex();
 	vector<VERTEX_TYPE> getChildren(VERTEX_TYPE prefix,int wordSize);
+	vector<VERTEX_TYPE> getParents(VERTEX_TYPE prefix,int wordSize);
 	void addChild(VERTEX_TYPE suffix,int wordSize);
+	void addParent(VERTEX_TYPE v,int wordSize);
 	void setColor(uint32_t c);
 	uint32_t getColor();
 };
