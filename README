@@ -29,3 +29,12 @@ assemble meta-contigs
 merge meta-contigs
 
 1. scaffolding
+
+An example of commands:
+
+dna_DeBruijnAssembler -assemblyDirectory test file1.fasta fileA.fasta file3.fastq file4.sff 
+cd test
+dna_Merger Contigs.fa fasta.contigs 
+tarchive2amos -s fasta.contigs -o amos
+minimus amos            
+bambus

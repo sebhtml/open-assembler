@@ -633,6 +633,8 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			map<int,map<char,int> >currentReadPositions;
 			contig_From_SINGLE(&currentReadPositions,&path,&newSources);
 			m_cout<<"Vertices: "<<path.size()<<""<<endl;
+			if(path.size()<=2)
+				continue;
 			m_contig_paths.push_back(path);
 		}
 		sources=newSources;
@@ -751,17 +753,21 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 		int cumulativeCoverage=0;
 		int added=0;
 		vector<AnnotationElement> annotations=annotationsWithCurrent(m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1)),currentReadPositions);
+		//(*m_cout)<<"Threading.. reads "<<endl;
 		for(int h=0;h<(int)annotations.size();h++){
 			if((*currentReadPositions).count(annotations.at(h).readId)==0){
 					// add a read when it starts at its beginning...
-				if(cumulativeCoverage<m_minimumCoverage&&annotations.at(h).readPosition==0){ // add at most a given amount of "new reads" to avoid depletion
+				if(cumulativeCoverage<=m_minimumCoverage&&annotations.at(h).readPosition==0){ // add at most a given amount of "new reads" to avoid depletion
 					(*currentReadPositions)[annotations.at(h).readId][annotations.at(h).readStrand]=annotations.at(h).readPosition;
+					//(*m_cout)<<path->size()<<" "<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
+					//(*m_cout)<<"Adding read "<<annotations.at(h).readId<<" "<<annotations.at(h).readStrand<<" "<<annotations.at(h).readPosition<<endl;
 					cumulativeCoverage++;
 					added++;
 				}
 			}else if(
 			(*currentReadPositions)[annotations.at(h).readId][annotations.at(h).readStrand] +1 ==  annotations.at(h).readPosition){
 				(*currentReadPositions)[annotations.at(h).readId][annotations.at(h).readStrand]=annotations.at(h).readPosition;
+				//(*m_cout)<<annotations.at(h).readId<<" "<<annotations.at(h).readStrand<<" "<<annotations.at(h).readPosition<<endl;
 				added++;
 			}
 		}
@@ -771,7 +777,7 @@ void DeBruijnAssembler::contig_From_SINGLE(map<int,map<char,int> >*currentReadPo
 		else
 			numberOfZeroAdded=0;
 
-		if(numberOfZeroAdded>200){
+		if(numberOfZeroAdded>100){
 			break;
 		}
 
@@ -831,7 +837,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 				// the position is greater than the one in the database
 		&& 		(*currentReadPositions)[readId][thisEdgeData.at(j).readStrand] + 1== thisEdgeData.at(j).readPosition
 			){
-					if(thisEdgeData.at(j).readPosition>scores[i])
+					if(thisEdgeData.at(j).readPosition>=scores[i])
 						scores[i]=thisEdgeData.at(j).readPosition;
 
 /*
@@ -852,7 +858,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 
 	if(scores.size()==0){
 		vector<VERTEX_TYPE> output;
-		(*m_cout)<<"Nothing scored."<<endl;
+		//(*m_cout)<<"Nothing scored."<<endl;
 		//(*m_cout)<<children.size()<<" children"<<endl;
 		return output;
 	}

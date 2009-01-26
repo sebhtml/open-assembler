@@ -29,6 +29,108 @@
 
 using namespace std;
 
+vector<string> overlapper(vector<string> contigSequences){
+	bool reducing=true;
+	cout<<contigSequences.size()<<" contigs"<<endl;
+	int round=1;
+	while(reducing){
+		cout<<endl;
+		cout<<"Round: "<<round<<endl;
+		round++;
+		map<VERTEX_TYPE,vector<int> > indexOfWords;
+		map<VERTEX_TYPE,vector<int> > indexOfRevWords;
+		cout<<"Indexing"<<endl;
+		for(int i=0;i<contigSequences.size();i++){
+			if(i%1000==0)
+				cout<<i<<" / "<<contigSequences.size()<<endl;
+			for(int j=0;j<contigSequences[i].length();j+=wordSize){
+				string word=contigSequences[i].substr(j,wordSize);
+				if(word.length()!=wordSize)
+					continue;
+				string revWord=DeBruijnAssembler::reverseComplement(word);
+				indexOfWords[DeBruijnAssembler::wordId(word.c_str())].push_back(i);
+				indexOfRevWords[DeBruijnAssembler::wordId(revWord.c_str())].push_back(i);
+			}
+		}
+		cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
+		vector<string> nextGeneration;
+		set<int> contigsDone;
+		cout<<"Merging"<<endl;
+		for(int i=0;i<contigSequences.size();i++){
+			if(i%100==0)
+				cout<<i<<" / "<<contigSequences.size()<<endl;
+
+			if(contigsDone.count(i)!=0)
+				continue;
+
+			// case 1: 
+			//
+			//       -------------------------------------------->       current contig
+			//       <--------------------------------------------
+			//
+			//       					-------------------------------------->
+			//       					<-------------------------------------- other contig
+
+			VERTEX_TYPE seed=DeBruijnAssembler::wordId(contigSequences[i].substr(contigSequences[i].length()-wordSize,wordSize).c_str());
+			vector<int> otherContigs=indexOfRevWords[seed];
+			if(otherContigs.size()==1&&contigsDone.count(otherContigs[0])==0){
+				int numberOfMersFound=0;
+				int numberOfMersNotFound=0;
+				set<VERTEX_TYPE> currentIndex;
+				for(int j=0;j<contigSequences[i].length();j++){
+					string word=contigSequences[i].substr(j,wordSize);
+					if(word.length()!=wordSize)
+						continue;
+					currentIndex.insert(DeBruijnAssembler::wordId(word.c_str()));
+				}
+				for(int j=0;j<contigSequences[otherContigs[0]].length();j++){
+					string word=contigSequences[otherContigs[0]].substr(j,wordSize);
+					if(word.length()!=wordSize)
+						continue;
+					string revWord=DeBruijnAssembler::reverseComplement(word);
+					VERTEX_TYPE theSeed=DeBruijnAssembler::wordId(revWord.c_str());
+					if(theSeed==seed){
+						numberOfMersFound++;
+						break;
+					}else if(currentIndex.count(theSeed)>0){
+						numberOfMersFound++;
+					}else{
+						numberOfMersNotFound++;
+					}
+				}
+				if(numberOfMersFound>numberOfMersNotFound){
+					ostringstream newSequence;
+					string firstToWatch=DeBruijnAssembler::reverseComplement(contigSequences[otherContigs[0]].substr(0,wordSize));
+					for(int j=0;j<contigSequences[i].length();j++){
+						string word=contigSequences[i].substr(j,wordSize);
+						if(word==firstToWatch)
+							break;
+						newSequence<< contigSequences[i][j];
+					}
+					newSequence<< DeBruijnAssembler::reverseComplement(contigSequences[otherContigs[0]]);
+					nextGeneration.push_back(newSequence.str());
+					contigsDone.insert(i);
+					contigsDone.insert(otherContigs[0]);
+					cout<<"Overlap"<<endl;
+				}
+			}
+
+		}
+
+		cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
+		for(int i=0;i<contigSequences.size();i++){
+			if(contigsDone.count(i)==0)
+				nextGeneration.push_back(contigSequences[i]);
+		}
+
+		reducing=!(nextGeneration.size()==contigSequences.size());
+		contigSequences=nextGeneration;
+		cout<<contigSequences.size()<<" contigs"<<endl;
+	}
+	return contigSequences;
+
+}
+
 vector<string> merge(vector<string> contigSequences){
 	bool reducing=true;
 	cout<<contigSequences.size()<<" contigs"<<endl;
@@ -178,6 +280,7 @@ int main(int argc,char*argv[]){
 	}
 
 	contigSequences=merge(contigSequences);
+	//contigSequences=overlapper(contigSequences);
 	cout<<endl;
 
 	ofstream f(outputFile.c_str());
