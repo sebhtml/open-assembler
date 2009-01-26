@@ -155,6 +155,7 @@ vector<string> merge(vector<string> contigSequences){
 			}
 		}
 		int maxNotFound=2*wordSize;
+		maxNotFound=0;
 		cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
 		vector<string> nextGeneration;
 		set<int> contigsDone;

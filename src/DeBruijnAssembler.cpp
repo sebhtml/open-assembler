@@ -1042,7 +1042,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices_OLD(vector<VERTEX_TYPE>*path
 	}
 
 	int best=-1;
-	double factor=1;
+	double factor=1.2;
 	for(map<int,int>::iterator i=scores.begin();i!=scores.end();i++){
 		//(*m_cout)<<i->second<<endl;
 		bool isBest=true;
