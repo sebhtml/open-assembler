@@ -36,8 +36,12 @@ void Loader::load(string file,vector<Read*>*reads){
 	if(file.substr(file.length()-4,4)==".sff"){
 		(*m_cout)<<"Format: SFF"<<endl;
 		SffLoader sffLoader(m_cout);
+		int num=reads->size();
 		sffLoader.load(file,reads);
+		int num2=reads->size()-num;
 		m_bases=sffLoader.getBases();
+		(*m_cout)<<num2<<" reads"<<endl;
+		(*m_cout)<<m_bases<<" bases"<<endl;
 		return;
 	}
 

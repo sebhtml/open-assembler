@@ -21,6 +21,7 @@
 #include<fstream>
 #include<sstream>
 #include"SffLoader.h"
+#include"Loader.h"
 #include<iostream>
 #include<vector>
 #include"DeBruijnAssembler.h"
@@ -36,8 +37,10 @@ int main(int argc,char*argv[]){
 	}
 	vector<Read*> reads;
 	string file=argv[1];
-	SffLoader loader(&cout);
+	cout<<"Loading file"<<endl;
+	Loader loader(&cout);
 	loader.load(file,&reads);
+	int num2=reads.size();
 	string standardReads=file+"_normal.fasta";
 	string paired1=file+"_paired_2.fasta";
 	string paired2=file+"_paired_1.fasta";
@@ -97,6 +100,8 @@ int main(int argc,char*argv[]){
 	cout<<"Normal: "<<normal<<endl;
 	cout<<"FLX Linker: "<<flxLinker<<endl;
 	cout<<"Titanium Linker: "<<titaniumLinker<<endl;
+
+	(cout)<<file<<"\t"<<num2<<"\t"<<loader.getBases()<<"\t"<<flxLinker<<endl;
 	if(standard!=NULL){
 		standard->close();
 		delete standard;
@@ -115,5 +120,6 @@ int main(int argc,char*argv[]){
 		right=NULL;
 		cout<<"Wrote "<<paired2<<endl;
 	}
+	cout<<endl;
 	return 0;
 }
