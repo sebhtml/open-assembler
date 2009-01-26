@@ -155,7 +155,7 @@ vector<string> merge(vector<string> contigSequences){
 			}
 		}
 		int maxNotFound=2*wordSize;
-		maxNotFound=0;
+		//maxNotFound=0;
 		cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
 		vector<string> nextGeneration;
 		set<int> contigsDone;
@@ -275,7 +275,7 @@ int main(int argc,char*argv[]){
 	loader.load(contigsFile,&contigs);
 	vector<string> contigSequences;
 	for(int i=0;i<contigs.size();i++){
-		if(strlen(contigs[i]->getSeq())<minimumContigSize)
+		if(false&&strlen(contigs[i]->getSeq())<minimumContigSize)
 			continue;
 		contigSequences.push_back(contigs[i]->getSeq());
 	}

@@ -990,6 +990,10 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices_OLD(vector<VERTEX_TYPE>*path
 	if(currentReadPositions->size()==0)
 		return children;
 
+	// make it fast.
+	if(children.size()==1)
+		return children;
+
 	map<int,int > scores;
 	ostringstream debugBuffer;
 	//(*m_cout)<<"Children"<<endl;
