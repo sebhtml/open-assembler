@@ -632,7 +632,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 				vector<VERTEX_TYPE>path;
 				path.push_back(prefix);
 				contig_From_SINGLE(&path,&newSources,true);
-				m_cout<<"Vertices: "<<path.size()<<""<<endl;
+				m_cout<<path.size()<<" vertices"<<endl;
 				if(path.size()>2)
 					m_contig_paths.push_back(path);
 			}
@@ -753,10 +753,13 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 		}
 		prefix=prefixNextVertices[0];
 		path->push_back(prefix);
-		(*m_cout)<<"Pushing "<<idToWord(prefix,m_wordSize)<<endl;
+		//(*m_cout)<<"Pushing "<<idToWord(prefix,m_wordSize)<<endl;
 		int cumulativeCoverage=0;
+		int added=0;
 		//(*m_cout)<<"Path position "<<path->size()-1<<endl;
 		vector<AnnotationElement>*annotations=(m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1)));
+		if(path->size()%1000==0)
+			(*m_cout)<<path->size()<<" progress."<<endl;
 		//(*m_cout)<<"Threading.. reads "<<endl;
 		for(int h=0;h<(int)annotations->size();h++){
 			if(usedReads.count(annotations->at(h).readId)==0){
@@ -764,20 +767,30 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 				if(cumulativeCoverage<=m_minimumCoverage&&annotations->at(h).readPosition==0){ // add at most a given amount of "new reads" to avoid depletion
 					currentReadPositions[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition; // = 0
 					//(*m_cout)<<path->size()<<" "<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
-					//(*m_cout)<<"Adding read "<<annotations.at(h).readId<<" "<<annotations.at(h).readStrand<<" "<<annotations.at(h).readPosition<<endl;
+					//(*m_cout)<<"Adding read "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
 					cumulativeCoverage++;
+					added++;
 					usedReads.insert(annotations->at(h).readId);
 				}
 			}else if(path->size()>2 &&
+			(currentReadPositions)[path->size()-3].count(annotations->at(h).readId)>0 &&
 			(currentReadPositions)[path->size()-3][annotations->at(h).readId][annotations->at(h).readStrand] +1==  annotations->at(h).readPosition){
 				(currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
-				//(*m_cout)<<annotations.at(h).readId<<" "<<annotations.at(h).readStrand<<" "<<annotations.at(h).readPosition<<endl;
+				added++;
+				//(*m_cout)<<"Threading "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
+				//(*m_cout)<<" (with "<<path->size()-3<<endl;
 			}else{
 				//(*m_cout)<<"Nothing matched"<<endl;
 			}
 
 		}
+
 		prefixNextVertices=nextVertices(path,&currentReadPositions,repeat_aware);
+
+		if(added==0){
+			(*m_cout)<<"Nothing threaded"<<endl;
+			break;
+		}
 		if(prefixNextVertices.size()>1){
 			//(*m_cout)<<"Removing"<<endl;
 			prefixNextVertices=removeBubblesAndTips(prefixNextVertices,path,&currentReadPositions);
@@ -797,7 +810,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 		(*m_cout)<<"Adding "<<idToWord(children[j],m_wordSize)<<endl;
 		newSources->push_back(children[j]);
 	}
-	
+	//return;
 	if(children.size()>0&&path->size()>=1){
 	/*
 		vector<AnnotationElement>*annotations=m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1));
@@ -808,6 +821,8 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 		if(path->size()>0){
 			(*m_cout)<<pathToDNA(path)<<endl;
 			for(map<int,map<int,map<char,int> > >::iterator k=currentReadPositions.begin();k!=currentReadPositions.end();k++){
+				if(k->first<path->size()-500)
+					continue;
 				for(map<int,map<char,int> >::iterator i=k->second.begin();i!=k->second.end();i++){
 					for(map<char,int>::iterator j=i->second.begin();j!=i->second.end();j++){
 						(*m_cout)<<k->first<<" "<<m_sequenceData->at(i->first)->getId()<<" "<<j->first<<" "<<j->second<<endl;
