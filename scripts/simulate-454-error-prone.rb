@@ -42,7 +42,7 @@ end
 chromosomes<< seq
 f.close
 
-coverage=25
+coverage=5
 readLength=250
 readID=1
 chromosomes.each do |genome|
@@ -63,7 +63,11 @@ chromosomes.each do |genome|
 			if sequence.length < p
 				next
 			end
-			sequence[p..p]='T'
+			if sequence[p..p]=='T'
+				sequence[p..p]='A'
+			else
+				sequence[p..p]='T'
+			end
 			if rand(2)==0
 				puts ">#{readID}_#{start}_#{read_length}_F"
 				puts sequence

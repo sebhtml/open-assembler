@@ -736,7 +736,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> 
 void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,bool repeat_aware){
 	VERTEX_TYPE prefix=path->at(path->size()-1);
 	map<int,map<int,map<char,int> > > currentReadPositions;
-	set<int> usedReads;
+	map<int,int> usedReads;
 
 	//(*m_cout)<<"Depth: "<<path->size()<<endl;
 	vector<VERTEX_TYPE> prefixNextVertices=(nextVertices(path,&currentReadPositions,repeat_aware));
@@ -756,8 +756,20 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 		//(*m_cout)<<"Pushing "<<idToWord(prefix,m_wordSize)<<endl;
 		int cumulativeCoverage=0;
 		int added=0;
+
+
+		(*m_cout)<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<" ";
+		vector<AnnotationElement>*annotations=m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1));
+		(*m_cout)<<annotations->size();
+		for(int j=0;j<annotations->size();j++){
+			(*m_cout)<<" "<<m_sequenceData->at(annotations->at(j).readId)->getId()<<" "<<annotations->at(j).readPosition<<" "<<annotations->at(j).readStrand;
+		}
+		(*m_cout)<<endl;
+
+		
+
+
 		//(*m_cout)<<"Path position "<<path->size()-1<<endl;
-		vector<AnnotationElement>*annotations=(m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1)));
 		if(path->size()%1000==0)
 			(*m_cout)<<path->size()<<" progress."<<endl;
 		//(*m_cout)<<"Threading.. reads "<<endl;
@@ -770,20 +782,40 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 					//(*m_cout)<<"Adding read "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
 					cumulativeCoverage++;
 					added++;
-					usedReads.insert(annotations->at(h).readId);
+					usedReads[(annotations->at(h).readId)]=path->size()-2;
 				}
 			}else if(path->size()>2 &&
 			(currentReadPositions)[path->size()-3].count(annotations->at(h).readId)>0 &&
 			(currentReadPositions)[path->size()-3][annotations->at(h).readId][annotations->at(h).readStrand] +1==  annotations->at(h).readPosition){
 				(currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
 				added++;
+				usedReads[annotations->at(h).readId]=path->size()-2;
 				//(*m_cout)<<"Threading "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
 				//(*m_cout)<<" (with "<<path->size()-3<<endl;
 			}else{
-				//(*m_cout)<<"Nothing matched"<<endl;
+				// WARNING: powerful magic is used below this line.
+				int lastPosition=usedReads[annotations->at(h).readId];
+				int distanceInRead=annotations->at(h).readPosition-currentReadPositions[lastPosition][annotations->at(h).readId][annotations->at(h).readStrand];
+				int distanceInPath=path->size()-2-lastPosition;
+				(*m_cout)<<m_sequenceData->at(annotations->at(h).readId)->getId()<<endl;
+				(*m_cout)<<distanceInRead<<" "<<distanceInPath<<endl;
+				if(distanceInRead==distanceInPath){ // allow error in read threading
+					added++;
+					usedReads[annotations->at(h).readId]=path->size()-2;
+					(currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
+				}
 			}
 
 		}
+
+		(*m_cout)<<currentReadPositions[path->size()-2].size();
+		for(map<int,map<char,int> >::iterator i=currentReadPositions[path->size()-2].begin();i!=currentReadPositions[path->size()-2].end();i++){
+			for(map<char,int>::iterator j=i->second.begin();j!=i->second.end();j++){
+				(*m_cout)<<" "<<m_sequenceData->at(i->first)->getId()<<" "<<j->first<<" "<<j->second;
+			}
+		}
+		(*m_cout)<<endl;
+
 
 		prefixNextVertices=nextVertices(path,&currentReadPositions,repeat_aware);
 
@@ -819,8 +851,9 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 			allowedReads[(annotations->at(h).readId)]=annotations->at(h).readPosition;
 */
 		if(path->size()>0){
-			(*m_cout)<<pathToDNA(path)<<endl;
+			//(*m_cout)<<pathToDNA(path)<<endl;
 			for(map<int,map<int,map<char,int> > >::iterator k=currentReadPositions.begin();k!=currentReadPositions.end();k++){
+				break;
 				if(k->first<path->size()-500)
 					continue;
 				for(map<int,map<char,int> >::iterator i=k->second.begin();i!=k->second.end();i++){
@@ -912,7 +945,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 	}
 
 	int best=-1;
-	double factor=1;
+	double factor=1.2;
 	for(map<int,int>::iterator i=scores.begin();i!=scores.end();i++){
 		//(*m_cout)<<i->second<<endl;
 		bool isBest=true;
