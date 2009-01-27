@@ -42,7 +42,7 @@ end
 chromosomes<< seq
 f.close
 
-coverage=5
+coverage=20
 readLength=250
 readID=1
 chromosomes.each do |genome|
