@@ -154,7 +154,11 @@ void Loader::add(vector<Read*>*reads,string*id,ostringstream*sequence,ostringstr
 		exit(0);
 	}
 	string sequenceStr=sequence->str();
-	Read*read=new Read(id->c_str(),sequenceStr.c_str());
+	string theId=*id;
+	if(theId[0]=='>')
+		theId=theId.substr(1);
+
+	Read*read=new Read(theId.c_str(),sequenceStr.c_str());
 	m_bases+=sequenceStr.length();
 	m_total++;
 	reads->push_back(read);
