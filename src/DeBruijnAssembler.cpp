@@ -361,6 +361,7 @@ void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
 	m_sequenceData=sequenceData;
 	ostream&m_cout=*(this->m_cout);
 	bool debug=true;
+	debug=false;
 	bool useCache=false;
 
 
@@ -379,7 +380,8 @@ void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
 		load_graphFrom_file();
 	}else{
 		build_From_Scratch(sequenceData);
-		writeGraph();
+		if(debug==true)
+			writeGraph();
 	}
 
 }
@@ -402,8 +404,8 @@ void DeBruijnAssembler::outputContigs(){
 	ostream&m_cout=*(this->m_cout);
 	m_cout<<endl;
 	m_cout<<"Writing contigs"<<endl;
-	string contigsFile=m_assemblyDirectory+"/Contigs.fa";
 	string paths=m_assemblyDirectory+"/Walks.txt";
+	string contigsFile=m_assemblyDirectory+"/Contigs.fa";
 	string coverageFile=m_assemblyDirectory+"/Coverage.txt";
 	ofstream outputWalk(paths.c_str());
 	ofstream output(contigsFile.c_str());
@@ -613,6 +615,12 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	set<VERTEX_TYPE> sourcesVisited;
 	vector<int> The_Discovery_Of_Sources;
 	vector<int>VisitsOfSources;
+	string assemblyAmos=m_assemblyDirectory+"/Assembly.amos";
+	string contigsFile=m_assemblyDirectory+"/Contigs.fasta";
+	
+	ofstream amosFile(assemblyAmos.c_str());
+	ofstream contigsFileStream(contigsFile.c_str());
+	int contigId=1;
 	while(sources.size()>0){
 		m_cout<<endl;
 		m_cout<<"[sources]: "<<sources.size()<<endl;
@@ -631,15 +639,22 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			//m_cout<<m_contig_paths.size()<<" contigs"<<endl;
 				vector<VERTEX_TYPE>path;
 				path.push_back(prefix);
-				contig_From_SINGLE(&path,&newSources,true);
+				map<int,map<int,map<char,int> > > currentReadPositions;
+				contig_From_SINGLE(&currentReadPositions,&path,&newSources,true);
 				m_cout<<path.size()<<" vertices"<<endl;
-				if(path.size()>2)
-					m_contig_paths.push_back(path);
+				if(path.size()<=2)
+					continue;
+				writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
+				writeContig_fasta(&path,&contigsFileStream,contigId);
+				m_contig_paths.push_back(path);
+				contigId++;
 			}
 		}
 		sources=newSources;
 		VisitsOfSources.push_back(sourcesVisited.size());
 	}
+	amosFile.close();
+	contigsFileStream.close();
 	m_cout<<endl;
 
 	(m_cout)<<"Source discovery"<<endl;
@@ -733,19 +748,19 @@ vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> 
 }
 
 
-void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,bool repeat_aware){
+void DeBruijnAssembler::contig_From_SINGLE( map<int,map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,bool repeat_aware){
+	
 	VERTEX_TYPE prefix=path->at(path->size()-1);
-	map<int,map<int,map<char,int> > > currentReadPositions;
 	map<int,int> usedReads;
 	bool debug_print=false;
 
 	//(*m_cout)<<"Depth: "<<path->size()<<endl;
-	vector<VERTEX_TYPE> prefixNextVertices=(nextVertices(path,&currentReadPositions,repeat_aware));
+	vector<VERTEX_TYPE> prefixNextVertices=(nextVertices(path,currentReadPositions,repeat_aware));
 	if(prefixNextVertices.size()>1)
-		prefixNextVertices=removeBubblesAndTips(prefixNextVertices,path,&currentReadPositions);
+		prefixNextVertices=removeBubblesAndTips(prefixNextVertices,path,currentReadPositions);
 
 	while(prefixNextVertices.size()==1){
-		vector<VERTEX_TYPE> children=removeBubblesAndTips(m_data->get(prefix).getChildren(prefix),path,&currentReadPositions);
+		vector<VERTEX_TYPE> children=removeBubblesAndTips(m_data->get(prefix).getChildren(prefix),path,currentReadPositions);
 		for(int i=0;i<(int)children.size();i++){
 			if(children[i]!=prefixNextVertices[0]){
 				(*m_cout)<<"Adding "<<idToWord(children[i],m_wordSize)<<endl;
@@ -777,7 +792,13 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 			if(usedReads.count(annotations->at(h).readId)==0){
 					// add a read when it starts at its beginning...
 				if(cumulativeCoverage<=m_minimumCoverage&&annotations->at(h).readPosition==0){ // add at most a given amount of "new reads" to avoid depletion
-					currentReadPositions[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition; // = 0
+/*
+					if((*currentReadPositions).size()<path->size()-1){
+						map<int,map<char,int> > a;
+						(*currentReadPositions).push_back(a);
+					}
+*/
+					(*currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition; // = 0
 					//(*m_cout)<<path->size()<<" "<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
 					//(*m_cout)<<"Adding read "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
 					cumulativeCoverage++;
@@ -785,9 +806,15 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 					usedReads[(annotations->at(h).readId)]=path->size()-2;
 				}
 			}else if(path->size()>2 &&
-			(currentReadPositions)[path->size()-3].count(annotations->at(h).readId)>0 &&
-			(currentReadPositions)[path->size()-3][annotations->at(h).readId][annotations->at(h).readStrand] +1==  annotations->at(h).readPosition){
-				(currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
+			(*currentReadPositions)[path->size()-3].count(annotations->at(h).readId)>0 &&
+			(*currentReadPositions)[path->size()-3][annotations->at(h).readId][annotations->at(h).readStrand] +1==  annotations->at(h).readPosition){
+/*
+				if((*currentReadPositions).size()<path->size()-1){
+					map<int,map<char,int> > a;
+					(*currentReadPositions).push_back(a);
+				}
+*/
+				(*currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
 				added++;
 				usedReads[annotations->at(h).readId]=path->size()-2;
 				//(*m_cout)<<"Threading "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
@@ -799,21 +826,28 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 			if(added==0&&usedReads.count(annotations->at(h).readId)>0){ // use this powerful trick only when needed
 				// WARNING: powerful magic is used below this line.
 				int lastPosition=usedReads[annotations->at(h).readId];
-				int distanceInRead=annotations->at(h).readPosition-currentReadPositions[lastPosition][annotations->at(h).readId][annotations->at(h).readStrand];
+				int distanceInRead=annotations->at(h).readPosition-(*currentReadPositions)[lastPosition][annotations->at(h).readId][annotations->at(h).readStrand];
 				int distanceInPath=path->size()-2-lastPosition;
 				//(*m_cout)<<m_sequenceData->at(annotations->at(h).readId)->getId()<<endl;
 				//(*m_cout)<<distanceInRead<<" "<<distanceInPath<<endl;
 				if(distanceInRead==distanceInPath){ // allow error in read threading
 					added++;
 					usedReads[annotations->at(h).readId]=path->size()-2;
-					(currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
+/*
+					if((*currentReadPositions).size()<path->size()-1){
+						map<int,map<char,int> > a;
+						(*currentReadPositions).push_back(a);
+					}
+*/
+
+					(*currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
 				}
 			}
 		}
 
 		if(debug_print){
-			(*m_cout)<<currentReadPositions[path->size()-2].size();
-			for(map<int,map<char,int> >::iterator i=currentReadPositions[path->size()-2].begin();i!=currentReadPositions[path->size()-2].end();i++){
+			(*m_cout)<<(*currentReadPositions)[path->size()-2].size();
+			for(map<int,map<char,int> >::iterator i=(*currentReadPositions)[path->size()-2].begin();i!=(*currentReadPositions)[path->size()-2].end();i++){
 				for(map<char,int>::iterator j=i->second.begin();j!=i->second.end();j++){
 					(*m_cout)<<" "<<m_sequenceData->at(i->first)->getId()<<" "<<j->first<<" "<<j->second;
 				}
@@ -821,7 +855,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 			(*m_cout)<<endl;
 		}
 
-		prefixNextVertices=nextVertices(path,&currentReadPositions,repeat_aware);
+		prefixNextVertices=nextVertices(path,currentReadPositions,repeat_aware);
 
 		if(added==0){
 			(*m_cout)<<"Nothing threaded"<<endl;
@@ -829,7 +863,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 		}
 		if(prefixNextVertices.size()>1){
 			//(*m_cout)<<"Removing"<<endl;
-			prefixNextVertices=removeBubblesAndTips(prefixNextVertices,path,&currentReadPositions);
+			prefixNextVertices=removeBubblesAndTips(prefixNextVertices,path,currentReadPositions);
 		}
 		if(prefixNextVertices.size()!=1){
 			//prefixNextVertices=removeBubblesAndTips(nextVertices_SAFE(path,currentReadPositions,repeat_aware),path,currentReadPositions);
@@ -858,15 +892,18 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 */
 		if(path->size()>0){
 			//(*m_cout)<<pathToDNA(path)<<endl;
-			for(map<int,map<int,map<char,int> > >::iterator k=currentReadPositions.begin();k!=currentReadPositions.end();k++){
+			int position=0;
+			for(map<int,map<int,map<char,int> > >::iterator k=currentReadPositions->begin();k!=currentReadPositions->end();k++){
 				break;
-				if(k->first<path->size()-500)
+				position=k->first;
+				if(position<path->size()-500)
 					continue;
 				for(map<int,map<char,int> >::iterator i=k->second.begin();i!=k->second.end();i++){
 					for(map<char,int>::iterator j=i->second.begin();j!=i->second.end();j++){
-						(*m_cout)<<k->first<<" "<<m_sequenceData->at(i->first)->getId()<<" "<<j->first<<" "<<j->second<<endl;
+						(*m_cout)<<position<<" "<<m_sequenceData->at(i->first)->getId()<<" "<<j->first<<" "<<j->second<<endl;
 					}
 				}
+				position++;
 			}
 			for(int i=399;i>=2;i--){
 				break;
@@ -904,8 +941,10 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 	vector<VERTEX_TYPE> children=m_data->get(path->at(path->size()-1)).getChildren(path->at(path->size()-1));
 
 	// start when nothing is done yet
-	if(currentReadPositions->size()==0)
+	(*m_cout)<<currentReadPositions->size()<<" "<<path->size()<<endl;
+	if(currentReadPositions->size()==0){//||currentReadPositions->size()<path->size())
 		return children;
+	}
 /*
 	for(map<int,map<int,map<char,int> > >::iterator k=currentReadPositions->begin();k!=currentReadPositions->end();k++){
 		for(map<int,map<char,int> >::iterator i=k->second.begin();i!=k->second.end();i++){
@@ -1067,10 +1106,8 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices_SAFE(vector<VERTEX_TYPE>*pat
 	vector<VERTEX_TYPE> children=m_data->get(path->at(path->size()-1)).getChildren(path->at(path->size()-1));
 
 	// start when nothing is done yet
-	/*
 	if(currentReadPositions->size()==0)
 		return children;
-*/
 
 
 
@@ -1150,12 +1187,12 @@ int DeBruijnAssembler::recThreading(VERTEX_TYPE prefix,VERTEX_TYPE suffix,map<in
 	for(int i=0;i<children.size();i++){
 		vector<AnnotationElement>*annotations=m_data->get(suffix).getAnnotations(children[i]);
 		int max=-1;
-		for(int i=0;i<annotations->size();i++){
-			if(allowedReads->count(annotations->at(i).readId)>0&&
-		(*allowedReads)[annotations->at(i).readId]<annotations->at(i).readPosition){
-				if(annotations->at(i).readPosition>max){
-					max=annotations->at(i).readPosition;
-					(*allowedReads)[annotations->at(i).readId]=annotations->at(i).readPosition;
+		for(int j=0;j<annotations->size();j++){
+			if(allowedReads->count(annotations->at(j).readId)>0&&
+		(*allowedReads)[annotations->at(j).readId]<annotations->at(j).readPosition){
+				if(annotations->at(j).readPosition>max){
+					max=annotations->at(j).readPosition;
+					(*allowedReads)[annotations->at(j).readId]=annotations->at(j).readPosition;
 				}
 			}
 		}
@@ -1166,5 +1203,65 @@ int DeBruijnAssembler::recThreading(VERTEX_TYPE prefix,VERTEX_TYPE suffix,map<in
 		return recThreading(suffix,scores.begin()->first,allowedReads);
 	}else{
 		return max;
+	}
+}
+
+/*
+
+http://www.cbcb.umd.edu/research/contig_representation.shtml#AMOS
+
+{CTG
+iid:1
+eid:1
+seq:
+CCTCTCCTGTAGAGTTCAACCGA-GCCGGTAGAGTTTTATCA
+.
+qlt:
+DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+.
+{TLE
+src:1027
+off:0
+clr:618,0
+gap:
+250 612
+.
+}
+}
+
+*/
+void DeBruijnAssembler::writeContig_Amos(map<int,map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i){
+	string sequenceDNA=pathToDNA(path);
+	(*file)<<"{CTG"<<endl;
+	(*file)<<"iid:"<<i<<endl;
+	(*file)<<"eid:Contig"<<i<<endl;
+	(*file)<<"seq:"<<endl;
+	(*file)<<sequenceDNA<<endl;
+	(*file)<<"."<<endl;
+	(*file)<<"qlt:"<<endl;
+	for(int i=0;i<sequenceDNA.length();i++)
+		(*file)<<"D";
+	(*file)<<endl;
+	(*file)<<"."<<endl;
+
+	map<int,int> readOffset;
+	map<int,int> readStart;
+	map<int,int> readEnd;
+	map<int,char> readStrand;
+
+	
+
+	(*file)<<"}"<<endl;
+}
+
+void DeBruijnAssembler::writeContig_fasta(vector<VERTEX_TYPE>*path,ofstream*file,int i){
+	int columns=60;
+	string sequenceDNA=pathToDNA(path);
+	(*file)<<">Contig"<<i+1<<"   "<<sequenceDNA.length()<<endl;
+	int j=0;
+	while(j<(int)sequenceDNA.length()){
+		(*file)<<sequenceDNA.substr(j,columns);
+		(*file)<<endl;
+		j+=columns;
 	}
 }

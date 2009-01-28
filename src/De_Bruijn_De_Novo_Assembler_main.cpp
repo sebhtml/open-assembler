@@ -161,7 +161,7 @@ int main(int argc,char*argv[]){
 	assembler.buildGraph(&sequenceData);
 	assembler.Algorithm_Assembler_20090121();
 
-	assembler.outputContigs();
+	//assembler.outputContigs();
 
 	m_cout<<endl;
 	m_cout<<"Files written in "+assemblyDirectory<<endl;

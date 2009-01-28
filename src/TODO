@@ -1,3 +1,3 @@
 code splitter
-more than 25 'A' get shrinked?
-check if the code can be made to have bigger contigs
+write contigs as they are generated  (fasta, coverage + hawkeye)
+remove graph, Graph.txt, RawWalks, and Walks
