@@ -54,7 +54,7 @@ int main(int argc,char*argv[]){
 	int wordSize=21;
 	buffer<<" -wordSize            default: "<<wordSize<<" (maximum: 31)"<<endl;
 	buffer<<"                      description: the length of strings inside vertices, edges will be defined for words of length <wordSize>+1."<<endl;
-	string m_minimumCoverageParameter="auto";
+	string m_minimumCoverageParameter="2";
 	buffer<<" -minimumCoverage     default: auto (with depletion curve)"<<endl;
 	
 	int minimumContigSize=500;

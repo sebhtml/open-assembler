@@ -737,6 +737,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 	VERTEX_TYPE prefix=path->at(path->size()-1);
 	map<int,map<int,map<char,int> > > currentReadPositions;
 	map<int,int> usedReads;
+	bool debug_print=false;
 
 	//(*m_cout)<<"Depth: "<<path->size()<<endl;
 	vector<VERTEX_TYPE> prefixNextVertices=(nextVertices(path,&currentReadPositions,repeat_aware));
@@ -757,16 +758,15 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 		int cumulativeCoverage=0;
 		int added=0;
 
-
-		(*m_cout)<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<" ";
 		vector<AnnotationElement>*annotations=m_data->get(path->at(path->size()-2)).getAnnotations(path->at(path->size()-1));
-		(*m_cout)<<annotations->size();
-		for(int j=0;j<annotations->size();j++){
-			(*m_cout)<<" "<<m_sequenceData->at(annotations->at(j).readId)->getId()<<" "<<annotations->at(j).readPosition<<" "<<annotations->at(j).readStrand;
+		if(debug_print){
+			(*m_cout)<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<" ";
+			(*m_cout)<<annotations->size();
+			for(int j=0;j<annotations->size();j++){
+				(*m_cout)<<" "<<m_sequenceData->at(annotations->at(j).readId)->getId()<<" "<<annotations->at(j).readPosition<<" "<<annotations->at(j).readStrand;
+			}
+			(*m_cout)<<endl;
 		}
-		(*m_cout)<<endl;
-
-		
 
 
 		//(*m_cout)<<"Path position "<<path->size()-1<<endl;
@@ -796,7 +796,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 		}
 
 		for(int h=0;h<(int)annotations->size();h++){
-			if(added==0){ // use this powerful trick only when needed
+			if(added==0&&usedReads.count(annotations->at(h).readId)>0){ // use this powerful trick only when needed
 				// WARNING: powerful magic is used below this line.
 				int lastPosition=usedReads[annotations->at(h).readId];
 				int distanceInRead=annotations->at(h).readPosition-currentReadPositions[lastPosition][annotations->at(h).readId][annotations->at(h).readStrand];
@@ -811,14 +811,15 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 			}
 		}
 
-		(*m_cout)<<currentReadPositions[path->size()-2].size();
-		for(map<int,map<char,int> >::iterator i=currentReadPositions[path->size()-2].begin();i!=currentReadPositions[path->size()-2].end();i++){
-			for(map<char,int>::iterator j=i->second.begin();j!=i->second.end();j++){
-				(*m_cout)<<" "<<m_sequenceData->at(i->first)->getId()<<" "<<j->first<<" "<<j->second;
+		if(debug_print){
+			(*m_cout)<<currentReadPositions[path->size()-2].size();
+			for(map<int,map<char,int> >::iterator i=currentReadPositions[path->size()-2].begin();i!=currentReadPositions[path->size()-2].end();i++){
+				for(map<char,int>::iterator j=i->second.begin();j!=i->second.end();j++){
+					(*m_cout)<<" "<<m_sequenceData->at(i->first)->getId()<<" "<<j->first<<" "<<j->second;
+				}
 			}
+			(*m_cout)<<endl;
 		}
-		(*m_cout)<<endl;
-
 
 		prefixNextVertices=nextVertices(path,&currentReadPositions,repeat_aware);
 
@@ -845,6 +846,8 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<VERTEX_TYPE>*path,vector<VERTE
 		(*m_cout)<<"Adding "<<idToWord(children[j],m_wordSize)<<endl;
 		newSources->push_back(children[j]);
 	}
+	if(!debug_print)
+		return;
 	//return;
 	if(children.size()>0&&path->size()>=1){
 	/*
@@ -934,10 +937,10 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 				// the position is greater than the one in the database
 			 (*currentReadPositions)[path->size()-2][readId][thisEdgeData->at(j).readStrand] +1==thisEdgeData->at(j).readPosition)
 				{
-					if(thisEdgeData->at(j).readPosition>=scores[i]){
-						scores[i]=thisEdgeData->at(j).readPosition;
+					//if(thisEdgeData->at(j).readPosition>=scores[i]){
+					scores[i]+=thisEdgeData->at(j).readPosition;
 						//(*m_cout)<<"Score "<<thisEdgeData->at(j).readPosition<<endl;
-					}
+					//}
 				}
 			}
 		}
