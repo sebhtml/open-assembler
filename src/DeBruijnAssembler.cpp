@@ -941,7 +941,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 	vector<VERTEX_TYPE> children=m_data->get(path->at(path->size()-1)).getChildren(path->at(path->size()-1));
 
 	// start when nothing is done yet
-	(*m_cout)<<currentReadPositions->size()<<" "<<path->size()<<endl;
+	//(*m_cout)<<currentReadPositions->size()<<" "<<path->size()<<endl;
 	if(currentReadPositions->size()==0){//||currentReadPositions->size()<path->size())
 		return children;
 	}
@@ -1231,6 +1231,7 @@ gap:
 
 */
 void DeBruijnAssembler::writeContig_Amos(map<int,map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i){
+	(*m_cout)<<"writeContig_Amos"<<endl;
 	string sequenceDNA=pathToDNA(path);
 	(*file)<<"{CTG"<<endl;
 	(*file)<<"iid:"<<i<<endl;
@@ -1249,8 +1250,43 @@ void DeBruijnAssembler::writeContig_Amos(map<int,map<int,map<char,int> > >*curre
 	map<int,int> readEnd;
 	map<int,char> readStrand;
 
-	
+	(*m_cout)<<"amos generator "<<currentReadPositions->size()<<endl;
+	for(map<int,map<int,map<char,int> > >::iterator i=currentReadPositions->begin();
+		i!=currentReadPositions->end();i++){
+		int readPosition=i->first;
+		for(map<int,map<char,int> >::iterator j=i->second.begin();
+			j!=i->second.end();j++){
+			int readId=j->first;
+			char strand=j->second.begin()->first;
+			int readPosition=j->second.begin()->second;
+			if(readOffset.count(readId)==0){
+				readOffset[readId]=readPosition;
+				readStart[readId]=0;
+				readEnd[readId]=0;
+				readStrand[readId]=strand;
+			}
+			if(readPosition>readEnd[readId])
+				readEnd[readId]=readPosition;
+		}
+	}
 
+	for(map<int,int>::iterator i=readOffset.begin();i!=readOffset.end();i++){
+		int readId=i->first;
+		int readOffset=i->second;
+		(*file)<<"{TLE"<<endl;
+		(*file)<<"src:"<<m_sequenceData->at(readId)->getId()<<endl;
+		(*file)<<"off:"<<readOffset<<endl;
+		char strand=readStrand[readId];
+		(*file)<<"clr:";
+		if(strand=='F')
+			(*file)<<readStart[readId]<<","<<readEnd[readId];
+		else
+			(*file)<<readEnd[readId]<<","<<readStart[readId];
+		(*file)<<endl;
+		(*file)<<"."<<endl;
+		(*file)<<"}"<<endl;
+		
+	}
 	(*file)<<"}"<<endl;
 }
 
