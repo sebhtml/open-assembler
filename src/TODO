@@ -1,3 +1,4 @@
 code splitter
 write contigs as they are generated  (fasta, coverage + hawkeye)
 remove graph, Graph.txt, RawWalks, and Walks
+change map for vector in current Positions
