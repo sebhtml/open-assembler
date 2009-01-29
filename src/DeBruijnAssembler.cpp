@@ -1263,8 +1263,8 @@ void DeBruijnAssembler::writeContig_Amos(map<int,map<int,map<char,int> > >*curre
 				readEnd[readId]=0;
 				readStrand[readId]=strand;
 			}
-			if(readPosition+m_wordSize>readEnd[readId])
-				readEnd[readId]=readPosition+m_wordSize;
+			if(readPosition>readEnd[readId])
+				readEnd[readId]=readPosition;
 		}
 	}
 
@@ -1274,8 +1274,8 @@ void DeBruijnAssembler::writeContig_Amos(map<int,map<int,map<char,int> > >*curre
 		(*file)<<"{TLE"<<endl;
 		//(*file)<<"src:"<<m_sequenceData->at(readId)->getId()<<endl;
 		(*file)<<"src:"<<readId+1<<endl;
-		(*file)<<"com:"<<m_sequenceData->at(readId)->getId()<<endl;
 		int readLength=strlen(m_sequenceData->at(readId)->getSeq());
+		(*file)<<"com:"<<m_sequenceData->at(readId)->getId()<<" "<<readLength<<" "<<readStrand[readId]<<" "<<readStart[readId]<<" "<<readEnd[readId]<<endl;
 
 /*
  
@@ -1296,13 +1296,14 @@ void DeBruijnAssembler::writeContig_Amos(map<int,map<int,map<char,int> > >*curre
 		if(strand=='F')
 			(*file)<<"off:"<<readOffset+0<<endl;
 		else
-			(*file)<<"off:"<<readOffset+readLength-readEnd[readId]<<endl;
+			(*file)<<"off:"<<readOffset+0<<endl;
 		(*file)<<"clr:";
 		if(strand=='F')
-			(*file)<<readStart[readId]<<","<<readEnd[readId];
+			(*file)<<readStart[readId]<<","<<readEnd[readId]+m_wordSize<<endl;
 		else
-			(*file)<<readLength-readStart[readId]-1<<","<<readEnd[readId]-readLength+1;
-		(*file)<<endl;
+			(*file)<<readLength-readStart[readId]<<","<<readLength-readEnd[readId]-m_wordSize-1<<endl;
+			//(*file)<<readEnd[readId]+m_wordSize<<","<<readStart[readId];
+		//(*file)<<endl;
 		(*file)<<"gap:"<<endl;
 		(*file)<<"."<<endl;
 		(*file)<<"}"<<endl;
