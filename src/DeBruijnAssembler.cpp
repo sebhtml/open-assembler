@@ -646,7 +646,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 					continue;
 				writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
 				writeContig_fasta(&path,&contigsFileStream,contigId);
-				m_contig_paths.push_back(path);
+				//m_contig_paths.push_back(path);
 				contigId++;
 			}
 		}
@@ -820,11 +820,7 @@ void DeBruijnAssembler::contig_From_SINGLE( map<int,map<int,map<char,int> > >*cu
 				usedReads[annotations->at(h).readId]=path->size()-2;
 				//(*m_cout)<<"Threading "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
 				//(*m_cout)<<" (with "<<path->size()-3<<endl;
-			}
-		}
-
-		for(int h=0;h<(int)annotations->size();h++){
-			if(added==0&&usedReads.count(annotations->at(h).readId)>0){ // use this powerful trick only when needed
+			}else { // use this powerful trick only when needed
 				// WARNING: powerful magic is used below this line.
 				int lastPosition=usedReads[annotations->at(h).readId];
 				int distanceInRead=annotations->at(h).readPosition-(*currentReadPositions)[lastPosition][annotations->at(h).readId][annotations->at(h).readStrand];
@@ -1267,8 +1263,8 @@ void DeBruijnAssembler::writeContig_Amos(map<int,map<int,map<char,int> > >*curre
 				readEnd[readId]=0;
 				readStrand[readId]=strand;
 			}
-			if(readPosition+m_wordSize-1>readEnd[readId])
-				readEnd[readId]=readPosition+m_wordSize-1;
+			if(readPosition+m_wordSize>readEnd[readId])
+				readEnd[readId]=readPosition+m_wordSize;
 		}
 	}
 
@@ -1279,17 +1275,33 @@ void DeBruijnAssembler::writeContig_Amos(map<int,map<int,map<char,int> > >*curre
 		//(*file)<<"src:"<<m_sequenceData->at(readId)->getId()<<endl;
 		(*file)<<"src:"<<readId+1<<endl;
 		(*file)<<"com:"<<m_sequenceData->at(readId)->getId()<<endl;
-		
+		int readLength=strlen(m_sequenceData->at(readId)->getSeq());
+
+/*
+ 
+
+---------------------------------------------
+          ------------------------>
+
+
+
+-------------------------------------------
+            <--------------------------
+
+
+
+
+*/
 		char strand=readStrand[readId];
 		if(strand=='F')
 			(*file)<<"off:"<<readOffset+0<<endl;
 		else
-			(*file)<<"off:"<<readOffset+strlen(m_sequenceData->at(readId)->getSeq())-readEnd[readId]<<endl;
+			(*file)<<"off:"<<readOffset+readLength-readEnd[readId]<<endl;
 		(*file)<<"clr:";
 		if(strand=='F')
 			(*file)<<readStart[readId]<<","<<readEnd[readId];
 		else
-			(*file)<<readEnd[readId]<<","<<readStart[readId];
+			(*file)<<readLength-readStart[readId]-1<<","<<readEnd[readId]-readLength+1;
 		(*file)<<endl;
 		(*file)<<"gap:"<<endl;
 		(*file)<<"."<<endl;

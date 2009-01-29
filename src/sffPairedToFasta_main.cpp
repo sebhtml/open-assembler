@@ -54,8 +54,7 @@ int main(int argc,char*argv[]){
 	int titaniumLinker=0;
 	for(int i=0;i<(int)reads.size();i++){
 		ostringstream name;
-		name<<file<<"_"<<i+1;
-		string readName=name.str();
+		string readName=reads[i]->getId();
 		string sequence=reads[i]->getSeq();
 		size_t positionFLX=sequence.find(linker_FLX);
 		size_t positionTITANIUM=sequence.find(linker_TITANIUM);
