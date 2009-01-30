@@ -925,6 +925,12 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 	if(currentReadPositions->size()==0){//||currentReadPositions->size()<path->size())
 		return children;
 	}
+
+
+	if(newSources!=NULL){
+		children=removeBubblesAndTips(children,path,currentReadPositions);
+	}
+
 /*
 	for(map<int,map<int,map<char,int> > >::iterator k=currentReadPositions->begin();k!=currentReadPositions->end();k++){
 		for(map<int,map<char,int> >::iterator i=k->second.begin();i!=k->second.end();i++){
@@ -936,7 +942,8 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 */
 	//(*m_cout)<<"previous position to check "<<path->size()-2<<endl;
 
-	map<int,int > scores;
+	map<int,int > scoresSum;
+	map<int,int> scoresMax;
 	ostringstream debugBuffer;
 	//(*m_cout)<<"Children"<<endl;
 	for(int i=0;i<(int)children.size();i++){
@@ -956,25 +963,26 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 				// the position is greater than the one in the database
 			 (*currentReadPositions)[path->size()-2][readId][thisEdgeData->at(j).readStrand] +1==thisEdgeData->at(j).readPosition)
 				{
-					//if(thisEdgeData->at(j).readPosition>=scores[i]){
-					scores[i]+=thisEdgeData->at(j).readPosition;
+					if(thisEdgeData->at(j).readPosition>=scoresMax[i]){
+						scoresMax[i]=thisEdgeData->at(j).readPosition;
+					}
+
+					scoresSum[i]+=thisEdgeData->at(j).readPosition;
+					//version 2:
+					//scores[i]+=thisEdgeData->at(j).readPosition*thisEdgeData->at(j).readPosition;
 						//(*m_cout)<<"Score "<<thisEdgeData->at(j).readPosition<<endl;
 					//}
 				}
 			}
 		}
-		if(scores.count(i)>0){
-		}else{
-			//(*m_cout)<<"Did not thread."<<endl;
-		}
 	}
 
 	int best=-1;
-	double factor=1.1; // magic number
-	for(map<int,int>::iterator i=scores.begin();i!=scores.end();i++){
+	double factor=1; // magic number
+	for(map<int,int>::iterator i=scoresSum.begin();i!=scoresSum.end();i++){
 		//(*m_cout)<<i->second<<endl;
 		bool isBest=true;
-		for(map<int,int>::iterator j=scores.begin();j!=scores.end();j++){
+		for(map<int,int>::iterator j=scoresSum.begin();j!=scoresSum.end();j++){
 			if(i->first==j->first)
 				continue;
 			if(i->second> factor*  j->second){
@@ -986,23 +994,36 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map
 			best=i->first;
 	}
 	
-	vector<VERTEX_TYPE>filteredChildren=children;
-	if(newSources!=NULL){
-		filteredChildren=removeBubblesAndTips(children,path,currentReadPositions);
+	if(best==-1){
+		for(map<int,int>::iterator i=scoresMax.begin();i!=scoresMax.end();i++){
+			//(*m_cout)<<i->second<<endl;
+			bool isBest=true;
+			for(map<int,int>::iterator j=scoresMax.begin();j!=scoresMax.end();j++){
+				if(i->first==j->first)
+					continue;
+				if(i->second> factor*  j->second){
+				}else{
+					isBest=false;
+				}
+			}
+			if(isBest)
+				best=i->first;
+	}
+
 	}
 
 	if(best==-1){
-		for(int i=0;i<filteredChildren.size();i++){
+		for(int i=0;i<children.size();i++){
 			if(newSources!=NULL){
-				newSources->push_back(filteredChildren[i]);
-				(*m_cout)<<"Adding alternative source: "<<idToWord(filteredChildren[i],m_wordSize)<<endl;
+				newSources->push_back(children[i]);
+				(*m_cout)<<"Adding alternative source: "<<idToWord(children[i],m_wordSize)<<endl;
 			}
 		}
 	}else{
-		for(int i=0;i<filteredChildren.size();i++){
-			if(filteredChildren[i]!=children[best]&&newSources!=NULL){
-				newSources->push_back(filteredChildren[i]);
-				(*m_cout)<<"Adding alternative source: "<<idToWord(filteredChildren[i],m_wordSize)<<endl;
+		for(int i=0;i<children.size();i++){
+			if(children[i]!=children[best]&&newSources!=NULL){
+				newSources->push_back(children[i]);
+				(*m_cout)<<"Adding alternative source: "<<idToWord(children[i],m_wordSize)<<endl;
 			}
 		}
 
