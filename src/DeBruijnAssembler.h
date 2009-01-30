@@ -69,13 +69,13 @@ class DeBruijnAssembler{
 	void writeGraph();
 
 	vector<VERTEX_TYPE> optimizedNextVertices(vector<VERTEX_TYPE>*path,map<VERTEX_TYPE,int>*visits,int C,int l);
-	void contig_From_SINGLE(map<int,map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources);
-	vector<VERTEX_TYPE> getWalk(VERTEX_TYPE prefix,vector<VERTEX_TYPE>*path,int length,map<int,map<int,map<char,int > > >*currentReadPositions);
-	vector<VERTEX_TYPE> removeBubblesAndTips(vector<VERTEX_TYPE> vertices,vector<VERTEX_TYPE>*path,map<int,map<int,map<char,int> > >*currentReadPositions);
+	void contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources);
+	vector<VERTEX_TYPE> getWalk(VERTEX_TYPE prefix,vector<VERTEX_TYPE>*path,int length,vector<map<int,map<char,int > > >*currentReadPositions);
+	vector<VERTEX_TYPE> removeBubblesAndTips(vector<VERTEX_TYPE> vertices,vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions);
 	char getLastSymbol(VERTEX_TYPE i);
 	string pathToDNA(vector<VERTEX_TYPE>*path);
 
-	vector<VERTEX_TYPE> nextVertices(vector<VERTEX_TYPE>*path,map<int,map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources);
+	vector<VERTEX_TYPE> nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources);
 	int recThreading(VERTEX_TYPE prefix,VERTEX_TYPE suffix,map<int,int>*allowedReads);
 
 
@@ -93,7 +93,7 @@ class DeBruijnAssembler{
 	vector<vector<VERTEX_TYPE> > Filter_Remove_Smaller_Duplicates_Cached(vector<vector<VERTEX_TYPE > > largeContigs);
 	void Walk_In_GRAPH();
 
-	vector<AnnotationElement>annotationsWithCurrent(vector<AnnotationElement>*elements,map<int,map<int,map<char,int> > >*currentReadPositions);
+	vector<AnnotationElement>annotationsWithCurrent(vector<AnnotationElement>*elements,vector<map<int,map<char,int> > >*currentReadPositions);
 
 	void indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData,CustomMap<int>*solidMers);
 
@@ -101,7 +101,7 @@ class DeBruijnAssembler{
 
 
 	void writeContig_fasta(vector<VERTEX_TYPE>*path,ofstream*file,int i);
-	void writeContig_Amos(map<int,map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);
+	void writeContig_Amos(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);
 public:
 	DeBruijnAssembler(ostream*m_cout);
 	void setPairedInfo(string a);

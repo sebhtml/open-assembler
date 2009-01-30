@@ -639,7 +639,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			//m_cout<<m_contig_paths.size()<<" contigs"<<endl;
 				vector<VERTEX_TYPE>path;
 				path.push_back(prefix);
-				map<int,map<int,map<char,int> > > currentReadPositions;
+				vector<map<int,map<char,int> > > currentReadPositions;
 				contig_From_SINGLE(&currentReadPositions,&path,&newSources);
 				m_cout<<path.size()<<" vertices"<<endl;
 				if(path.size()<=2)
@@ -683,7 +683,7 @@ void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 
 // get a walk from a vertex, with a path, up to maxSize,
 // the path is not added in the walk
-vector<VERTEX_TYPE> DeBruijnAssembler::getWalk(VERTEX_TYPE prefix,vector<VERTEX_TYPE>*path,int length,map<int,map<int,map<char,int> > >*currentReadPositions){
+vector<VERTEX_TYPE> DeBruijnAssembler::getWalk(VERTEX_TYPE prefix,vector<VERTEX_TYPE>*path,int length,vector<map<int,map<char,int> > >*currentReadPositions){
 	vector<VERTEX_TYPE> subPath;
 	vector<VERTEX_TYPE> path1=*path;
 	path1.push_back(prefix);
@@ -700,7 +700,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::getWalk(VERTEX_TYPE prefix,vector<VERTEX_
 
 // remove bubble, if any
 // remote tips also..
-vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> vertices,vector<VERTEX_TYPE>*path,map<int,map<int,map<char,int> > >*currentReadPositions){
+vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> vertices,vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions){
 	if(vertices.size()==1)
 		return vertices;
 
@@ -749,7 +749,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::removeBubblesAndTips(vector<VERTEX_TYPE> 
 }
 
 
-void DeBruijnAssembler::contig_From_SINGLE( map<int,map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources){
+void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources){
 	
 	VERTEX_TYPE prefix=path->at(path->size()-1);
 	map<int,int> usedReads;
@@ -784,12 +784,10 @@ void DeBruijnAssembler::contig_From_SINGLE( map<int,map<int,map<char,int> > >*cu
 			if(usedReads.count(annotations->at(h).readId)==0){
 					// add a read when it starts at its beginning...
 				if(cumulativeCoverage<=m_minimumCoverage&&annotations->at(h).readPosition==0){ // add at most a given amount of "new reads" to avoid depletion
-/*
 					if((*currentReadPositions).size()<path->size()-1){
 						map<int,map<char,int> > a;
 						(*currentReadPositions).push_back(a);
 					}
-*/
 					(*currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition; // = 0
 					//(*m_cout)<<path->size()<<" "<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
 					//(*m_cout)<<"Adding read "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
@@ -800,12 +798,10 @@ void DeBruijnAssembler::contig_From_SINGLE( map<int,map<int,map<char,int> > >*cu
 			}else if(path->size()>2 &&
 			(*currentReadPositions)[path->size()-3].count(annotations->at(h).readId)>0 &&
 			(*currentReadPositions)[path->size()-3][annotations->at(h).readId][annotations->at(h).readStrand] +1==  annotations->at(h).readPosition){
-/*
 				if((*currentReadPositions).size()<path->size()-1){
 					map<int,map<char,int> > a;
 					(*currentReadPositions).push_back(a);
 				}
-*/
 				(*currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
 				added++;
 				usedReads[annotations->at(h).readId]=path->size()-2;
@@ -821,12 +817,10 @@ void DeBruijnAssembler::contig_From_SINGLE( map<int,map<int,map<char,int> > >*cu
 				if(distanceInRead==distanceInPath){ // allow error in read threading
 					added++;
 					usedReads[annotations->at(h).readId]=path->size()-2;
-/*
 					if((*currentReadPositions).size()<path->size()-1){
 						map<int,map<char,int> > a;
 						(*currentReadPositions).push_back(a);
 					}
-*/
 
 					(*currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
 				}
@@ -874,12 +868,11 @@ void DeBruijnAssembler::contig_From_SINGLE( map<int,map<int,map<char,int> > >*cu
 		if(path->size()>0){
 			//(*m_cout)<<pathToDNA(path)<<endl;
 			int position=0;
-			for(map<int,map<int,map<char,int> > >::iterator k=currentReadPositions->begin();k!=currentReadPositions->end();k++){
-				break;
-				position=k->first;
+			for(vector<map<int,map<char,int> > >::iterator k=currentReadPositions->begin();k!=currentReadPositions->end();k++){
+				//position=k->first;
 				if(position<path->size()-500)
 					continue;
-				for(map<int,map<char,int> >::iterator i=k->second.begin();i!=k->second.end();i++){
+				for(map<int,map<char,int> >::iterator i=(*k).begin();i!=(*k).end();i++){
 					for(map<char,int>::iterator j=i->second.begin();j!=i->second.end();j++){
 						(*m_cout)<<position<<" "<<m_sequenceData->at(i->first)->getId()<<" "<<j->first<<" "<<j->second<<endl;
 					}
@@ -918,7 +911,7 @@ void DeBruijnAssembler::contig_From_SINGLE( map<int,map<int,map<char,int> > >*cu
 /**
  * \param simple  force passFilter to use passFilter_ShortRead
  */
-vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,map<int,map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources){
+vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources){
 	vector<VERTEX_TYPE> children=m_data->get(path->at(path->size()-1)).getChildren(path->at(path->size()-1));
 	// start when nothing is done yet
 	//(*m_cout)<<currentReadPositions->size()<<" "<<path->size()<<endl;
@@ -1104,7 +1097,7 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 	}
 }
 
-vector<AnnotationElement>DeBruijnAssembler::annotationsWithCurrent(vector<AnnotationElement>*elements,map<int,map<int,map<char,int> > >*currentReadPositions){
+vector<AnnotationElement>DeBruijnAssembler::annotationsWithCurrent(vector<AnnotationElement>*elements,vector<map<int,map<char,int> > >*currentReadPositions){
 	map<int,AnnotationElement> minimumEncountered;
 /*
 	for(int i=0;i<elements->size();i++){
@@ -1188,7 +1181,7 @@ gap:
 }
 
 */
-void DeBruijnAssembler::writeContig_Amos(map<int,map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i){
+void DeBruijnAssembler::writeContig_Amos(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i){
 	//(*m_cout)<<"writeContig_Amos"<<endl;
 	string sequenceDNA=pathToDNA(path);
 	(*file)<<"{CTG"<<endl;
@@ -1210,11 +1203,12 @@ void DeBruijnAssembler::writeContig_Amos(map<int,map<int,map<char,int> > >*curre
 	map<int,char> readStrand;
 
 	//(*m_cout)<<"amos generator "<<currentReadPositions->size()<<endl;
-	for(map<int,map<int,map<char,int> > >::iterator i=currentReadPositions->begin();
+	int contigPosition=0;
+	for(vector<map<int,map<char,int> > >::iterator i=currentReadPositions->begin();
 		i!=currentReadPositions->end();i++){
-		int contigPosition=i->first;
-		for(map<int,map<char,int> >::iterator j=i->second.begin();
-			j!=i->second.end();j++){
+		//int contigPosition=i->first;
+		for(map<int,map<char,int> >::iterator j=(*i).begin();
+			j!=(*i).end();j++){
 			int readId=j->first;
 			char strand=j->second.begin()->first;
 			int readPosition=j->second.begin()->second;
@@ -1227,6 +1221,7 @@ void DeBruijnAssembler::writeContig_Amos(map<int,map<int,map<char,int> > >*curre
 			if(readPosition>readEnd[readId])
 				readEnd[readId]=readPosition;
 		}
+		contigPosition++;
 	}
 
 	for(map<int,int>::iterator i=readOffset.begin();i!=readOffset.end();i++){

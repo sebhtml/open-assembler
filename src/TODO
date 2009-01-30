@@ -1,7 +1,6 @@
-code splitter
 change map for vector in current Positions
-addSources in nextVertices
 
 long-term:
+	code splitter
 	carry-forward
 	foward recursive threading, when possible
