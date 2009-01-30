@@ -49,6 +49,7 @@ class DeBruijnAssembler{
 	int m_longReadMode_threshold;
 	bool m_longReadAvailable;
 	string m_pairedInfoFile;
+	bool m_DEBUG;
 	int m_default_window;
 	uint64_t m_solidMers;
 	CustomMap<VertexData>*m_data;
@@ -111,6 +112,7 @@ public:
 	void setAssemblyDirectory(string assemblyDirectory);
 	void setMinimumContigSize(int minimumContigSize);
 	void outputContigs();
+	void debug();
 
 	~DeBruijnAssembler();
 	void setBuckets(uint64_t buckets);

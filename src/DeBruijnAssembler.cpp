@@ -53,6 +53,7 @@ int DeBruijnAssembler::m_NUCLEOTIDE_C=2;
 int DeBruijnAssembler::m_NUCLEOTIDE_G=3;
 
 DeBruijnAssembler::DeBruijnAssembler(ostream*m_cout){
+	m_DEBUG=false;
 	this->m_cout=m_cout;
 }
 
@@ -360,7 +361,7 @@ void DeBruijnAssembler::load_graphFrom_file(){
 void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
 	m_sequenceData=sequenceData;
 	ostream&m_cout=*(this->m_cout);
-	bool debug=true;
+	bool debug=m_DEBUG;
 	//debug=false;
 	bool useCache=false;
 
@@ -634,7 +635,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			m_cout<<endl;
 			sourcesVisited.insert(prefix);
 			{
-				m_cout<<"Source "<<i+1<<" / "<<sources.size()<<" REPEAT MODE"<<endl;
+				m_cout<<"Source "<<i+1<<" / "<<sources.size()<<endl;//" REPEAT MODE"<<endl;
 				m_cout<<"From: "<<idToWord(prefix,m_wordSize)<<endl;
 			//m_cout<<m_contig_paths.size()<<" contigs"<<endl;
 				vector<VERTEX_TYPE>path;
@@ -769,8 +770,8 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 	
 	VERTEX_TYPE prefix=path->at(path->size()-1);
 	map<int,int> usedReads;
-	bool debug_print=false;
-	debug_print=true;
+	bool debug_print=m_DEBUG;
+	//debug_print=true;
 	//(*m_cout)<<"Depth: "<<path->size()<<endl;
 	vector<VERTEX_TYPE> prefixNextVertices=nextVertices(path,currentReadPositions,newSources);
 
@@ -920,6 +921,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
  * \param simple  force passFilter to use passFilter_ShortRead
  */
 vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources){
+	bool debugPrint=m_DEBUG;
 	vector<VERTEX_TYPE> children=m_data->get(path->at(path->size()-1)).getChildren(path->at(path->size()-1));
 	// start when nothing is done yet
 	//(*m_cout)<<currentReadPositions->size()<<" "<<path->size()<<endl;
@@ -975,7 +977,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 	}
 
 	int best=-1;
-	double factor=1.01; // magic number
+	double factor=1.5; // magic number
 	for(map<int,int>::iterator i=scoresSum.begin();i!=scoresSum.end();i++){
 		//(*m_cout)<<i->second<<endl;
 		bool isBest=true;
@@ -1038,7 +1040,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 	}
 	//(*m_cout)<<debugBuffer.str()<<endl;
 	vector<VERTEX_TYPE> output;
-	if(newSources!=NULL){
+	if(newSources!=NULL&&m_DEBUG){
 		(*m_cout)<<"No children scored. "<<endl;
 		vector<VERTEX_TYPE> allChildren=m_data->get(path->at(path->size()-1)).getChildren(path->at(path->size()-1));
 		(*m_cout)<<"Before filtering "<<allChildren.size()<<endl;
@@ -1296,4 +1298,8 @@ void DeBruijnAssembler::writeContig_fasta(vector<VERTEX_TYPE>*path,ofstream*file
 		(*file)<<endl;
 		j+=columns;
 	}
+}
+
+void DeBruijnAssembler::debug(){
+	m_DEBUG=true;
 }

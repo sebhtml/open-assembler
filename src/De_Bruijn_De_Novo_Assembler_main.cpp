@@ -63,6 +63,8 @@ int main(int argc,char*argv[]){
 	uint64_t buckets=100000000;
 	buffer<<" -buckets             default: "<<buckets<<endl;
 	buffer<<"                      description: number of buckets"<<endl;
+	bool DEBUGMODE=false;
+	buffer<<" [ -debug ]"<<endl;
 	string pairedInfo="none";
 	buffer<<" -pairedInfo          default: none"<<endl;
 	buffer<<"                      description: a file that contains paired information (For Solexa, and others)"<<endl;
@@ -82,6 +84,8 @@ int main(int argc,char*argv[]){
 		}else if(option=="-minimumCoverage"){
 			i++;
 			m_minimumCoverageParameter=argv[i];
+		}else if(option=="-debug"){
+			DEBUGMODE=true;
 		}else if(option=="-buckets"){
 			i++;
 			buckets=atoi(argv[i]);
@@ -158,6 +162,9 @@ int main(int argc,char*argv[]){
 	assembler.setMinimumCoverage(m_minimumCoverageParameter);
 	assembler.setAssemblyDirectory(assemblyDirectory);
 	assembler.setPairedInfo(pairedInfo);
+	if(DEBUGMODE)
+		assembler.debug();
+
 	assembler.buildGraph(&sequenceData);
 	assembler.Algorithm_Assembler_20090121();
 
