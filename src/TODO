@@ -1,3 +1,7 @@
 code splitter
 change map for vector in current Positions
-forward: clr range +1
+addSources in nextVertices
+
+long-term:
+	carry-forward
+	foward recursive threading, when possible
