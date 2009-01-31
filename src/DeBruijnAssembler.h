@@ -41,27 +41,21 @@ class DeBruijnAssembler{
 	string m_graphFile;
 	string m_minimumCoverageParameter;
 	int m_minimumCoverage;
-	int m_minimumCoverage_for_walk;
 	int m_wordSize;
 	double m_threshold;
+	int m_Coverage_From_DepletionCurve;
 	bool m_pairedAvailable;
 	uint64_t m_buckets;
-	int m_longReadMode_threshold;
-	bool m_longReadAvailable;
 	string m_pairedInfoFile;
 	bool m_DEBUG;
-	int m_default_window;
 	uint64_t m_solidMers;
 	CustomMap<VertexData>*m_data;
 
 	SequenceDataFull*m_sequenceData;
 	// map edges to reads
 
-	// stock directly a vector of vertices
-	vector<vector<VERTEX_TYPE> > m_contig_paths;
 
 	// minimu contig size
-	int m_minimumContigSize;
 	ostream*m_cout;
 	string m_assemblyDirectory;
 
@@ -69,38 +63,23 @@ class DeBruijnAssembler{
 	void build_From_Scratch(SequenceDataFull*sequenceData);
 	void writeGraph();
 
-	vector<VERTEX_TYPE> optimizedNextVertices(vector<VERTEX_TYPE>*path,map<VERTEX_TYPE,int>*visits,int C,int l);
 	void contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources);
 	vector<VERTEX_TYPE> getWalk(VERTEX_TYPE prefix,vector<VERTEX_TYPE>*path,int length,vector<map<int,map<char,int > > >*currentReadPositions);
-	vector<VERTEX_TYPE> removeBubblesAndTips(vector<VERTEX_TYPE> vertices,vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions);
+
 	char getLastSymbol(VERTEX_TYPE i);
 	string pathToDNA(vector<VERTEX_TYPE>*path);
 
 	vector<VERTEX_TYPE> nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources);
 	bool DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VERTEX_TYPE b);
-	int recThreading(VERTEX_TYPE prefix,VERTEX_TYPE suffix,map<int,int>*allowedReads);
-
 
 	VERTEX_TYPE reverseComplement_VERTEX(VERTEX_TYPE a);
 
-	vector<int> not_Processed(vector<int>contigs,set<int>processed,int self);
+	//bool addNewContig(vector<vector<VERTEX_TYPE> >*newContigs,vector<VERTEX_TYPE>*newContig,int currentContigId,int otherContigId,set<int>*contigsProcessed);
 
-	bool addNewContig(vector<vector<VERTEX_TYPE> >*newContigs,vector<VERTEX_TYPE>*newContig,int currentContigId,int otherContigId,set<int>*contigsProcessed);
-
-	vector<vector<VERTEX_TYPE> >Remove_Small_Contigs(vector<vector<VERTEX_TYPE> > contigs);
-	vector<vector<VERTEX_TYPE> > ExtendReverseComplements(vector<vector<VERTEX_TYPE> > contigs);
-	vector<vector<VERTEX_TYPE> >Filter_Remove_Smaller_Duplicates(vector<vector<VERTEX_TYPE> > contigs);
-
-
-	vector<vector<VERTEX_TYPE> > Filter_Remove_Smaller_Duplicates_Cached(vector<vector<VERTEX_TYPE > > largeContigs);
 	void Walk_In_GRAPH();
 
-	vector<AnnotationElement>annotationsWithCurrent(vector<AnnotationElement>*elements,vector<map<int,map<char,int> > >*currentReadPositions);
 
 	void indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData,CustomMap<int>*solidMers);
-
-
-
 
 	void writeContig_fasta(vector<VERTEX_TYPE>*path,ofstream*file,int i);
 	void writeContig_Amos(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);

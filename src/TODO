@@ -1,4 +1,10 @@
+articlek
+don't start to thread in high coverage
 adjust repeat code on Spneumoniae
+remove 1-threading
+add d-threading in nextVertices also
+
+
 
 long-term:
 	code splitter
