@@ -143,8 +143,11 @@ int Loader::getBases(){
 void Loader::add(vector<Read*>*reads,string*id,ostringstream*sequence,ostringstream*quality){
 	if(id->length()==0)
 		return;
-	if(sequence->str().length()==0)
-		(*m_cout)<<"0 22"<<endl;
+	if(sequence->str().length()==0){
+		//(*m_cout)<<"0 22"<<endl;
+		(*m_cout)<<"Empty sequence? "<<*id<<endl;
+		return;
+	}
 	if(sequence->str().length()!=quality->str().length()){
 		(*m_cout)<<*id<<endl;
 		(*m_cout)<<sequence->str()<<endl;
