@@ -38,6 +38,8 @@ using namespace std;
 
 
 class DeBruijnAssembler{
+	int m_coverage_mean;
+	int m_coverage_stddev;
 	string m_graphFile;
 	string m_minimumCoverageParameter;
 	int m_minimumCoverage;
@@ -60,6 +62,10 @@ class DeBruijnAssembler{
 	string m_assemblyDirectory;
 
 	void load_graphFrom_file();
+
+
+	bool is_d_Threading(AnnotationElement*annotation,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,map<int,int>*usedReads,bool beforeAdding);
+
 	void build_From_Scratch(SequenceDataFull*sequenceData);
 	void writeGraph();
 
@@ -69,7 +75,7 @@ class DeBruijnAssembler{
 	char getLastSymbol(VERTEX_TYPE i);
 	string pathToDNA(vector<VERTEX_TYPE>*path);
 
-	vector<VERTEX_TYPE> nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources);
+	vector<VERTEX_TYPE> nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources,map<int,int>*usedReads);
 	bool DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VERTEX_TYPE b);
 
 	VERTEX_TYPE reverseComplement_VERTEX(VERTEX_TYPE a);

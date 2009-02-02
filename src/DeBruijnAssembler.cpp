@@ -18,7 +18,7 @@
 */
 
 
-
+#include<cmath>
 #include<cstdlib>
 #include<map>
 #include<iostream>
@@ -495,6 +495,31 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		}
 	}
 
+	uint64_t sumCoverage=0;
+	int edges=0;
+	for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
+		VERTEX_TYPE prefix=i.first();
+		vector<VERTEX_TYPE>children=(i).second().getChildren(prefix);
+		for(int j=0;j<children.size();j++){
+			sumCoverage+=(i).second().getAnnotations(children[j])->size();
+			edges++;
+		}
+	}
+	int meanCoverage=sumCoverage/edges;
+	uint64_t sum_ofSquaredDiffs=0;
+	for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
+		VERTEX_TYPE prefix=i.first();
+		vector<VERTEX_TYPE>children=(i).second().getChildren(prefix);
+		for(int j=0;j<children.size();j++){
+			int diff=meanCoverage-(i).second().getAnnotations(children[j])->size();
+			sum_ofSquaredDiffs+=diff*diff;
+		}
+	}
+	int  stddev=sqrt(sum_ofSquaredDiffs/(edges-1));
+	m_coverage_mean=meanCoverage;
+	m_coverage_stddev=stddev;
+	(*m_cout)<<"Mean: "<<meanCoverage<<endl;
+	(*m_cout)<<"Standard deviation: "<<stddev<<endl;
 	ostream&m_cout=*(this->m_cout);	
 	vector<VERTEX_TYPE> sources=withoutParents;
 	set<VERTEX_TYPE> sourcesVisited;
@@ -594,15 +619,12 @@ bool DeBruijnAssembler::DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VER
 
 
 void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources){
-	
 	VERTEX_TYPE prefix=path->at(path->size()-1);
 	map<int,int> usedReads;
 	bool debug_print=m_DEBUG;
 	//debug_print=true;
 	//(*m_cout)<<"Depth: "<<path->size()<<endl;
-	vector<VERTEX_TYPE> prefixNextVertices=nextVertices(path,currentReadPositions,newSources);
-	int HIGHCOVERAGETHRESHOLD=10*m_Coverage_From_DepletionCurve;
-	(*m_cout)<<"HIGH-COVERAGE THRESHOLD "<<HIGHCOVERAGETHRESHOLD<<endl;
+	vector<VERTEX_TYPE> prefixNextVertices=nextVertices(path,currentReadPositions,newSources,&usedReads);
 	while(prefixNextVertices.size()==1){
 		prefix=prefixNextVertices[0];
 		path->push_back(prefix);
@@ -628,15 +650,16 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		if(path->size()%1000==0)
 			(*m_cout)<<path->size()<<" progress."<<endl;
 		//(*m_cout)<<"Threading.. reads "<<endl;
-		
+		//(*m_cout)<<"Coverage mean: "<<coverageMean<<" "<<annotations->size()<<endl; 
+		int HIGHCOVERAGETHRESHOLD=2*m_coverage_mean+m_coverage_stddev;
 		if(annotations->size()>=HIGHCOVERAGETHRESHOLD&&m_DEBUG){
 			(*m_cout)<<"Coverage: "<<annotations->size()<<", refusing to start threading reads!"<<endl;
 		}
 		for(int h=0;h<(int)annotations->size();h++){
 			if(usedReads.count(annotations->at(h).readId)==0){
 					// add a read when it starts at its beginning...
-				if(annotations->size()<=HIGHCOVERAGETHRESHOLD&&
-cumulativeCoverage<=m_minimumCoverage&&annotations->at(h).readPosition==0){ // add at most a given amount of "new reads" to avoid depletion
+				if(annotations->size()<HIGHCOVERAGETHRESHOLD&&
+			annotations->at(h).readPosition==0){ // add at most a given amount of "new reads" to avoid depletion
 					(*currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition; // = 0
 					//(*m_cout)<<path->size()<<" "<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
 					//(*m_cout)<<"Adding read "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
@@ -644,27 +667,11 @@ cumulativeCoverage<=m_minimumCoverage&&annotations->at(h).readPosition==0){ // a
 					added++;
 					usedReads[(annotations->at(h).readId)]=path->size()-2;
 				}
-			}else if(path->size()>2 &&
-			(*currentReadPositions)[path->size()-3].count(annotations->at(h).readId)>0 &&
-			(*currentReadPositions)[path->size()-3][annotations->at(h).readId][annotations->at(h).readStrand] +1==  annotations->at(h).readPosition){
-				(*currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
+			}else if(is_d_Threading(&(annotations->at(h)),currentReadPositions,path,&usedReads,false)){
 				added++;
 				usedReads[annotations->at(h).readId]=path->size()-2;
-				//(*m_cout)<<"Threading "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
-				//(*m_cout)<<" (with "<<path->size()-3<<endl;
-			}else { // use this powerful trick only when needed
-				// WARNING: powerful magic is used below this line.
-				int lastPosition=usedReads[annotations->at(h).readId];
-				int distanceInRead=annotations->at(h).readPosition-(*currentReadPositions)[lastPosition][annotations->at(h).readId][annotations->at(h).readStrand];
-				int distanceInPath=path->size()-2-lastPosition;
-				//(*m_cout)<<m_sequenceData->at(annotations->at(h).readId)->getId()<<endl;
-				//(*m_cout)<<distanceInRead<<" "<<distanceInPath<<endl;
-				if(distanceInRead==distanceInPath){ // allow error in read threading
-					added++;
-					usedReads[annotations->at(h).readId]=path->size()-2;
 
-					(*currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
-				}
+				(*currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
 			}
 		}
 
@@ -678,12 +685,14 @@ cumulativeCoverage<=m_minimumCoverage&&annotations->at(h).readPosition==0){ // a
 			(*m_cout)<<endl;
 		}
 
-		prefixNextVertices=nextVertices(path,currentReadPositions,newSources);
+		prefixNextVertices=nextVertices(path,currentReadPositions,newSources,&usedReads);
 
 		if(added==0){
 			(*m_cout)<<"Nothing threaded"<<endl;
 			break;
 		}
+
+		//(*m_cout)<<"adding "<<(*currentReadPositions).at(currentReadPositions->size()-1).size()<<endl;
 	}
 
 	VertexData dataStructure= (m_data->get(prefix));
@@ -753,7 +762,7 @@ cumulativeCoverage<=m_minimumCoverage&&annotations->at(h).readPosition==0){ // a
 /**
  * \param simple  force passFilter to use passFilter_ShortRead
  */
-vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources){
+vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources,map<int,int>*usedReads){
 	bool debugPrint=m_DEBUG;
 	vector<VERTEX_TYPE> children=m_data->get(path->at(path->size()-1)).getChildren(path->at(path->size()-1));
 	// start when nothing is done yet
@@ -789,25 +798,12 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 			uint32_t readId=thisEdgeData->at(j).readId;
 
 			//(*m_cout)<<readId<<" "<<thisEdgeData->at(j).readStrand<<" "<<thisEdgeData->at(j).readPosition<<endl;
-			if(
-				// the read is there in the path already
-				(*currentReadPositions)[path->size()-2].count(readId)>0
-				// the strand is available
-		&&		(*currentReadPositions)[path->size()-2][readId].count(thisEdgeData->at(j).readStrand)>0){
-				if(
-				// the position is greater than the one in the database
-			 (*currentReadPositions)[path->size()-2][readId][thisEdgeData->at(j).readStrand] +1==thisEdgeData->at(j).readPosition)
-				{
-					if(thisEdgeData->at(j).readPosition>=scoresMax[i]){
-						scoresMax[i]=thisEdgeData->at(j).readPosition;
-					}
-
-					scoresSum[i]+=thisEdgeData->at(j).readPosition;
-					//version 2:
-					//scores[i]+=thisEdgeData->at(j).readPosition*thisEdgeData->at(j).readPosition;
-						//(*m_cout)<<"Score "<<thisEdgeData->at(j).readPosition<<endl;
-					//}
+			if(is_d_Threading(&(thisEdgeData->at(j)),currentReadPositions,path,usedReads,true)){
+				if(thisEdgeData->at(j).readPosition>=scoresMax[i]){
+					scoresMax[i]=thisEdgeData->at(j).readPosition;
 				}
+
+				scoresSum[i]+=thisEdgeData->at(j).readPosition;
 			}
 		}
 	}
@@ -1084,4 +1080,22 @@ void DeBruijnAssembler::writeContig_fasta(vector<VERTEX_TYPE>*path,ofstream*file
 
 void DeBruijnAssembler::debug(){
 	m_DEBUG=true;
+}
+
+bool DeBruijnAssembler::is_d_Threading(AnnotationElement*annotation,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,map<int,int>*usedReads,bool beforeAdding){
+
+	int readId=annotation->readId;
+	if(usedReads->count(readId)==0)
+		return false;
+	int lastPosition=(*usedReads)[readId];
+	char readStrand=annotation->readStrand;
+	if((*currentReadPositions)[lastPosition][readId].count(readStrand)==0)
+		return false;
+
+	int distanceInRead=annotation->readPosition-(*currentReadPositions)[lastPosition][readId][readStrand];
+	int distanceInPath=path->size()-2-lastPosition;
+	if(beforeAdding)
+		distanceInPath++;
+	//(*m_cout)<<"R "<<distanceInRead<<" C "<<distanceInPath<<endl;
+	return distanceInRead==distanceInPath; // allow error in read threading, if d !=1
 }
