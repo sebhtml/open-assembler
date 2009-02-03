@@ -14,27 +14,36 @@ ulimit -v  230000000 # in kB
 
 
 
-1. quality analysis, choose minimum coverage
-2. build graph without annotations
-3. find connected parts
-4. for each of them
-	quality analysis
-	build graph, with annotations
-	assemble graph
-	merge contigs
-	assemble contigs
-	merge meta-contigs
+Using DNA is easy.
 
-assemble meta-contigs
-merge meta-contigs
+== Assembling 454 data: ==
 
-1. scaffolding
+dna_DeBruijnAssembler reads.sff
+cd Assembly
+dna_Merger fasta.contigs Merge.fasta
+cd ..
 
-An example of commands:
+== Assembling paired 454 data: ==
 
-dna_DeBruijnAssembler -assemblyDirectory test file1.fasta fileA.fasta file3.fastq file4.sff 
-cd test
-dna_Merger Contigs.fa fasta.contigs 
-tarchive2amos -s fasta.contigs -o amos
-minimus amos            
-bambus
+dna_sffPairedToFasta reads.sff
+dna_DeBruijnAssembler reads.sff*.fasta
+cd Assembly
+dna_Merger fasta.contigs Merge.fasta
+cd ..
+cat reads.sff*paired* > paired-reads.fasta
+dna_Scaffolder paired-reads.fasta Assembly/Merge.fasta /Assembly/scaffolds.fasta
+
+== Assembling Solexa data: ==
+
+dna_DeBruijnAssembler reads.fastq
+cd Assembly
+dna_Merger fasta.contigs Merge.fasta
+cd ..
+
+== Assembling Sanger reads: ==
+
+dna_DeBruijnAssembler reads.fasta
+cd Assembly
+dna_Merger fasta.contigs Merge.fasta
+cd ..
+

@@ -8,7 +8,7 @@ do
 	bash CreateBank.sh
 	bash Merge.sh
 	cd ..
-	blat $(echo $i|sed 's/.fa$//') D$i/Assembly.fasta D$i/blat.psl -fastMap 
-	blat $(echo $i|sed 's/.fa$//') D$i/Assembly.fasta D$i/blat.blast -fastMap -out=blast
+	blat $(echo $i|sed 's/.fa$//') D$i/Merger.fasta D$i/blat.psl -fastMap 
+	blat $(echo $i|sed 's/.fa$//') D$i/Merger.fasta D$i/blat.blast -fastMap -out=blast
 	)&
 done
