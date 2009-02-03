@@ -158,7 +158,8 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	}
 	m_cout<<endl;
 	double cutOff=m_threshold;
-	m_cout<<"Cutoff: "<<cutOff<<endl;
+	if(m_minimumCoverageParameter=="auto")
+		m_cout<<"Cutoff: "<<cutOff<<endl;
 	for(int minimumCoverage=2;minimumCoverage<=32;minimumCoverage++){
 		if(solidDiff[minimumCoverage]<minimum){
 			m_minimumCoverage=minimumCoverage;
@@ -168,7 +169,8 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 			break;
 		if(solidDiff[minimumCoverage]<cutOff){
 			m_minimumCoverage=minimumCoverage;
-			m_cout<<"Best Coverage <- "<<m_minimumCoverage<<endl;
+			if(m_minimumCoverageParameter=="auto")
+				m_cout<<"Best Coverage <- "<<m_minimumCoverage<<endl;
 			break;
 		}
 	}
@@ -178,7 +180,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		m_cout<<"Using depletion curve (-minimumCoverage auto)"<<endl;
 		m_cout<<"m_minimumCoverage <- "<<m_minimumCoverage<<endl;
 	}else{
-		m_cout<<"Not using the depletion curve"<<endl;
+		//m_cout<<""<<endl;
 		m_cout<<"m_minimumCoverage <- "<<atoi(m_minimumCoverageParameter.c_str())<<endl;
 		m_minimumCoverage=atoi(m_minimumCoverageParameter.c_str());
 	}
@@ -206,7 +208,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	}
 	m_solidMers=solidMers.size();
 	m_cout<<"Solid mers: "<<solid<<" / "<<words.size()<<" ---> "<<((solid+0.0)/words.size()+0.0)*100.0<<"%"<<endl;
-	m_cout<<" (this should be roughly twice the genome size)"<<endl;
+	//m_cout<<" (this should be roughly twice the genome size)"<<endl;
 	m_cout<<"Not-solid mers: "<<processed-solid<<" / "<<words.size()<<" ---> "<<(processed-solid+0.0)/words.size()*100.0<<"%"<<endl;
 
 	if(m_solidMers==0){
@@ -494,32 +496,57 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			withoutParents.push_back(prefix);
 		}
 	}
+	(*m_cout)<<"Done..., "<<withoutParents.size()<<" sources."<<endl;
+	
+	m_coverage_mean=1000;
+	m_coverage_stddev=100;
 
-	uint64_t sumCoverage=0;
-	int edges=0;
-	for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
-		VERTEX_TYPE prefix=i.first();
-		vector<VERTEX_TYPE>children=(i).second().getChildren(prefix);
-		for(int j=0;j<children.size();j++){
-			sumCoverage+=(i).second().getAnnotations(children[j])->size();
-			edges++;
+	(*m_cout)<<endl;
+	(*m_cout)<<"(k+1)-mers coverage statistics"<<endl;
+	int NUMBER_OF_ROUND_FOR_SHRINKING=5;
+	for(int round=1;round<=NUMBER_OF_ROUND_FOR_SHRINKING;round++){
+		ostringstream distributionFile;
+		distributionFile<<m_assemblyDirectory<<"/Coverage-Round-"<<round<<".txt";
+		ofstream coverageBuffer(distributionFile.str().c_str());
+		int threshold=1*m_coverage_mean+3*m_coverage_stddev;
+		uint64_t sumCoverage=0;
+		int edges=0;
+		for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
+			VERTEX_TYPE prefix=i.first();
+			vector<VERTEX_TYPE>children=(i).second().getChildren(prefix);
+			for(int j=0;j<children.size();j++){
+				int value=(i).second().getAnnotations(children[j])->size();
+				if(value>=threshold)
+					continue;
+				sumCoverage+=value;
+				coverageBuffer<<value<<endl;
+				edges++;
+			}
 		}
-	}
-	int meanCoverage=sumCoverage/edges;
-	uint64_t sum_ofSquaredDiffs=0;
-	for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
-		VERTEX_TYPE prefix=i.first();
-		vector<VERTEX_TYPE>children=(i).second().getChildren(prefix);
-		for(int j=0;j<children.size();j++){
-			int diff=meanCoverage-(i).second().getAnnotations(children[j])->size();
-			sum_ofSquaredDiffs+=diff*diff;
+		coverageBuffer.close();
+		int meanCoverage=sumCoverage/edges;
+		uint64_t sum_ofSquaredDiffs=0;
+		for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
+			VERTEX_TYPE prefix=i.first();
+			vector<VERTEX_TYPE>children=(i).second().getChildren(prefix);
+			for(int j=0;j<children.size();j++){
+				int value=(i).second().getAnnotations(children[j])->size();
+				if(value>=threshold)
+					continue;
+				int diff=meanCoverage-value;
+				sum_ofSquaredDiffs+=diff*diff;
+			}
 		}
+
+		int  stddev=sqrt(sum_ofSquaredDiffs/(edges-1));
+
+	
+		m_coverage_mean=meanCoverage;
+		m_coverage_stddev=stddev;
+		(*m_cout)<<"Round "<<round<<": Mean="<<m_coverage_mean<<", Standard deviation="<<m_coverage_stddev<<endl;
 	}
-	int  stddev=sqrt(sum_ofSquaredDiffs/(edges-1));
-	m_coverage_mean=meanCoverage;
-	m_coverage_stddev=stddev;
-	(*m_cout)<<"Mean: "<<meanCoverage<<endl;
-	(*m_cout)<<"Standard deviation: "<<stddev<<endl;
+
+
 	ostream&m_cout=*(this->m_cout);	
 	vector<VERTEX_TYPE> sources=withoutParents;
 	set<VERTEX_TYPE> sourcesVisited;
@@ -531,9 +558,11 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	ofstream amosFile(assemblyAmos.c_str());
 	ofstream contigsFileStream(contigsFile.c_str());
 	int contigId=1;
+	int round=1;
 	while(sources.size()>0){
 		m_cout<<endl;
-		m_cout<<"[sources]: "<<sources.size()<<endl;
+		m_cout<<"Round: "<<round<<", "<<sources.size()<<" sources."<<endl;
+		round++;
 		The_Discovery_Of_Sources.push_back(sources.size());
 		vector<VERTEX_TYPE> newSources;
 		for(int i=0;i<(int)sources.size();i++){
@@ -651,7 +680,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			(*m_cout)<<path->size()<<" progress."<<endl;
 		//(*m_cout)<<"Threading.. reads "<<endl;
 		//(*m_cout)<<"Coverage mean: "<<coverageMean<<" "<<annotations->size()<<endl; 
-		int HIGHCOVERAGETHRESHOLD=2*m_coverage_mean+m_coverage_stddev;
+		int HIGHCOVERAGETHRESHOLD=1*m_coverage_mean+3*m_coverage_stddev;
 		if(annotations->size()>=HIGHCOVERAGETHRESHOLD&&m_DEBUG){
 			(*m_cout)<<"Coverage: "<<annotations->size()<<", refusing to start threading reads!"<<endl;
 		}

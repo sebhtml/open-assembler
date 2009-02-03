@@ -134,7 +134,7 @@ int main(int argc,char*argv[]){
 
 	// TODO: a class SequenceData
 	// to avoid loading all files in memory (only 1 at any moment)
-	m_cout<<"Indexing files"<<endl;
+	//m_cout<<"Indexing files"<<endl;
 	m_cout<<endl;
 	SequenceDataFull sequenceData(&inputFiles,&m_cout);
 
@@ -152,7 +152,7 @@ int main(int argc,char*argv[]){
 
 
 	// starting the assembler
-	m_cout<<"Starting  De Bruijn assembler!."<<endl;
+	//m_cout<<"Starting  De Bruijn assembler!."<<endl;
 	DeBruijnAssembler assembler(&m_cout);
 	// word size must be odd (2k+1)
 	// to avoid palindromes
