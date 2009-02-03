@@ -262,12 +262,29 @@ vector<int> merge(vector<string> contigSequences){
 		// reverse complement hits
 		for(set<int>::iterator matchContig=otherRevContigs.begin();matchContig!=otherRevContigs.end();matchContig++){
 			if(i!=*matchContig&&
-		contigSequences[i].length()==contigSequences[*matchContig].length()
+		contigSequences[i].length()<=contigSequences[*matchContig].length()
 			){
-				string sequenceA=contigSequences[i];
-				string sequenceB=contigSequences[*matchContig];
-				string sequenceB_Rev=DeBruijnAssembler::reverseComplement(sequenceB);
-				bool theSame=false;
+				string sequenceSmall=contigSequences[i];
+				string sequenceLong=contigSequences[*matchContig];
+				string sequenceLong_Rev=DeBruijnAssembler::reverseComplement(sequenceLong);
+				string shortContig=sequenceSmall;
+				string longContig=sequenceLong_Rev;
+				bool theSame=true;
+				int offset=150;
+				string wordToSearch=shortContig.substr(offset,wordSize);
+				int offSetInLong=0;
+				while(offSetInLong<longContig.length()&&longContig.substr(offSetInLong,wordSize)!=wordToSearch){
+					offSetInLong++;
+				}
+				for(int k=offset;k<shortContig.length();k++){
+					if(shortContig[k]!=longContig[offSetInLong]){
+						theSame=false;
+						//cout<<"oops"<<endl;
+						break;
+					}
+					//cout<<"ok"<<endl;
+					offSetInLong++;
+				}
 
 /*
 				//cout<<"Possible match (Reverse Complement)"<<endl;

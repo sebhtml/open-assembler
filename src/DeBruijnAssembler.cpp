@@ -498,8 +498,8 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	}
 	(*m_cout)<<"Done..., "<<withoutParents.size()<<" sources."<<endl;
 	
-	m_coverage_mean=1000;
-	m_coverage_stddev=100;
+	m_coverage_mean=0;
+	m_coverage_stddev=500;
 
 	(*m_cout)<<endl;
 	(*m_cout)<<"(k+1)-mers coverage statistics"<<endl;
@@ -508,7 +508,8 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		ostringstream distributionFile;
 		distributionFile<<m_assemblyDirectory<<"/Coverage-Round-"<<round<<".txt";
 		ofstream coverageBuffer(distributionFile.str().c_str());
-		int threshold=1*m_coverage_mean+3*m_coverage_stddev;
+		int thresholdUpper=1*m_coverage_mean+3*m_coverage_stddev;
+		int thresholdLower=1*m_coverage_mean-3*m_coverage_stddev;
 		uint64_t sumCoverage=0;
 		int edges=0;
 		for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
@@ -516,7 +517,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			vector<VERTEX_TYPE>children=(i).second().getChildren(prefix);
 			for(int j=0;j<children.size();j++){
 				int value=(i).second().getAnnotations(children[j])->size();
-				if(value>=threshold)
+				if(value>=thresholdUpper||value<=thresholdLower)
 					continue;
 				sumCoverage+=value;
 				coverageBuffer<<value<<endl;
@@ -531,7 +532,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			vector<VERTEX_TYPE>children=(i).second().getChildren(prefix);
 			for(int j=0;j<children.size();j++){
 				int value=(i).second().getAnnotations(children[j])->size();
-				if(value>=threshold)
+				if(value>=thresholdUpper||value<=thresholdLower)
 					continue;
 				int diff=meanCoverage-value;
 				sum_ofSquaredDiffs+=diff*diff;
@@ -540,7 +541,6 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 
 		int  stddev=sqrt(sum_ofSquaredDiffs/(edges-1));
 
-	
 		m_coverage_mean=meanCoverage;
 		m_coverage_stddev=stddev;
 		(*m_cout)<<"Round "<<round<<": Mean="<<m_coverage_mean<<", Standard deviation="<<m_coverage_stddev<<endl;
