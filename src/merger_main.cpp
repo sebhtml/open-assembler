@@ -26,11 +26,12 @@
 #include"DeBruijnAssembler.h"
 
 #define wordSize 31
+#define m_DEBUG false
 
 using namespace std;
 
 void applyColor(int i,int color,map<int,int>*contigToColor,map<int,set<int> >*contigs_graph){
-	if((*contigToColor)[i]!=-1)
+	if((*contigToColor)[i]==color)
 		return;
 	(*contigToColor)[i]=color;
 	set<int> children=(*contigs_graph)[i];
@@ -150,7 +151,7 @@ vector<int> merge(vector<string> contigSequences){
 	for(int i=0;i<contigSequences.size();i++){
 		contigs_graph[i].size();// insert a node
 		if(i%1000==0)
-			cout<<i<<" / "<<contigSequences.size()<<endl;
+			cout<<i+1<<" / "<<contigSequences.size()<<endl;
 		for(int j=0;j<contigSequences[i].length();j+=wordSize){
 			string word=contigSequences[i].substr(j,wordSize);
 			if(word.length()!=wordSize)
@@ -166,7 +167,7 @@ vector<int> merge(vector<string> contigSequences){
 	cout<<"Building a graph of contigs."<<endl;
 	for(int i=0;i<contigSequences.size();i++){
 		if(i%100==0||true)
-			cout<<i<<" / "<<contigSequences.size()<<endl;
+			cout<<i+1<<" / "<<contigSequences.size()<<endl;
 
 
 		set<int>otherContigs;
@@ -197,17 +198,24 @@ vector<int> merge(vector<string> contigSequences){
 				//cout<<longContig.substr(lengthDifference,100)<<endl;
 				//int notFound=0;
 				bool theSame=true;
-				int offset=50;
+				int offset=150;
 				string wordToSearch=shortContig.substr(offset,wordSize);
 				int offSetInLong=0;
 				while(offSetInLong<longContig.length()&&longContig.substr(offSetInLong,wordSize)!=wordToSearch){
 					offSetInLong++;
 				}
+				if(m_DEBUG){
+					cout<<"offSetInLong "<<offSetInLong<<endl;
+					cout<<shortContig.substr(offset,100)<<endl;
+					cout<<longContig.substr(offSetInLong,100)<<endl;
+				}
 				for(int k=offset;k<shortContig.length();k++){
 					if(shortContig[k]!=longContig[offSetInLong]){
 						theSame=false;
+						//cout<<"oops"<<endl;
 						break;
 					}
+					//cout<<"ok"<<endl;
 					offSetInLong++;
 				}
 /*
@@ -241,7 +249,8 @@ vector<int> merge(vector<string> contigSequences){
 */
 				//cout<<"Not found"<<endl;
 				if(theSame){
-					//cout<<"Forward the same"<<endl;
+					if(m_DEBUG)
+						cout<<"Forward the same"<<endl;
 					//contigs_graph[i].insert(*matchContig);
 					contigs_graph[*matchContig].insert(i);
 				}

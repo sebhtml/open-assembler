@@ -65,6 +65,8 @@ int main(int argc,char*argv[]){
 			if(right==NULL)
 				right=new ofstream(paired2.c_str());
 
+			if(standard==NULL)
+				standard=new ofstream(standardReads.c_str());
 			string leftPart=sequence.substr(0,positionFLX);
 			int multiplicity=1;
 			string rightPart=sequence.substr(positionFLX+multiplicity*linker_FLX.length());
@@ -72,7 +74,14 @@ int main(int argc,char*argv[]){
 				multiplicity++;
 				rightPart=sequence.substr(positionFLX+multiplicity*linker_FLX.length());
 			}
-			if(leftPart.length()>0&&rightPart.length()>0){
+			if(leftPart.length()==0){
+				(*standard)<<">"<<readName<<"_2 "<<rightPart.length()<<endl;
+				(*standard)<<rightPart<<endl;
+
+			}else if(rightPart.length()==0){
+				(*standard)<<">"<<readName<<"_1 "<<leftPart.length()<<endl;
+				(*standard)<<leftPart<<endl;
+			}else{
 				(*left)<<">"<<readName<<"_1 "<<leftPart.length()<<endl;
 				(*left)<<leftPart<<endl;
 				(*right)<<">"<<readName<<"_2 "<<rightPart.length()<<endl;
@@ -80,6 +89,8 @@ int main(int argc,char*argv[]){
 			}
 		}else if(positionTITANIUM!=string::npos){
 			titaniumLinker++;
+			if(standard==NULL)
+				standard=new ofstream(standardReads.c_str());
 			if(left==NULL)
 				left=new ofstream(paired1.c_str());
 			if(right==NULL)
