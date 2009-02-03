@@ -33,13 +33,8 @@ using namespace std;
 
 int main(int argc,char*argv[]){
 	ostringstream buffer;
-
+	DeBruijnAssembler::CommonHeader(&buffer);
 	// show usage
-	buffer<<"Welcome to dna, De Novo Assembler."<<endl;
-	buffer<<"Notice: You need a 64-bits processor"<<endl;
-	buffer<<"Website: http://DeNovoAssembler.sf.net"<<endl;
-	buffer<<"Version: "<<SOFTWARE_VERSION<<endl;
-	buffer<<"License: GPLv3 (see http://fsf.org/)"<<endl;
 	buffer<<endl;
 	buffer<<"Usage:"<<endl;
 	buffer<<"dna_DeBruijnAssembler [options] <files (fasta, sff, or fastq)>"<<endl;
@@ -64,11 +59,11 @@ int main(int argc,char*argv[]){
 	buffer<<" -buckets             default: "<<buckets<<endl;
 	buffer<<"                      description: number of buckets"<<endl;
 	bool DEBUGMODE=false;
-	buffer<<" [ -debug ]"<<endl;
+	//buffer<<" [ -debug ]"<<endl;
 	string pairedInfo="none";
-	buffer<<" -pairedInfo          default: none"<<endl;
-	buffer<<"                      description: a file that contains paired information (For Solexa, and others)"<<endl;
-	buffer<<"                                   Note that the files must be in the same order in the <pairedInfo> file and in the command line."<<endl;
+	//buffer<<" -pairedInfo          default: none"<<endl;
+	//buffer<<"                      description: a file that contains paired information (For Solexa, and others)"<<endl;
+	//buffer<<"                                   Note that the files must be in the same order in the <pairedInfo> file and in the command line."<<endl;
 	buffer<<endl;
 
 
@@ -103,9 +98,14 @@ int main(int argc,char*argv[]){
 
 	buffer<<endl;
 	buffer<<endl;
-	buffer<<"dna_DeBruijnAssembler -assemblyDirectory "<<assemblyDirectory<<" -minimumCoverage "<<m_minimumCoverageParameter<<" -buckets "<<buckets<<" -pairedInfo "<<pairedInfo<<  " -wordSize "<<wordSize ;
+	buffer<<"  -assemblyDirectory="<<assemblyDirectory<<endl;
+	buffer<<"  -minimumCoverage="<<m_minimumCoverageParameter<<endl;
+	buffer<<"  -buckets="<<buckets<<endl;
+	buffer<<"  -wordSize="<<wordSize<<endl;
+	buffer<<" <FILES>"<<endl;
+	//buffer<<"dna_DeBruijnAssembler -assemblyDirectory "<<assemblyDirectory<<" -minimumCoverage "<<m_minimumCoverageParameter<<" -buckets "<<buckets<<" -pairedInfo "<<pairedInfo<<  " -wordSize "<<wordSize ;
 	for(int i=0;i<(int)inputFiles.size();i++)
-		buffer<<" "<<inputFiles[i];
+		buffer<<" "<<inputFiles[i]<<endl;
 	buffer<<endl;
 
 
@@ -194,7 +194,7 @@ int main(int argc,char*argv[]){
 	fileStreamBank<<"cat";
 	for(int i=0;i<inputFiles.size();i++){
 		if(inputFiles[i][0]!='/'){
-			fileStreamBank<<" "<<currentDirectory<<inputFiles[i];
+			fileStreamBank<<" "<<currentDirectory<<"/"<<inputFiles[i];
 		}else{
 			fileStreamBank<<" "<<inputFiles[i];
 		}
@@ -209,7 +209,7 @@ int main(int argc,char*argv[]){
 	fileStream.close();
 	string mergerFile=assemblyDirectory+"/Merge.sh";
 	ofstream fileStreamMerger(mergerFile.c_str());
-	fileStreamMerger<<"dna_Merger fasta.contigs Assembly.fasta > merger.log"<<endl;
+	fileStreamMerger<<"dna_Merger fasta.contigs Merger.fasta > merger.log"<<endl;
 	fileStreamMerger.close();
 	return 0;
 }

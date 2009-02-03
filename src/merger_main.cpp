@@ -25,7 +25,7 @@
 #include"Loader.h"
 #include"DeBruijnAssembler.h"
 
-#define wordSize 21
+#define wordSize 31
 
 using namespace std;
 
@@ -165,8 +165,9 @@ vector<int> merge(vector<string> contigSequences){
 	cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
 	cout<<"Building a graph of contigs."<<endl;
 	for(int i=0;i<contigSequences.size();i++){
-		if(i%100==0)
+		if(i%100==0||true)
 			cout<<i<<" / "<<contigSequences.size()<<endl;
+
 
 		set<int>otherContigs;
 		set<int>otherRevContigs;
@@ -182,7 +183,73 @@ vector<int> merge(vector<string> contigSequences){
 			for(int k=0;k<otherRevContigs2.size();k++)
 				otherRevContigs.insert(otherRevContigs2[k]);
 		}
+		cout<<"Forward hits: "<<otherContigs.size()<<endl;
 
+		// forward hits
+		for(set<int>::iterator matchContig=otherContigs.begin();matchContig!=otherContigs.end();matchContig++){
+			if(i!=*matchContig&&
+		contigSequences[i].length()<=contigSequences[*matchContig].length()
+			){
+				string shortContig=contigSequences[i];
+				string longContig=contigSequences[*matchContig];
+				int lengthDifference=longContig.length()-shortContig.length();
+				//cout<<shortContig.substr(0,100)<<endl;
+				//cout<<longContig.substr(lengthDifference,100)<<endl;
+				//int notFound=0;
+				bool theSame=true;
+				int offset=50;
+				string wordToSearch=shortContig.substr(offset,wordSize);
+				int offSetInLong=0;
+				while(offSetInLong<longContig.length()&&longContig.substr(offSetInLong,wordSize)!=wordToSearch){
+					offSetInLong++;
+				}
+				for(int k=offset;k<shortContig.length();k++){
+					if(shortContig[k]!=longContig[offSetInLong]){
+						theSame=false;
+						break;
+					}
+					offSetInLong++;
+				}
+/*
+				for(int k=offset;k<shortContig.length();k++){
+					if(shortContig[k]!=longContig[lengthDifference+k]){
+						//cout<<"Not the same"<<endl;
+						theSame=false;
+						break;
+					}
+				}
+		*/
+/*
+				//cout<<"Possible match (Foward)"<<endl;
+				set<VERTEX_TYPE> otherIndex;
+				for(int k=0;k<contigSequences[*matchContig].length();k++){
+					string word=contigSequences[*matchContig].substr(k,wordSize);
+					if(word.length()!=wordSize)
+						continue;
+					otherIndex.insert(DeBruijnAssembler::wordId(word.c_str()));
+				}
+				int notFound=0;
+				for(int k=0;k<contigSequences[i].length();k++){
+					if(notFound>maxNotFound)
+						break;
+					string word=(contigSequences[i].substr(k,wordSize));
+					if(word.length()!=wordSize)
+						continue;
+					if(otherIndex.count(DeBruijnAssembler::wordId(word.c_str()))==0)
+						notFound++;
+				}
+*/
+				//cout<<"Not found"<<endl;
+				if(theSame){
+					//cout<<"Forward the same"<<endl;
+					//contigs_graph[i].insert(*matchContig);
+					contigs_graph[*matchContig].insert(i);
+				}
+			}
+		}
+
+
+		cout<<"Reverse hits: "<<otherRevContigs.size()<<endl;
 		// reverse complement hits
 		for(set<int>::iterator matchContig=otherRevContigs.begin();matchContig!=otherRevContigs.end();matchContig++){
 			if(i!=*matchContig&&
@@ -220,56 +287,7 @@ vector<int> merge(vector<string> contigSequences){
 			}
 		}
 
-		// forward hits
-		for(set<int>::iterator matchContig=otherContigs.begin();matchContig!=otherContigs.end();matchContig++){
-			if(i!=*matchContig&&
-		contigSequences[i].length()<=contigSequences[*matchContig].length()
-			){
-				string shortContig=contigSequences[i];
-				string longContig=contigSequences[*matchContig];
-				int lengthDifference=longContig.length()-shortContig.length();
-				//cout<<shortContig.substr(0,100)<<endl;
-				//cout<<longContig.substr(lengthDifference,100)<<endl;
-				//int notFound=0;
-				bool theSame=true;
-				int offset=50;
-				for(int k=offset;k<shortContig.length();k++){
-					if(shortContig[k]!=longContig[lengthDifference+k]){
-						//cout<<"Not the same"<<endl;
-						theSame=false;
-						break;
-					}
-				}
 		
-/*
-				//cout<<"Possible match (Foward)"<<endl;
-				set<VERTEX_TYPE> otherIndex;
-				for(int k=0;k<contigSequences[*matchContig].length();k++){
-					string word=contigSequences[*matchContig].substr(k,wordSize);
-					if(word.length()!=wordSize)
-						continue;
-					otherIndex.insert(DeBruijnAssembler::wordId(word.c_str()));
-				}
-				int notFound=0;
-				for(int k=0;k<contigSequences[i].length();k++){
-					if(notFound>maxNotFound)
-						break;
-					string word=(contigSequences[i].substr(k,wordSize));
-					if(word.length()!=wordSize)
-						continue;
-					if(otherIndex.count(DeBruijnAssembler::wordId(word.c_str()))==0)
-						notFound++;
-				}
-*/
-				//cout<<"Not found"<<endl;
-				if(theSame){
-					//cout<<"Forward the same"<<endl;
-					//contigs_graph[i].insert(*matchContig);
-					contigs_graph[*matchContig].insert(i);
-				}
-			}
-		}
-
 	}
 	cout<<"The graph is ready."<<endl;
 
@@ -310,6 +328,7 @@ vector<int> merge(vector<string> contigSequences){
 }
 
 int main(int argc,char*argv[]){
+	DeBruijnAssembler::CommonHeader(&cout);
 	cout<<"This is dna_Merger."<<endl;
 	if(argc!=3){
 		cout<<"usage"<<endl;

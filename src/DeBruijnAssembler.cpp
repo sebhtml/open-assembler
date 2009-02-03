@@ -1098,7 +1098,7 @@ void DeBruijnAssembler::writeContig_Amos(vector<map<int,map<char,int> > >*curren
 void DeBruijnAssembler::writeContig_fasta(vector<VERTEX_TYPE>*path,ofstream*file,int i){
 	int columns=60;
 	string sequenceDNA=pathToDNA(path);
-	(*file)<<">Contig"<<i+1<<"   "<<sequenceDNA.length()<<endl;
+	(*file)<<">Contig"<<i<<"   "<<sequenceDNA.length()<<endl;
 	int j=0;
 	while(j<(int)sequenceDNA.length()){
 		(*file)<<sequenceDNA.substr(j,columns);
@@ -1127,4 +1127,13 @@ bool DeBruijnAssembler::is_d_Threading(AnnotationElement*annotation,vector<map<i
 		distanceInPath++;
 	//(*m_cout)<<"R "<<distanceInRead<<" C "<<distanceInPath<<endl;
 	return distanceInRead==distanceInPath; // allow error in read threading, if d !=1
+}
+
+
+void DeBruijnAssembler::CommonHeader(ostream*out){
+	*out<<"DNA: De Novo Assembler"<<endl;
+	*out<<"Documentation: http://denovoassembler.sf.net/"<<endl;
+	*out<<"License: http://www.gnu.org/licenses/gpl.html"<<endl;
+	*out<<"Publication: in preparation"<<endl;
+	*out<<"Version: "<<SOFTWARE_VERSION<<endl;
 }

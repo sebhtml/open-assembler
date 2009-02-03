@@ -9,7 +9,7 @@ LightVertex.h LightVertex.cpp
 
 dna_Merger_SOURCES = merger_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp
 
-dna_Scaffolder_SOURCES = scaffolder_main.cpp
+dna_Scaffolder_SOURCES = scaffolder_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp
 
 dna_sffPairedToFasta_SOURCES = SffLoader.cpp SffLoader.h Read.h Read.cpp DeBruijnAssembler.cpp DeBruijnAssembler.h sffPairedToFasta_main.cpp VertexData.h VertexData.cpp CustomMap.hpp  Loader.cpp Loader.h SequenceDataFull.h SequenceDataFull.cpp
 

@@ -113,6 +113,7 @@ public:
 	static int m_NUCLEOTIDE_T;
 	static int m_NUCLEOTIDE_C;
 	static int m_NUCLEOTIDE_G;
+	static void CommonHeader(ostream*out);
 };
 
 #endif
