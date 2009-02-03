@@ -72,10 +72,12 @@ int main(int argc,char*argv[]){
 				multiplicity++;
 				rightPart=sequence.substr(positionFLX+multiplicity*linker_FLX.length());
 			}
-			(*left)<<">"<<readName<<"_1 "<<leftPart.length()<<endl;
-			(*left)<<leftPart<<endl;
-			(*right)<<">"<<readName<<"_2 "<<rightPart.length()<<endl;
-			(*right)<<rightPart<<endl;
+			if(leftPart.length()>0&&rightPart.length()>0){
+				(*left)<<">"<<readName<<"_1 "<<leftPart.length()<<endl;
+				(*left)<<leftPart<<endl;
+				(*right)<<">"<<readName<<"_2 "<<rightPart.length()<<endl;
+				(*right)<<rightPart<<endl;
+			}
 		}else if(positionTITANIUM!=string::npos){
 			titaniumLinker++;
 			if(left==NULL)

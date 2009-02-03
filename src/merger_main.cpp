@@ -161,7 +161,7 @@ vector<int> merge(vector<string> contigSequences){
 		}
 	}
 	int maxNotFound=2*wordSize;
-	//maxNotFound=0;
+	maxNotFound=0;
 	cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
 	cout<<"Building a graph of contigs."<<endl;
 	for(int i=0;i<contigSequences.size();i++){
@@ -182,10 +182,18 @@ vector<int> merge(vector<string> contigSequences){
 			for(int k=0;k<otherRevContigs2.size();k++)
 				otherRevContigs.insert(otherRevContigs2[k]);
 		}
+
+		// reverse complement hits
 		for(set<int>::iterator matchContig=otherRevContigs.begin();matchContig!=otherRevContigs.end();matchContig++){
 			if(i!=*matchContig&&
-		contigSequences[i].length()<=contigSequences[*matchContig].length()
-		){
+		contigSequences[i].length()==contigSequences[*matchContig].length()
+			){
+				string sequenceA=contigSequences[i];
+				string sequenceB=contigSequences[*matchContig];
+				string sequenceB_Rev=DeBruijnAssembler::reverseComplement(sequenceB);
+				bool theSame=false;
+
+/*
 				//cout<<"Possible match (Reverse Complement)"<<endl;
 				set<VERTEX_TYPE> otherIndex;
 				for(int k=0;k<contigSequences[*matchContig].length();k++){
@@ -204,17 +212,36 @@ vector<int> merge(vector<string> contigSequences){
 					if(otherIndex.count(DeBruijnAssembler::wordId(word.c_str()))==0)
 						notFound++;
 				}
-				if(notFound<=maxNotFound){
+*/
+				if(theSame){
 					//contigs_graph[i].insert(*matchContig);
 					contigs_graph[*matchContig].insert(i);
 				}
 			}
 		}
 
+		// forward hits
 		for(set<int>::iterator matchContig=otherContigs.begin();matchContig!=otherContigs.end();matchContig++){
 			if(i!=*matchContig&&
 		contigSequences[i].length()<=contigSequences[*matchContig].length()
-		){
+			){
+				string shortContig=contigSequences[i];
+				string longContig=contigSequences[*matchContig];
+				int lengthDifference=longContig.length()-shortContig.length();
+				//cout<<shortContig.substr(0,100)<<endl;
+				//cout<<longContig.substr(lengthDifference,100)<<endl;
+				//int notFound=0;
+				bool theSame=true;
+				int offset=50;
+				for(int k=offset;k<shortContig.length();k++){
+					if(shortContig[k]!=longContig[lengthDifference+k]){
+						//cout<<"Not the same"<<endl;
+						theSame=false;
+						break;
+					}
+				}
+		
+/*
 				//cout<<"Possible match (Foward)"<<endl;
 				set<VERTEX_TYPE> otherIndex;
 				for(int k=0;k<contigSequences[*matchContig].length();k++){
@@ -233,8 +260,10 @@ vector<int> merge(vector<string> contigSequences){
 					if(otherIndex.count(DeBruijnAssembler::wordId(word.c_str()))==0)
 						notFound++;
 				}
+*/
 				//cout<<"Not found"<<endl;
-				if(notFound<=maxNotFound){
+				if(theSame){
+					//cout<<"Forward the same"<<endl;
 					//contigs_graph[i].insert(*matchContig);
 					contigs_graph[*matchContig].insert(i);
 				}

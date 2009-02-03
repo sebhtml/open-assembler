@@ -174,5 +174,42 @@ int main(int argc,char*argv[]){
 	m_cout<<"Files written in "+assemblyDirectory<<endl;
 	m_cout<<"Done."<<endl;
 	m_cout.close();
+	string hawkeyeFile=assemblyDirectory+"/RunHawkeye.sh";
+	string bankFile=assemblyDirectory+"/CreateBank.sh";
+	ofstream fileStreamBank(bankFile.c_str());
+	ofstream fileStream(hawkeyeFile.c_str());
+	string currentDirectory;
+	string pwdFile=assemblyDirectory+"/pwd.txt";
+	string pwdCommand="pwd > "+pwdFile;
+	system(pwdCommand.c_str());
+	ifstream pwdFileStream(pwdFile.c_str());
+	pwdFileStream>>currentDirectory;
+	pwdFileStream.close();
+	fileStream<<"if test -d bank"<<endl;
+	fileStream<<"then"<<endl;
+	fileStream<<"	true"<<endl;
+	fileStream<<"else"<<endl;
+	fileStream<<"	bash CreateBank.sh > bank.log"<<endl;
+	fileStreamBank<<"bank-transact -m Assembly.afg -b bank -c"<<endl;
+	fileStreamBank<<"cat";
+	for(int i=0;i<inputFiles.size();i++){
+		if(inputFiles[i][0]!='/'){
+			fileStreamBank<<" "<<currentDirectory<<inputFiles[i];
+		}else{
+			fileStreamBank<<" "<<inputFiles[i];
+		}
+	}
+			
+	fileStreamBank<<" > reads.fasta"<<endl;
+	fileStreamBank<<"dna_fastaToAMOS reads.fasta reads.afg"<<endl;
+	fileStreamBank<<"bank-transact -m reads.afg -b bank"<<endl;
+	fileStream<<"fi"<<endl;
+	fileStream<<"hawkeye bank"<<endl;
+	fileStreamBank.close();
+	fileStream.close();
+	string mergerFile=assemblyDirectory+"/Merge.sh";
+	ofstream fileStreamMerger(mergerFile.c_str());
+	fileStreamMerger<<"dna_Merger fasta.contigs Assembly.fasta > merger.log"<<endl;
+	fileStreamMerger.close();
 	return 0;
 }
