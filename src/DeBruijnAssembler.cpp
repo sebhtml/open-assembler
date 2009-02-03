@@ -838,7 +838,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 	}
 
 	int best=-1;
-	double factor=1.1; // magic number
+	double factor=1.0; // magic number
 	for(map<int,int>::iterator i=scoresSum.begin();i!=scoresSum.end();i++){
 		//(*m_cout)<<i->second<<endl;
 		bool isBest=true;
