@@ -552,11 +552,12 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	set<VERTEX_TYPE> sourcesVisited;
 	vector<int> The_Discovery_Of_Sources;
 	vector<int>VisitsOfSources;
-	string assemblyAmos=m_assemblyDirectory+"/Assembly.afg";
-	string contigsFile=m_assemblyDirectory+"/fasta.contigs";
-	
+	string assemblyAmos=m_assemblyDirectory+"/"+AMOS_FILE_NAME;
+	string contigsFile=m_assemblyDirectory+"/"+FASTA_FILE_NAME;
+	string coverageFile=m_assemblyDirectory+"/"+COVERAGE_FILE_NAME;
 	ofstream amosFile(assemblyAmos.c_str());
 	ofstream contigsFileStream(contigsFile.c_str());
+	ofstream coverageStream(coverageFile.c_str());
 	int contigId=1;
 	int round=1;
 	while(sources.size()>0){
@@ -585,6 +586,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 					continue;
 				writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
 				writeContig_fasta(&path,&contigsFileStream,contigId);
+				writeContig_Coverage(&currentReadPositions,&path,&coverageStream,contigId);
 				//m_contig_paths.push_back(path);
 				contigId++;
 			}
@@ -594,6 +596,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	}
 	amosFile.close();
 	contigsFileStream.close();
+	coverageStream.close();
 	m_cout<<endl;
 
 	(m_cout)<<"Source discovery"<<endl;
@@ -680,7 +683,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			(*m_cout)<<path->size()<<" progress."<<endl;
 		//(*m_cout)<<"Threading.. reads "<<endl;
 		//(*m_cout)<<"Coverage mean: "<<coverageMean<<" "<<annotations->size()<<endl; 
-		int HIGHCOVERAGETHRESHOLD=1*m_coverage_mean+3*m_coverage_stddev;
+		int HIGHCOVERAGETHRESHOLD=2*m_coverage_mean+0*m_coverage_stddev;
 		if(annotations->size()>=HIGHCOVERAGETHRESHOLD&&m_DEBUG){
 			(*m_cout)<<"Coverage: "<<annotations->size()<<", refusing to start threading reads!"<<endl;
 		}
@@ -982,7 +985,23 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 }
 
 
-
+void DeBruijnAssembler::writeContig_Coverage(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i){
+	(*file)<<"Contig"<<i<<endl;
+	int p=1;
+	for(int vertexOffset=0;vertexOffset<path->size();vertexOffset++){
+		if(vertexOffset==0){
+			while(p<=m_wordSize){
+				int edgeOffset=vertexOffset;
+				(*file)<<p<<" "<<currentReadPositions->at(edgeOffset).size()<<endl;
+				p++;
+			}
+		}else{
+			int edgeOffset=vertexOffset-1;
+			(*file)<<p<<" "<<currentReadPositions->at(edgeOffset).size()<<endl;
+			p++;
+		}
+	}
+}
 
 /*
 

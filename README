@@ -19,31 +19,19 @@ Using DNA is easy.
 == Assembling 454 data: ==
 
 dna_DeBruijnAssembler reads.sff
-cd Assembly
-dna_Merger fasta.contigs Merge.fasta
-cd ..
 
 == Assembling paired 454 data: ==
 
 dna_sffPairedToFasta reads.sff
 dna_DeBruijnAssembler reads.sff*.fasta
-cd Assembly
-dna_Merger fasta.contigs Merge.fasta
-cd ..
 cat reads.sff*paired* > paired-reads.fasta
-dna_Scaffolder paired-reads.fasta Assembly/Merge.fasta /Assembly/scaffolds.fasta
+dna_Scaffolder paired-reads.fasta Assembly/contigs.fasta Assembly/scaffolds.fasta
 
 == Assembling Solexa data: ==
 
 dna_DeBruijnAssembler reads.fastq
-cd Assembly
-dna_Merger fasta.contigs Merge.fasta
-cd ..
 
 == Assembling Sanger reads: ==
 
 dna_DeBruijnAssembler reads.fasta
-cd Assembly
-dna_Merger fasta.contigs Merge.fasta
-cd ..
 

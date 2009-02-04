@@ -8,12 +8,16 @@ end
 
 seq=""
 
+names=[]
 contigs=[]
 f=File.open ARGV[0]
 while l=f.gets
     if l[0..0]=='>'
-        contigs<< seq
+	if seq!=""
+        	contigs<< seq
+	end
         seq=""
+	names<< l.strip
     else
         seq<< l.strip
     end
@@ -23,14 +27,15 @@ contigs<< seq
 f.close
 
 threshold=ARGV[1].to_i
-k=1
+k=0
 out=File.open ARGV[2],"w+"
 contigs.each do |i|
     if i.length<threshold
+	k+=1
         next
     end
     j=0
-    out.puts ">#{k} #{i.length}"
+    out.puts names[k]
     columns=60
     while j<i.length
         out.puts i[j..(j+columns-1)]

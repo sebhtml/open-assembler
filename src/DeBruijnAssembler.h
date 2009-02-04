@@ -35,7 +35,9 @@
 #include<sstream>
 using namespace std;
 
-
+#define AMOS_FILE_NAME "contigs-amos.afg"
+#define FASTA_FILE_NAME "contigs.fasta"
+#define COVERAGE_FILE_NAME "contigs-coverage.txt"
 
 class DeBruijnAssembler{
 	int m_coverage_mean;
@@ -89,6 +91,8 @@ class DeBruijnAssembler{
 
 	void writeContig_fasta(vector<VERTEX_TYPE>*path,ofstream*file,int i);
 	void writeContig_Amos(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);
+
+	void writeContig_Coverage(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);
 public:
 	DeBruijnAssembler(ostream*m_cout);
 	void setPairedInfo(string a);

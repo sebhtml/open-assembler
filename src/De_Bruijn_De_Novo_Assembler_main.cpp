@@ -190,7 +190,7 @@ int main(int argc,char*argv[]){
 	fileStream<<"	true"<<endl;
 	fileStream<<"else"<<endl;
 	fileStream<<"	bash CreateBank.sh > bank.log"<<endl;
-	fileStreamBank<<"bank-transact -m Assembly.afg -b bank -c"<<endl;
+	fileStreamBank<<"bank-transact -m "<<AMOS_FILE_NAME<<" -b bank -c"<<endl;
 	fileStreamBank<<"cat";
 	for(int i=0;i<inputFiles.size();i++){
 		if(inputFiles[i][0]!='/'){
@@ -209,7 +209,7 @@ int main(int argc,char*argv[]){
 	fileStream.close();
 	string mergerFile=assemblyDirectory+"/Merge.sh";
 	ofstream fileStreamMerger(mergerFile.c_str());
-	fileStreamMerger<<"dna_Merger fasta.contigs Merger.fasta > merger.log"<<endl;
+	fileStreamMerger<<"dna_Merger "<<FASTA_FILE_NAME<<" Merger.fasta > merger.log"<<endl;
 	fileStreamMerger.close();
 	return 0;
 }

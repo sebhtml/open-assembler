@@ -143,6 +143,8 @@ vector<string> overlapper(vector<string> contigSequences){
 }
 
 
+
+
 vector<Read*> mergeForward(vector<Read*> contigSequences){
 	map<int,set<int> > contigs_graph;
 	cout<<contigSequences.size()<<" contigs"<<endl;
@@ -219,9 +221,12 @@ vector<Read*> mergeForward(vector<Read*> contigSequences){
 	int color=1;
 	
 	for(int i=0;i<contigSequences.size();i++){
+		if(i%1000==0)
+			cout<<i+1<<" / "<<contigSequences.size()<<endl;
 		applyColor(i,color,&contigToColor,&contigs_graph);
 		color++;
 	}
+	cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
 
 /*
 	ofstream graphFile("graph.graphviz");
@@ -269,22 +274,22 @@ vector<Read*> mergeForward(vector<Read*> contigSequences){
 }
 
 
-vector<int> merge(vector<string> contigSequences){
+vector<Read*> reverseMerge(vector<Read*> contigSequences){
 	map<int,set<int> > contigs_graph;
 	cout<<contigSequences.size()<<" contigs"<<endl;
-	map<VERTEX_TYPE,vector<int> > indexOfWords;
 	map<VERTEX_TYPE,vector<int> > indexOfRevWords;
+	cout<<"Reverse to Reverse now."<<endl;
 	cout<<"Indexing"<<endl;
 	for(int i=0;i<contigSequences.size();i++){
 		contigs_graph[i].size();// insert a node
 		if(i%10000==0)
 			cout<<i+1<<" / "<<contigSequences.size()<<endl;
-		for(int j=0;j<contigSequences[i].length();j+=wordSize){
-			string word=contigSequences[i].substr(j,wordSize);
+		string sequence=contigSequences[i]->getSeq();
+		for(int j=0;j<sequence.length();j+=wordSize){
+			string word=sequence.substr(j,wordSize);
 			if(word.length()!=wordSize)
 				continue;
 			string revWord=DeBruijnAssembler::reverseComplement(word);
-			indexOfWords[DeBruijnAssembler::wordId(word.c_str())].push_back(i);
 			indexOfRevWords[DeBruijnAssembler::wordId(revWord.c_str())].push_back(i);
 		}
 	}
@@ -297,158 +302,54 @@ vector<int> merge(vector<string> contigSequences){
 			cout<<i+1<<" / "<<contigSequences.size()<<endl;
 
 		bool used=false;
-		set<int>otherContigs;
 		set<int>otherRevContigs;
-		for(int j=contigSequences[i].length()/2-3*wordSize;j<contigSequences[i].length()/2+3*wordSize;j+=1){
-			string word=contigSequences[i].substr(j,wordSize);
+		string sequence=contigSequences[i]->getSeq();
+		for(int j=sequence.length()/2-3*wordSize;j<sequence.length()/2+3*wordSize;j+=1){
+			string word=sequence.substr(j,wordSize);
 			if(word.length()!=wordSize)
 				continue;
-			vector<int> otherContigs2=indexOfWords[DeBruijnAssembler::wordId(word.c_str())];
-			for(int k=0;k<otherContigs2.size();k++)
-				otherContigs.insert(otherContigs2[k]);
 
 			vector<int> otherRevContigs2=indexOfRevWords[DeBruijnAssembler::wordId(word.c_str())];
 			for(int k=0;k<otherRevContigs2.size();k++)
 				otherRevContigs.insert(otherRevContigs2[k]);
 		}
-		if(m_DEBUG)
-			cout<<"Forward hits: "<<otherContigs.size()<<endl;
 
-		// forward hits
-		for(set<int>::iterator matchContig=otherContigs.begin();matchContig!=otherContigs.end();matchContig++){
-			if(i!=*matchContig&&
-		contigSequences[i].length()<=contigSequences[*matchContig].length()&&
-		used==false
-			){
-			
-				string shortContig=contigSequences[i];
-				string longContig=contigSequences[*matchContig];
-				int lengthDifference=longContig.length()-shortContig.length();
-				//cout<<shortContig.substr(0,100)<<endl;
-				//cout<<longContig.substr(lengthDifference,100)<<endl;
-				//int notFound=0;
-				bool theSame=true;
-				int offset=150;
-				string wordToSearch=shortContig.substr(offset,wordSize);
-				int offSetInLong=0;
-				while(offSetInLong<longContig.length()&&longContig.substr(offSetInLong,wordSize)!=wordToSearch){
-					offSetInLong++;
-				}
-				if(m_DEBUG){
-					cout<<"offSetInLong "<<offSetInLong<<endl;
-					cout<<shortContig.substr(offset,100)<<endl;
-					cout<<longContig.substr(offSetInLong,100)<<endl;
-				}
-				for(int k=offset;k<shortContig.length();k++){
-					if(shortContig[k]!=longContig[offSetInLong]){
-						theSame=false;
-						if(m_DEBUG){
-							cout<<"oops"<<endl;
-						}
-						break;
-					}
-					//cout<<"ok"<<endl;
-					offSetInLong++;
-				}
-/*
-				for(int k=offset;k<shortContig.length();k++){
-					if(shortContig[k]!=longContig[lengthDifference+k]){
-						//cout<<"Not the same"<<endl;
-						theSame=false;
-						break;
-					}
-				}
-		*/
-/*
-				//cout<<"Possible match (Foward)"<<endl;
-				set<VERTEX_TYPE> otherIndex;
-				for(int k=0;k<contigSequences[*matchContig].length();k++){
-					string word=contigSequences[*matchContig].substr(k,wordSize);
-					if(word.length()!=wordSize)
-						continue;
-					otherIndex.insert(DeBruijnAssembler::wordId(word.c_str()));
-				}
-				int notFound=0;
-				for(int k=0;k<contigSequences[i].length();k++){
-					if(notFound>maxNotFound)
-						break;
-					string word=(contigSequences[i].substr(k,wordSize));
-					if(word.length()!=wordSize)
-						continue;
-					if(otherIndex.count(DeBruijnAssembler::wordId(word.c_str()))==0)
-						notFound++;
-				}
-*/
-				//cout<<"Not found"<<endl;
-				if(theSame){
-					if(m_DEBUG)
-						cout<<"Forward the same"<<endl;
-					contigs_graph[i].insert(*matchContig);
-					contigs_graph[*matchContig].insert(i);
-					used=true;
-				}
-			}
-		}
 
 		if(m_DEBUG){
 			cout<<"Reverse hits: "<<otherRevContigs.size()<<endl;
 		}
 		// reverse complement hits
 		for(set<int>::iterator matchContig=otherRevContigs.begin();matchContig!=otherRevContigs.end();matchContig++){
+			string sequenceSmall=contigSequences[i]->getSeq();
+			string sequenceLong=contigSequences[*matchContig]->getSeq();
 			if(i!=*matchContig&&
-		contigSequences[i].length()<=contigSequences[*matchContig].length()&&
+		sequenceSmall.length()<=sequenceLong.length()&&
 				used==false
 			){
-				string sequenceSmall=contigSequences[i];
-				string sequenceLong=contigSequences[*matchContig];
 				string sequenceLong_Rev=DeBruijnAssembler::reverseComplement(sequenceLong);
 				string shortContig=sequenceSmall;
 				string longContig=sequenceLong_Rev;
-				bool theSame=true;
-				int offset=150;
-				string wordToSearch=shortContig.substr(offset,wordSize);
-				if(m_DEBUG)
-					cout<<wordToSearch<<endl;
-				int offSetInLong=0;
-				while(offSetInLong<longContig.length()&&longContig.substr(offSetInLong,wordSize)!=wordToSearch){
-					offSetInLong++;
-				}
-				for(int k=offset;k<shortContig.length();k++){
-					if(shortContig[k]!=longContig[offSetInLong]){
-						theSame=false;
-						if(m_DEBUG){
-							cout<<"oops"<<endl;
-						}
-						break;
-					}
-					//cout<<"ok"<<endl;
-					offSetInLong++;
+				set<VERTEX_TYPE> longMap;
+				for(int o=0;o<longContig.length();o++){
+					string word=longContig.substr(o,wordSize);
+					if(word.length()!=wordSize)
+						continue;
+					longMap.insert(DeBruijnAssembler::wordId(word.c_str()));
 				}
 
-/*
-				//cout<<"Possible match (Reverse Complement)"<<endl;
-				set<VERTEX_TYPE> otherIndex;
-				for(int k=0;k<contigSequences[*matchContig].length();k++){
-					string word=contigSequences[*matchContig].substr(k,wordSize);
-					if(word.length()!=wordSize)
-						continue;
-					otherIndex.insert(DeBruijnAssembler::wordId(word.c_str()));
-				}
 				int notFound=0;
-				for(int k=0;k<contigSequences[i].length();k++){
-					if(notFound>maxNotFound)
-						break;
-					string word=DeBruijnAssembler::reverseComplement(contigSequences[i].substr(k,wordSize));
+				for(int o=0;o<shortContig.length();o+=wordSize){
+					string word=shortContig.substr(o,wordSize);
 					if(word.length()!=wordSize)
 						continue;
-					if(otherIndex.count(DeBruijnAssembler::wordId(word.c_str()))==0)
+					if(longMap.count(DeBruijnAssembler::wordId(word.c_str()))==0)
 						notFound++;
 				}
-*/
+				bool theSame=notFound<(150/wordSize);
 				if(theSame){
 					contigs_graph[i].insert(*matchContig);
 					contigs_graph[*matchContig].insert(i);
-					used=true;
+					//used=true;
 				}
 			}
 		}
@@ -487,7 +388,7 @@ vector<int> merge(vector<string> contigSequences){
 		colorToContigs[contigToColor[i]].push_back(i);
 	}
 	
-	vector<int> theBestContigs;
+	vector<Read*> theBestContigs;
 	for(map<int,vector<int> >::iterator i=colorToContigs.begin();i!=colorToContigs.end();i++){
 		vector<int> contigs=i->second;
 		cout<<"Color: "<<i->first<<endl;
@@ -497,12 +398,14 @@ vector<int> merge(vector<string> contigSequences){
 		for(int j=0;j<contigs.size();j++){
 			//cout<<contigsWithNames->at(contigs[j])->getId()<<" ";
 			cout<<contigs[j]<<" ";
-			if(contigSequences[contigs[j]].length()>contigSequences[best].length()){
+			string sequenceA=contigSequences[contigs[j]]->getSeq();
+			string sequenceB=contigSequences[best]->getSeq();
+			if(sequenceA.length()>sequenceB.length()){
 				best=contigs[j];
 			}
 		}
 		cout<<endl;
-		theBestContigs.push_back(best);
+		theBestContigs.push_back(contigSequences[best]);
 	}
 	return theBestContigs;
 }
@@ -522,10 +425,12 @@ int main(int argc,char*argv[]){
 	Loader loader(&cout);
 	loader.load(contigsFile,&contigs);
 
+	//for(int i=0;i<contigs.size();i++)
+		//cout<<strlen(contigs[i]->getSeq())<<endl;
 	vector<Read*> forwardMerge=mergeForward(contigs);
 	cout<<endl;
 
-	vector<Read*> theBestContigs=forwardMerge;
+	vector<Read*> theBestContigs=reverseMerge(forwardMerge);
 
 	ofstream f(outputFile.c_str());
 	for(int j=0;j<theBestContigs.size();j++){
