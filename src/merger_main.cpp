@@ -142,6 +142,133 @@ vector<string> overlapper(vector<string> contigSequences){
 
 }
 
+
+vector<Read*> mergeForward(vector<Read*> contigSequences){
+	map<int,set<int> > contigs_graph;
+	cout<<contigSequences.size()<<" contigs"<<endl;
+	map<string,vector<int> > indexOfWords;
+	cout<<"[Forward to Forward]"<<endl;
+	cout<<"Indexing"<<endl;
+	for(int i=0;i<contigSequences.size();i++){
+		contigs_graph[i].size();// insert a node
+		if(i%10000==0)
+			cout<<i+1<<" / "<<contigSequences.size()<<endl;
+		string sequence=contigSequences[i]->getSeq();
+		if(sequence.length()<wordSize)
+			continue;
+		//cout<<sequence.length()<<endl;
+		string word=sequence.substr(sequence.length()-wordSize,wordSize);
+		indexOfWords[word].push_back(i);
+	}
+	cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
+	cout<<"Building a graph of contigs."<<endl;
+	for(int i=0;i<contigSequences.size();i++){
+		if(i%1000==0)
+			cout<<i+1<<" / "<<contigSequences.size()<<endl;
+
+		bool used=false;
+		string sequence=contigSequences[i]->getSeq();
+		//cout<<sequence.length()<<endl;
+
+		if(sequence.length()<wordSize)
+			continue;
+		string word=sequence.substr(sequence.length()-wordSize,wordSize);
+		vector<int>otherContigs=indexOfWords[word];
+		if(m_DEBUG){
+			cout<<"Forward hits: "<<otherContigs.size()<<endl;
+			cout<<otherContigs.size()<< "hits"<<endl;
+		}
+		// forward hits
+		for(vector<int>::iterator matchContig=otherContigs.begin();matchContig!=otherContigs.end();matchContig++){
+			string shortContig=contigSequences[i]->getSeq();
+			string longContig=contigSequences[*matchContig]->getSeq();
+			if(i!=*matchContig&&
+		shortContig.length()<=longContig.length()&&
+		used==false
+			){
+			
+				int ok=0;
+				for(int k=0;k<shortContig.length();k++){
+					if(shortContig[shortContig.length()-1-k]==longContig[longContig.length()-1-k])
+						ok++;
+					else
+						break;
+				}
+				if(m_DEBUG)
+					cout<<ok<<" "<<shortContig.length()<<endl;
+				bool theSame=ok>(shortContig.length()/2);
+				if(theSame){
+					if(m_DEBUG)
+						cout<<"Forward the same"<<endl;
+					contigs_graph[i].insert(*matchContig);
+					contigs_graph[*matchContig].insert(i);
+					//used=true;
+				}
+			}
+		}
+	}
+
+	cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
+	cout<<"The graph is ready."<<endl;
+
+	map<int,int> contigToColor;
+	
+	for(int i=0;i<contigSequences.size();i++){
+		contigToColor[i]=-1;
+	}
+	int color=1;
+	
+	for(int i=0;i<contigSequences.size();i++){
+		applyColor(i,color,&contigToColor,&contigs_graph);
+		color++;
+	}
+
+/*
+	ofstream graphFile("graph.graphviz");
+	graphFile<<"digraph G{"<<endl;
+	for(map<int,int>::iterator i=contigToColor.begin();i!=contigToColor.end();i++){
+		//graphFi
+	}
+	for(map<int,set<int> >::iterator i=contigs_graph.begin();i!=contigs_graph.end();i++){
+		for(set<int>::iterator j=i->second.begin();j!=i->second.end();j++){
+			graphFile<<i->first<<" -> "<<*j<<endl;
+		}
+	}
+	graphFile<<"}"<<endl;
+	graphFile.close();
+*/
+	map<int,vector<int> > colorToContigs;
+	for(int i=0;i<contigSequences.size();i++){
+		colorToContigs[contigToColor[i]].push_back(i);
+	}
+	
+	vector<Read*> theBestContigs;
+	int colors=0;
+	for(map<int,vector<int> >::iterator i=colorToContigs.begin();i!=colorToContigs.end();i++){
+		vector<int> contigs=i->second;
+		if(colors%10000==0)
+			cout<<"Progress: "<<colors<<endl;
+		colors++;
+		//cout<<"Color: "<<i->first<<endl;
+		//cout<<contigs.size()<<" contigs: ";
+		
+		int best=contigs[0];
+		for(int j=0;j<contigs.size();j++){
+			//cout<<contigsWithNames->at(contigs[j])->getId()<<" ";
+			//cout<<contigs[j]<<" ";
+			string a=contigSequences[contigs[j]]->getSeq();
+			string b=contigSequences[best]->getSeq();
+			if(a.length()>b.length()){
+				best=contigs[j];
+			}
+		}
+		//cout<<endl;
+		theBestContigs.push_back(contigSequences[best]);
+	}
+	return theBestContigs;
+}
+
+
 vector<int> merge(vector<string> contigSequences){
 	map<int,set<int> > contigs_graph;
 	cout<<contigSequences.size()<<" contigs"<<endl;
@@ -150,7 +277,7 @@ vector<int> merge(vector<string> contigSequences){
 	cout<<"Indexing"<<endl;
 	for(int i=0;i<contigSequences.size();i++){
 		contigs_graph[i].size();// insert a node
-		if(i%1000==0)
+		if(i%10000==0)
 			cout<<i+1<<" / "<<contigSequences.size()<<endl;
 		for(int j=0;j<contigSequences[i].length();j+=wordSize){
 			string word=contigSequences[i].substr(j,wordSize);
@@ -166,7 +293,7 @@ vector<int> merge(vector<string> contigSequences){
 	cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
 	cout<<"Building a graph of contigs."<<endl;
 	for(int i=0;i<contigSequences.size();i++){
-		if(i%100==0||true)
+		if(i%100==0)
 			cout<<i+1<<" / "<<contigSequences.size()<<endl;
 
 		bool used=false;
@@ -184,7 +311,8 @@ vector<int> merge(vector<string> contigSequences){
 			for(int k=0;k<otherRevContigs2.size();k++)
 				otherRevContigs.insert(otherRevContigs2[k]);
 		}
-		cout<<"Forward hits: "<<otherContigs.size()<<endl;
+		if(m_DEBUG)
+			cout<<"Forward hits: "<<otherContigs.size()<<endl;
 
 		// forward hits
 		for(set<int>::iterator matchContig=otherContigs.begin();matchContig!=otherContigs.end();matchContig++){
@@ -214,7 +342,9 @@ vector<int> merge(vector<string> contigSequences){
 				for(int k=offset;k<shortContig.length();k++){
 					if(shortContig[k]!=longContig[offSetInLong]){
 						theSame=false;
-						cout<<"oops"<<endl;
+						if(m_DEBUG){
+							cout<<"oops"<<endl;
+						}
 						break;
 					}
 					//cout<<"ok"<<endl;
@@ -260,8 +390,9 @@ vector<int> merge(vector<string> contigSequences){
 			}
 		}
 
-
-		cout<<"Reverse hits: "<<otherRevContigs.size()<<endl;
+		if(m_DEBUG){
+			cout<<"Reverse hits: "<<otherRevContigs.size()<<endl;
+		}
 		// reverse complement hits
 		for(set<int>::iterator matchContig=otherRevContigs.begin();matchContig!=otherRevContigs.end();matchContig++){
 			if(i!=*matchContig&&
@@ -285,8 +416,9 @@ vector<int> merge(vector<string> contigSequences){
 				for(int k=offset;k<shortContig.length();k++){
 					if(shortContig[k]!=longContig[offSetInLong]){
 						theSame=false;
-						if(m_DEBUG)
+						if(m_DEBUG){
 							cout<<"oops"<<endl;
+						}
 						break;
 					}
 					//cout<<"ok"<<endl;
@@ -359,7 +491,7 @@ vector<int> merge(vector<string> contigSequences){
 	for(map<int,vector<int> >::iterator i=colorToContigs.begin();i!=colorToContigs.end();i++){
 		vector<int> contigs=i->second;
 		cout<<"Color: "<<i->first<<endl;
-		cout<<"   Contigs: ";
+		cout<<contigs.size()<<" contigs: ";
 		
 		int best=contigs[0];
 		for(int j=0;j<contigs.size();j++){
@@ -389,25 +521,22 @@ int main(int argc,char*argv[]){
 	vector<Read*> contigs;
 	Loader loader(&cout);
 	loader.load(contigsFile,&contigs);
-	vector<string> contigSequences;
-	for(int i=0;i<contigs.size();i++){
-		contigSequences.push_back(contigs[i]->getSeq());
-	}
 
-	vector<int> theBestContigs=merge(contigSequences);
-	//contigSequences=overlapper(contigSequences);
+	vector<Read*> forwardMerge=mergeForward(contigs);
 	cout<<endl;
+
+	vector<Read*> theBestContigs=forwardMerge;
 
 	ofstream f(outputFile.c_str());
 	for(int j=0;j<theBestContigs.size();j++){
-		int i=theBestContigs[j];
-		f<<">"<<contigs.at(i)->getId()<<" "<<contigSequences[i].length()<<" nucleotides"<<endl;
-		cout<<">"<<contigs.at(i)->getId()<<" "<<contigSequences[i].length()<<" nucleotides"<<endl;
+		string sequence=theBestContigs[j]->getSeq();
+		f<<">"<<theBestContigs.at(j)->getId()<<" "<<sequence.length()<<" nucleotides"<<endl;
+		cout<<">"<<theBestContigs.at(j)->getId()<<" "<<sequence.length()<<" nucleotides"<<endl;
 		int columns=70;
-		int j=0;
-		while(j<contigSequences[i].length()){
-			f<<contigSequences[i].substr(j,columns)<<endl;
-			j+=columns;
+		int k=0;
+		while(k<sequence.length()){
+			f<<sequence.substr(k,columns)<<endl;
+			k+=columns;
 		}
 	}
 	f.close();
