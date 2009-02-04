@@ -169,7 +169,7 @@ vector<int> merge(vector<string> contigSequences){
 		if(i%100==0||true)
 			cout<<i+1<<" / "<<contigSequences.size()<<endl;
 
-
+		bool used=false;
 		set<int>otherContigs;
 		set<int>otherRevContigs;
 		for(int j=contigSequences[i].length()/2-3*wordSize;j<contigSequences[i].length()/2+3*wordSize;j+=1){
@@ -189,8 +189,10 @@ vector<int> merge(vector<string> contigSequences){
 		// forward hits
 		for(set<int>::iterator matchContig=otherContigs.begin();matchContig!=otherContigs.end();matchContig++){
 			if(i!=*matchContig&&
-		contigSequences[i].length()<=contigSequences[*matchContig].length()
+		contigSequences[i].length()<=contigSequences[*matchContig].length()&&
+		used==false
 			){
+			
 				string shortContig=contigSequences[i];
 				string longContig=contigSequences[*matchContig];
 				int lengthDifference=longContig.length()-shortContig.length();
@@ -212,7 +214,7 @@ vector<int> merge(vector<string> contigSequences){
 				for(int k=offset;k<shortContig.length();k++){
 					if(shortContig[k]!=longContig[offSetInLong]){
 						theSame=false;
-						//cout<<"oops"<<endl;
+						cout<<"oops"<<endl;
 						break;
 					}
 					//cout<<"ok"<<endl;
@@ -251,8 +253,9 @@ vector<int> merge(vector<string> contigSequences){
 				if(theSame){
 					if(m_DEBUG)
 						cout<<"Forward the same"<<endl;
-					//contigs_graph[i].insert(*matchContig);
+					contigs_graph[i].insert(*matchContig);
 					contigs_graph[*matchContig].insert(i);
+					used=true;
 				}
 			}
 		}
@@ -262,7 +265,8 @@ vector<int> merge(vector<string> contigSequences){
 		// reverse complement hits
 		for(set<int>::iterator matchContig=otherRevContigs.begin();matchContig!=otherRevContigs.end();matchContig++){
 			if(i!=*matchContig&&
-		contigSequences[i].length()<=contigSequences[*matchContig].length()
+		contigSequences[i].length()<=contigSequences[*matchContig].length()&&
+				used==false
 			){
 				string sequenceSmall=contigSequences[i];
 				string sequenceLong=contigSequences[*matchContig];
@@ -272,6 +276,8 @@ vector<int> merge(vector<string> contigSequences){
 				bool theSame=true;
 				int offset=150;
 				string wordToSearch=shortContig.substr(offset,wordSize);
+				if(m_DEBUG)
+					cout<<wordToSearch<<endl;
 				int offSetInLong=0;
 				while(offSetInLong<longContig.length()&&longContig.substr(offSetInLong,wordSize)!=wordToSearch){
 					offSetInLong++;
@@ -279,7 +285,8 @@ vector<int> merge(vector<string> contigSequences){
 				for(int k=offset;k<shortContig.length();k++){
 					if(shortContig[k]!=longContig[offSetInLong]){
 						theSame=false;
-						//cout<<"oops"<<endl;
+						if(m_DEBUG)
+							cout<<"oops"<<endl;
 						break;
 					}
 					//cout<<"ok"<<endl;
@@ -307,8 +314,9 @@ vector<int> merge(vector<string> contigSequences){
 				}
 */
 				if(theSame){
-					//contigs_graph[i].insert(*matchContig);
+					contigs_graph[i].insert(*matchContig);
 					contigs_graph[*matchContig].insert(i);
+					used=true;
 				}
 			}
 		}
@@ -328,6 +336,20 @@ vector<int> merge(vector<string> contigSequences){
 		applyColor(i,color,&contigToColor,&contigs_graph);
 		color++;
 	}
+
+	ofstream graphFile("graph.graphviz");
+	graphFile<<"digraph G{"<<endl;
+	for(map<int,int>::iterator i=contigToColor.begin();i!=contigToColor.end();i++){
+		//graphFi
+	}
+	for(map<int,set<int> >::iterator i=contigs_graph.begin();i!=contigs_graph.end();i++){
+		for(set<int>::iterator j=i->second.begin();j!=i->second.end();j++){
+			graphFile<<i->first<<" -> "<<*j<<endl;
+		}
+	}
+	graphFile<<"}"<<endl;
+	graphFile.close();
+
 	map<int,vector<int> > colorToContigs;
 	for(int i=0;i<contigSequences.size();i++){
 		colorToContigs[contigToColor[i]].push_back(i);
