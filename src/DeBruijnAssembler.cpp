@@ -505,6 +505,8 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	(*m_cout)<<"(k+1)-mers coverage statistics"<<endl;
 	int NUMBER_OF_ROUND_FOR_SHRINKING=5;
 	for(int round=1;round<=NUMBER_OF_ROUND_FOR_SHRINKING;round++){
+		if(m_coverage_stddev==0)
+			break;
 		ostringstream distributionFile;
 		distributionFile<<m_assemblyDirectory<<"/Coverage-Round-"<<round<<".txt";
 		ofstream coverageBuffer(distributionFile.str().c_str());
@@ -841,7 +843,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 	}
 
 	int best=-1;
-	double factor=1.02; // magic number
+	double factor=1.5; // magic number
 	for(map<int,int>::iterator i=scoresSum.begin();i!=scoresSum.end();i++){
 		//(*m_cout)<<i->second<<endl;
 		bool isBest=true;

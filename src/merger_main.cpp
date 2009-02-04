@@ -40,6 +40,124 @@ void applyColor(int i,int color,map<int,int>*contigToColor,map<int,set<int> >*co
 	}
 }
 
+/*
+				||||
+			-----------------------------------------------> Query
+			<-----------------------------------------------
+	
+					     |||||
+	----------------------------------------------->
+	<----------------------------------------------- Subject
+
+
+
+*/
+vector<Read*> reverseOverlapHeadToHead(vector<Read*> contigSequences){
+	cout<<"reverseOverlapHeadToHead"<<endl;
+	int offset=50;
+	bool reducing=true;
+	while(reducing){
+		map<string,vector<int> > index;
+		for(int i=0;i<contigSequences.size();i++){
+			if(i%1000==0){
+				cout<<i<<" / "<<contigSequences.size()<<endl;
+			}
+			string sequence=contigSequences[i]->getSeq();
+			if(sequence.length()<100)
+				continue;
+			string revWord=DeBruijnAssembler::reverseComplement(sequence.substr(offset,wordSize));
+			index[revWord].push_back(i);
+		}
+		cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
+
+		vector<Read*> newContigs;
+		set<int> contigUsage;
+		for(int i=0;i<contigSequences.size();i++){
+			if(contigUsage.count(i)!=0)
+				continue;
+			string sequence=contigSequences[i]->getSeq();
+			if(sequence.length()<100)
+				continue;
+			vector<int> hits;
+			for(int j=0;j<sequence.length();j++){
+				string word=sequence.substr(j,wordSize);
+				if(word.length()<wordSize)
+					continue;
+				vector<int> localHits=index[word];
+				for(int k=0;k<localHits.size();k++){
+					if(localHits[k]==i)
+						continue;
+					if(contigUsage.count(localHits[k])!=0)
+						continue;
+					hits.push_back(localHits[k]);
+				}
+			}
+			if(m_DEBUG)
+				cout<<hits.size()<<" hits"<<endl;
+
+			for(int j=0;j<hits.size();j++){
+				string QuerySequence=sequence;
+				string subjectSequenceRaw=contigSequences[hits[j]]->getSeq();
+				string SubjectSequenceRev=DeBruijnAssembler::reverseComplement(subjectSequenceRaw);
+				string startingSeed=QuerySequence.substr(offset,wordSize);
+				string endingSeed=DeBruijnAssembler::reverseComplement(subjectSequenceRaw.substr(offset,wordSize));
+				int AlignmentStartInQuery=0;
+				int AlignmentStartInSubject=0;
+				int AlignmentEndInQuery=0;
+				int AlignmentEndInSubject=0;
+				while(AlignmentStartInQuery<QuerySequence.length()&&QuerySequence.substr(AlignmentStartInQuery,wordSize)!=startingSeed)
+					AlignmentStartInQuery++;
+				while(AlignmentEndInQuery<QuerySequence.length()&&QuerySequence.substr(AlignmentEndInQuery,wordSize)!=endingSeed)
+					AlignmentEndInQuery++;
+				while(AlignmentStartInSubject<SubjectSequenceRev.length()&&SubjectSequenceRev.substr(AlignmentStartInSubject,wordSize)!=startingSeed)
+					AlignmentStartInSubject++;
+				while(AlignmentEndInSubject<SubjectSequenceRev.length()&&SubjectSequenceRev.substr(AlignmentEndInSubject,wordSize)!=endingSeed)
+					AlignmentEndInSubject++;
+
+
+/*
+ 			------------------------------------->
+	------------------------------>
+
+*/
+				int found=0;
+				set<string> currentIndex;
+				if(AlignmentEndInQuery>AlignmentStartInQuery&&AlignmentEndInSubject>AlignmentEndInSubject){
+					for(int iteratorI=AlignmentStartInQuery;iteratorI<=AlignmentEndInQuery;iteratorI++){
+						currentIndex.insert(QuerySequence.substr(iteratorI,wordSize));
+					}
+					for(int iteratorI=AlignmentStartInSubject;iteratorI<=AlignmentEndInSubject;iteratorI++){
+						if(currentIndex.count(SubjectSequenceRev.substr(iteratorI,wordSize))>0)
+							found++;
+					}
+				}
+				bool isTheSame=AlignmentEndInSubject-AlignmentStartInSubject-found<50;
+				//cout<<AlignmentEndInQuery-AlignmentStartInQuery<<endl;
+				//cout<<AlignmentEndInSubject-AlignmentStartInSubject<<endl;
+				if(isTheSame&&contigUsage.count(i)==0&&contigUsage.count(hits[j])==0){
+					//cout<<"Alignment! "<<AlignmentEndInQuery-AlignmentStartInQuery<<endl;
+					ostringstream newName;
+					newName<<"Contig_"<<contigSequences[hits[j]]->getId()<<"_R"<<contigSequences[i]->getId()<<"_F_";
+					
+					string sequence=SubjectSequenceRev.substr(0,AlignmentStartInSubject)+QuerySequence.substr(AlignmentStartInQuery);
+					Read*read=new Read(newName.str().c_str(),sequence.c_str());
+					newContigs.push_back(read);
+					contigUsage.insert(i);
+					contigUsage.insert(hits[j]);
+				}
+			}
+		}
+
+		for(int i=0;i<contigSequences.size();i++){
+			if(contigUsage.count(i)==0)
+				newContigs.push_back(contigSequences[i]);
+		}
+		reducing=contigSequences.size()>newContigs.size();
+		contigSequences=newContigs;
+	}
+	return contigSequences;
+}
+
 vector<string> overlapper(vector<string> contigSequences){
 	bool reducing=true;
 	cout<<contigSequences.size()<<" contigs"<<endl;
@@ -427,10 +545,7 @@ int main(int argc,char*argv[]){
 
 	//for(int i=0;i<contigs.size();i++)
 		//cout<<strlen(contigs[i]->getSeq())<<endl;
-	vector<Read*> forwardMerge=mergeForward(contigs);
-	cout<<endl;
-
-	vector<Read*> theBestContigs=reverseMerge(forwardMerge);
+	vector<Read*> theBestContigs=(reverseOverlapHeadToHead(reverseMerge(mergeForward(contigs))));
 
 	ofstream f(outputFile.c_str());
 	for(int j=0;j<theBestContigs.size();j++){

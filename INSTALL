@@ -3,6 +3,7 @@
 export CXXFLAGS="-O6 -Wall -std=c++98 -fomit-frame-pointer -static  "
 export LDFLAGS=$CXXFLAGS
 ./configure CXXFLAGS="$CXXFLAGS" LDFLAGS="$LDFLAGS" 
+make
 
 
 
