@@ -361,7 +361,7 @@ void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
 	bool debug=m_DEBUG;
 	//debug=false;
 	bool useCache=false;
-
+	useCache=true;
 
 	if(debug){
 		useCache=true;
@@ -377,7 +377,7 @@ void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
 		load_graphFrom_file();
 	}else{
 		build_From_Scratch(sequenceData);
-		if(debug==true)
+		if(useCache)
 			writeGraph();
 	}
 
@@ -547,8 +547,10 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		m_coverage_stddev=stddev;
 		(*m_cout)<<"Round "<<round<<": Mean="<<m_coverage_mean<<", Standard deviation="<<m_coverage_stddev<<endl;
 	}
-
-
+	m_REPEAT_DETECTION=2*m_coverage_mean;
+	m_alpha=1.2;
+	(*m_cout)<<"REPEAT_DETECTION_COVERAGE = "<<m_REPEAT_DETECTION<<endl;
+	(*m_cout)<<"alpha = "<<m_alpha<<endl;
 	ostream&m_cout=*(this->m_cout);	
 	vector<VERTEX_TYPE> sources=withoutParents;
 	set<VERTEX_TYPE> sourcesVisited;
@@ -557,9 +559,11 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	string assemblyAmos=m_assemblyDirectory+"/"+AMOS_FILE_NAME;
 	string contigsFile=m_assemblyDirectory+"/"+FASTA_FILE_NAME;
 	string coverageFile=m_assemblyDirectory+"/"+COVERAGE_FILE_NAME;
+	string repeatAnnotationFile=m_assemblyDirectory+"/contigs-repeats.txt";
 	ofstream amosFile(assemblyAmos.c_str());
 	ofstream contigsFileStream(contigsFile.c_str());
 	ofstream coverageStream(coverageFile.c_str());
+	ofstream repeatAnnotation(repeatAnnotationFile.c_str());
 	int contigId=1;
 	int round=1;
 	while(sources.size()>0){
@@ -582,13 +586,15 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 				vector<VERTEX_TYPE>path;
 				path.push_back(prefix);
 				vector<map<int,map<char,int> > > currentReadPositions;
-				contig_From_SINGLE(&currentReadPositions,&path,&newSources);
+				vector<int> repeatAnnotations;
+				contig_From_SINGLE(&currentReadPositions,&path,&newSources,&repeatAnnotations);
 				m_cout<<path.size()<<" vertices"<<endl;
 				if(path.size()<=2)
 					continue;
 				writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
 				writeContig_fasta(&path,&contigsFileStream,contigId);
 				writeContig_Coverage(&currentReadPositions,&path,&coverageStream,contigId);
+				writeContig_RepeatAnnotation(&repeatAnnotations,contigId,&repeatAnnotation,&path);
 				//m_contig_paths.push_back(path);
 				contigId++;
 			}
@@ -597,6 +603,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		VisitsOfSources.push_back(sourcesVisited.size());
 	}
 	amosFile.close();
+	repeatAnnotation.close();
 	contigsFileStream.close();
 	coverageStream.close();
 	m_cout<<endl;
@@ -652,7 +659,7 @@ bool DeBruijnAssembler::DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VER
 
 
 
-void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources){
+void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,vector<int>*repeatAnnotations){
 	VERTEX_TYPE prefix=path->at(path->size()-1);
 	map<int,int> usedReads;
 	bool debug_print=m_DEBUG;
@@ -685,9 +692,14 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			(*m_cout)<<path->size()<<" progress."<<endl;
 		//(*m_cout)<<"Threading.. reads "<<endl;
 		//(*m_cout)<<"Coverage mean: "<<coverageMean<<" "<<annotations->size()<<endl; 
-		int HIGHCOVERAGETHRESHOLD=2*m_coverage_mean+0*m_coverage_stddev;
+		int HIGHCOVERAGETHRESHOLD=m_REPEAT_DETECTION;2*m_coverage_mean+0*m_coverage_stddev;
 		if(annotations->size()>=HIGHCOVERAGETHRESHOLD&&m_DEBUG){
 			(*m_cout)<<"Coverage: "<<annotations->size()<<", refusing to start threading reads!"<<endl;
+		}
+		if(annotations->size()>=HIGHCOVERAGETHRESHOLD){
+			repeatAnnotations->push_back(1);
+		}else{
+			repeatAnnotations->push_back(0);
 		}
 		for(int h=0;h<(int)annotations->size();h++){
 			if(usedReads.count(annotations->at(h).readId)==0){
@@ -843,7 +855,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 	}
 
 	int best=-1;
-	double factor=1.5; // magic number
+	double factor=m_alpha; // magic number
 	for(map<int,int>::iterator i=scoresSum.begin();i!=scoresSum.end();i++){
 		//(*m_cout)<<i->second<<endl;
 		bool isBest=true;
@@ -986,6 +998,24 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 	}
 }
 
+
+void DeBruijnAssembler::writeContig_RepeatAnnotation(vector<int>*repeatAnnotations,int i,ofstream*file,vector<VERTEX_TYPE>*path){
+	(*file)<<"Contig"<<i<<endl;
+	int p=1;
+	for(int vertexOffset=0;vertexOffset<path->size();vertexOffset++){
+		if(vertexOffset==0){
+			while(p<=m_wordSize){
+				int edgeOffset=vertexOffset;
+				(*file)<<p<<" "<<repeatAnnotations->at(edgeOffset)<<endl;
+				p++;
+			}
+		}else{
+			int edgeOffset=vertexOffset-1;
+			(*file)<<p<<" "<<repeatAnnotations->at(edgeOffset)<<endl;
+			p++;
+		}
+	}
+}
 
 void DeBruijnAssembler::writeContig_Coverage(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i){
 	(*file)<<"Contig"<<i<<endl;

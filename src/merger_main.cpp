@@ -131,7 +131,7 @@ vector<Read*> reverseOverlapHeadToHead(vector<Read*> contigSequences){
 							found++;
 					}
 				}
-				bool isTheSame=AlignmentEndInSubject-AlignmentStartInSubject-found<50;
+				bool isTheSame=found/(AlignmentEndInSubject-AlignmentStartInSubject+0.0)>0.90;
 				//cout<<AlignmentEndInQuery-AlignmentStartInQuery<<endl;
 				//cout<<AlignmentEndInSubject-AlignmentStartInSubject<<endl;
 				if(isTheSame&&contigUsage.count(i)==0&&contigUsage.count(hits[j])==0){
@@ -456,14 +456,17 @@ vector<Read*> reverseMerge(vector<Read*> contigSequences){
 				}
 
 				int notFound=0;
-				for(int o=0;o<shortContig.length();o+=wordSize){
+				for(int o=0;o<shortContig.length();o++){
 					string word=shortContig.substr(o,wordSize);
 					if(word.length()!=wordSize)
 						continue;
-					if(longMap.count(DeBruijnAssembler::wordId(word.c_str()))==0)
+					if(longMap.count(DeBruijnAssembler::wordId(word.c_str()))==0){
+						//cout<<"P "<<o<<endl;
 						notFound++;
+					}
 				}
-				bool theSame=notFound<(150/wordSize);
+				bool theSame=(notFound/(wordSize+0.0))/shortContig.length()<0.01;
+				cout<<"Not found "<<notFound/wordSize<<", "<<shortContig.length()<<endl;
 				if(theSame){
 					contigs_graph[i].insert(*matchContig);
 					contigs_graph[*matchContig].insert(i);
