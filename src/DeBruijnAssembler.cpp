@@ -312,7 +312,7 @@ void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
 	//debug=false;
 	bool useCache=false;
 	//useCache=true;
-
+	bool writeGraphFile=false;
 	if(debug){
 		useCache=true;
 	}
@@ -327,7 +327,7 @@ void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
 		load_graphFrom_file();
 	}else{
 		build_From_Scratch(sequenceData);
-		if(true)
+		if(writeGraphFile)
 			writeGraph();
 	}
 
@@ -730,14 +730,17 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 */
 	//(*m_cout)<<"previous position to check "<<path->size()-2<<endl;
 
-	map<int,int > scoresSum;
-	map<int,int> scoresMax;
+	map<VERTEX_TYPE,int > scoresSum;
+	map<VERTEX_TYPE,int> scoresMax;
+	map<VERTEX_TYPE,int>  coverageOfEdges;
 	ostringstream debugBuffer;
 	//(*m_cout)<<"Children"<<endl;
 	for(int i=0;i<(int)children.size();i++){
 
 		//(*m_cout)<<"Child "<<idToWord(children[i],m_wordSize)<<endl;
-		vector<AnnotationElement>*thisEdgeData=(m_data->get(path->at(path->size()-1)).getAnnotations(children[i]));
+		VERTEX_TYPE y=children[i];
+		vector<AnnotationElement>*thisEdgeData=(m_data->get(path->at(path->size()-1)).getAnnotations(y));
+		coverageOfEdges[y]=thisEdgeData->size();
 		for(int j=0;j<(int)thisEdgeData->size();j++){
 			uint32_t readId=thisEdgeData->at(j).readId;
 
@@ -752,19 +755,19 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 		}
 	}
 
-	int best=-1;
-	for(map<int,int>::iterator i=scoresSum.begin();i!=scoresSum.end();i++){
+	VERTEX_TYPE best=0;
+	bool foundBest=false;
+	for(map<VERTEX_TYPE,int>::iterator i=scoresSum.begin();i!=scoresSum.end();i++){
 		//(*m_cout)<<i->second<<endl;
 		bool isBest=true;
-		int currentIndex=i->first;
-		VERTEX_TYPE  y=children[currentIndex];
-		int coverage=(m_data->get(path->at(path->size()-1)).getAnnotations(y))->size();
+		VERTEX_TYPE  y=i->first;
+		int coverage=coverageOfEdges[y];
 		double factor=coverage/(0.0+m_coverage_mean);
 		if(factor<1)
 			factor=1;
 		if(factor>1.6)
 			factor=1.6;
-		for(map<int,int>::iterator j=scoresSum.begin();j!=scoresSum.end();j++){
+		for(map<VERTEX_TYPE,int>::iterator j=scoresSum.begin();j!=scoresSum.end();j++){
 			if(i->first==j->first)
 				continue;
 			if(i->second> factor*  j->second){
@@ -772,8 +775,10 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 				isBest=false;
 			}
 		}
-		if(isBest)
-			best=i->first;
+		if(isBest){
+			foundBest=true;
+			best=y;
+		}
 	}
 	
 /*
@@ -806,7 +811,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 		}
 	}else{
 		for(int i=0;i<children.size();i++){
-			if(children[i]!=children[best]&&newSources!=NULL&&!DETECT_BUBBLE(path,children[i],children[best])){
+			if(children[i]!=children[best]&&newSources!=NULL&&!DETECT_BUBBLE(path,children[i],best)){
 				newSources->push_back(children[i]);
 				(*m_cout)<<"Adding alternative source: "<<idToWord(children[i],m_wordSize)<<endl;
 			}
@@ -819,7 +824,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 		children=removeBubblesAndTips(children,path,currentReadPositions);
 	}
 */
-	if(best!=-1){
+	if(foundBest==true){
 		vector<VERTEX_TYPE> output;
 		output.push_back(children[best]);
 		return output;
