@@ -58,7 +58,6 @@ DeBruijnAssembler::DeBruijnAssembler(ostream*m_cout){
 }
 
 void DeBruijnAssembler::setWordSize(int k){
-	m_Coverage_From_DepletionCurve=5;
 	m_wordSize=k;
 	m_threshold=0.015;
 	m_pairedAvailable=false;
@@ -94,7 +93,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	ostream&m_cout=*(this->m_cout);
 	m_cout<<endl;
 	m_cout<<endl;
-	m_cout<<"Collecting mers from reads"<<endl;
+	m_cout<<"********** Collecting mers from reads..."<<endl;
 	m_cout<<"k+1 = "<<m_wordSize+1<<endl;
 	CustomMap<int> words(m_buckets);
 	int last_vertices_size=-1;
@@ -124,81 +123,38 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 
 	m_cout<<endl;
 
-	string depletionFile=m_assemblyDirectory+"/DepletionCurve.txt";
-	ofstream depletionStream(depletionFile.c_str());
-	//depletionStream<<"MinimumCoverage Mers"<<endl;
-	map<int,int> solidCounts;
-	for(int minimumCoverage=1;minimumCoverage<=32;minimumCoverage++){
-		solidCounts[minimumCoverage]=0;
-	}
-	map<int,int> distributionOfCoverage;
+	//
+	m_cout<<"********** Writing coverage distribution..."<<endl;
+	map<int,int>  distributionOfCoverage;
 	for(CustomMap<int>::iterator i=words.begin();i!=words.end();i++){
 		distributionOfCoverage[i.second()]++;
-		for(int minimumCoverage=1;minimumCoverage<=32;minimumCoverage++){
-			if(i.second()>=minimumCoverage){
-				solidCounts[minimumCoverage]++;
-			}
-		}
 	}
 	string distributionFile=m_assemblyDirectory+"/CoverageDistribution.txt";
 	ofstream   distributionStream(distributionFile.c_str());
 	//distributionStream<<
-	m_coverage_mean=0;
+	m_coverage_mean=2;
+	bool found=false;
+	m_minimumCoverage=2;
+	if(m_minimumCoverageParameter!="auto"){
+		m_minimumCoverage=atoi(m_minimumCoverageParameter.c_str());
+	}
+
 	for(map<int,int>::iterator i=distributionOfCoverage.begin();i!=distributionOfCoverage.end();i++){
 		distributionStream<<i->first<<" "<<i->second<<endl;
-		if(i->first>1&&m_coverage_mean<i->second){
-			m_coverage_mean=i->second;
+		if(i->first>1&&distributionOfCoverage[m_coverage_mean]<i->second){
+			m_coverage_mean=i->first;
+		}
+		if(m_minimumCoverageParameter=="auto"&&
+distributionOfCoverage.count(i->first+1)>0&&
+distributionOfCoverage[i->first]<distributionOfCoverage[i->first+1]&&found==false){
+			found=true;
+			m_minimumCoverage=i->first;
 		}
 	}
 	distributionStream.close();
-	map<int,double> solidRatio;
-	
-	for(int minimumCoverage=1;minimumCoverage<=32;minimumCoverage++){
-		solidRatio[minimumCoverage]=solidCounts[minimumCoverage]/(0.0+solidCounts[1]);
-	}
-	map<int,double> solidDiff;
-	for(int minimumCoverage=2;minimumCoverage<=32;minimumCoverage++){
-		solidDiff[minimumCoverage]=solidRatio[minimumCoverage-1]-solidRatio[minimumCoverage];
-	}
-
-	m_minimumCoverage=5;
-	double minimum=1;
-	for(int minimumCoverage=1;minimumCoverage<=32;minimumCoverage++){
-		depletionStream<<minimumCoverage<<" "<<solidCounts[minimumCoverage]<<endl;//<<" "<<solidRatio[minimumCoverage];
-		if(minimumCoverage!=1){
-			//m_cout<<" "<<solidDiff[minimumCoverage];
-		}
-		//m_cout<<endl;
-	}
 	m_cout<<endl;
-	double cutOff=m_threshold;
-	if(m_minimumCoverageParameter=="auto")
-		m_cout<<"Cutoff: "<<cutOff<<endl;
-	for(int minimumCoverage=2;minimumCoverage<=32;minimumCoverage++){
-		if(solidDiff[minimumCoverage]<minimum){
-			m_minimumCoverage=minimumCoverage;
-			minimum=solidDiff[minimumCoverage];
-		}
-		if(solidDiff[minimumCoverage]>minimum)
-			break;
-		if(solidDiff[minimumCoverage]<cutOff){
-			m_minimumCoverage=minimumCoverage;
-			if(m_minimumCoverageParameter=="auto")
-				m_cout<<"Best Coverage <- "<<m_minimumCoverage<<endl;
-			break;
-		}
-	}
+	(m_cout)<<"MinimumCoverage <- "<<m_minimumCoverage<<endl;
 
-	m_Coverage_From_DepletionCurve=m_minimumCoverage;
-	if(m_minimumCoverageParameter=="auto"){
-		m_cout<<"Using depletion curve (-minimumCoverage auto)"<<endl;
-		m_cout<<"m_minimumCoverage <- "<<m_minimumCoverage<<endl;
-	}else{
-		//m_cout<<""<<endl;
-		m_cout<<"m_minimumCoverage <- "<<atoi(m_minimumCoverageParameter.c_str())<<endl;
-		m_minimumCoverage=atoi(m_minimumCoverageParameter.c_str());
-	}
-	m_cout<<endl;
 
 	uint64_t total_bases=0;
 	uint64_t solid_bases=0;
@@ -233,7 +189,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	words.clear();
 
 	// Don't load too much reads in edges, MAX: 15?
-	m_cout<<"Indexing solid mers in reads, building graph with solid mers."<<endl; // <-------
+	m_cout<<"********** Indexing solid mers in reads..."<<endl; // <-------
 	for(int readId=0;readId<(int)sequenceData->size();readId++){
 		if(readId%10000==0)
 			m_cout<<"Reads: "<<readId<<" / "<<sequenceData->size()<<endl;
@@ -501,7 +457,7 @@ void DeBruijnAssembler::setAssemblyDirectory(string assemblyDirectory){
 void DeBruijnAssembler::Walk_In_GRAPH(){
 
 	(*m_cout)<<endl;
-	(*m_cout)<<"Collecting sources"<<endl;
+	(*m_cout)<<"********** Collecting sources"<<endl;
 	vector<VERTEX_TYPE> withoutParents;
 	//for(MAP_TYPE<VERTEX_TYPE,MAP_TYPE<VERTEX_TYPE,vector<int> > >::iterator i=m_graph.begin();i!=m_graph.end();i++){
 	for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
@@ -512,8 +468,10 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	}
 	(*m_cout)<<"Done..., "<<withoutParents.size()<<" sources."<<endl;
 	
+	(*m_cout)<<endl;
 	m_REPEAT_DETECTION=2*m_coverage_mean;
 	(*m_cout)<<"REPEAT_DETECTION_COVERAGE = "<<m_REPEAT_DETECTION<<endl;
+	(*m_cout)<<"Detected coverage: "<<m_coverage_mean<<endl;
 	ostream&m_cout=*(this->m_cout);	
 	vector<VERTEX_TYPE> sources=withoutParents;
 	set<VERTEX_TYPE> sourcesVisited;
@@ -1150,6 +1108,7 @@ bool DeBruijnAssembler::is_d_Threading(AnnotationElement*annotation,vector<map<i
 
 
 void DeBruijnAssembler::CommonHeader(ostream*out){
+	*out<<"********** Starting..."<<endl;
 	*out<<"DNA: De Novo Assembler"<<endl;
 	*out<<"Documentation: http://denovoassembler.sf.net/"<<endl;
 	*out<<"License: http://www.gnu.org/licenses/gpl.html"<<endl;

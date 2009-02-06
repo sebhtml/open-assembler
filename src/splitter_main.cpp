@@ -60,7 +60,7 @@ int main(int argc,char*argv[]){
 	string outputDirectory="parts";
 	int wordSize=21;
 	int buckets=100000000;
-	string minimumCoverage="auto";
+	string m_minimumCoverageParameter="auto";
 	vector<string> inputFiles;
 
 	// collect arguments
@@ -71,7 +71,7 @@ int main(int argc,char*argv[]){
 			outputDirectory=argv[i];
 		}else if(option=="-minimumCoverage"){
 			i++;
-			minimumCoverage=argv[i];
+			m_minimumCoverageParameter=argv[i];
 		}else if(option=="-buckets"){
 			i++;
 			buckets=atoi(argv[i]);
@@ -90,7 +90,12 @@ int main(int argc,char*argv[]){
 		cout<<"No files provided."<<endl;
 		return 0;
 	}
-	CustomMap<int> wordCount(buckets);
+
+
+	cout<<"Creating "<<outputDirectory<<endl;
+	string command = "mkdir -p "+outputDirectory;
+	system(command.c_str());
+	CustomMap<int> words(buckets);
 	
 	for(int i=0;i<inputFiles.size();i++){
 		vector<Read*> reads;
@@ -99,9 +104,9 @@ int main(int argc,char*argv[]){
 		for(int j=0;j<reads.size();j++){
 			vector<VERTEX_TYPE> mers=reads.at(j)->getHighQualityMers(wordSize);
 			for(int k=0;k<mers.size();k++){
-				if(!wordCount.find(mers[k]))
-					wordCount.add(mers[k],0);
-				wordCount.set(mers[k],wordCount.get(mers[k])+1);
+				if(!words.find(mers[k]))
+					words.add(mers[k],0);
+				words.set(mers[k],words.get(mers[k])+1);
 			}
 		}
 	}
@@ -110,69 +115,50 @@ int main(int argc,char*argv[]){
 	// depletion curve analysis
 	//
 	//
-	
-
-	(cout)<<"Quality analysis (Depletion curve), k+1 = "<<wordSize+1<<endl;
-	(cout)<<"MinimumCoverage NumberOfSolidMers NormalizedNumberOfSolidMers Change"<<endl;
-	map<int,int> solidCounts;
-	for(int minimumCoverage=1;minimumCoverage<=32;minimumCoverage++){
-		solidCounts[minimumCoverage]=0;
+	string m_assemblyDirectory=outputDirectory;
+	int m_coverage_mean=0;
+	int m_minimumCoverage=0;
+	//
+	cout<<"********** Writing coverage distribution..."<<endl;
+	map<int,int>  distributionOfCoverage;
+	for(CustomMap<int>::iterator i=words.begin();i!=words.end();i++){
+		distributionOfCoverage[i.second()]++;
 	}
-	for(CustomMap<int>::iterator i=wordCount.begin();i!=wordCount.end();i++){
-		for(int minimumCoverage=1;minimumCoverage<=32;minimumCoverage++){
-			if(i.second()>=minimumCoverage){
-				solidCounts[minimumCoverage]++;
-			}
+	string distributionFile=m_assemblyDirectory+"/CoverageDistribution.txt";
+	//cout<<distributionFile<<endl;
+	ofstream   distributionStream(distributionFile.c_str());
+	//distributionStream<<
+	m_coverage_mean=2;
+	bool found=false;
+	m_minimumCoverage=2;
+	if(m_minimumCoverageParameter!="auto"){
+		m_minimumCoverage=atoi(m_minimumCoverageParameter.c_str());
+	}
+
+	for(map<int,int>::iterator i=distributionOfCoverage.begin();i!=distributionOfCoverage.end();i++){
+		distributionStream<<i->first<<" "<<i->second<<endl;
+		if(i->first>1&&distributionOfCoverage[m_coverage_mean]<i->second){
+			m_coverage_mean=i->first;
+		}
+		if(m_minimumCoverageParameter=="auto"&&
+distributionOfCoverage.count(i->first+1)>0&&
+distributionOfCoverage[i->first]<distributionOfCoverage[i->first+1]&&found==false){
+			found=true;
+			m_minimumCoverage=i->first;
 		}
 	}
-
-	map<int,double> solidRatio;
-	
-	for(int minimumCoverage=1;minimumCoverage<=32;minimumCoverage++){
-		solidRatio[minimumCoverage]=solidCounts[minimumCoverage]/(0.0+solidCounts[1]);
-	}
-	map<int,double> solidDiff;
-	for(int minimumCoverage=2;minimumCoverage<=32;minimumCoverage++){
-		solidDiff[minimumCoverage]=solidRatio[minimumCoverage-1]-solidRatio[minimumCoverage];
-	}
-
-	int m_minimumCoverage=5;
-	double minimum=1;
-	for(int minimumCoverage=1;minimumCoverage<=32;minimumCoverage++){
-		cout<<minimumCoverage<<" "<<solidCounts[minimumCoverage]<<" "<<solidRatio[minimumCoverage];
-		if(minimumCoverage!=1)
-			cout<<" "<<solidDiff[minimumCoverage];
-		cout<<endl;
-	}
+	cout<<"before"<<endl;
+	distributionStream.close();
+	cout<<"after"<<endl;
 	cout<<endl;
-	double cutOff=0.015;
-	cout<<"Cutoff: "<<cutOff<<endl;
-	for(int minimumCoverage=2;minimumCoverage<=32;minimumCoverage++){
-		if(solidDiff[minimumCoverage]<minimum){
-			m_minimumCoverage=minimumCoverage;
-			minimum=solidDiff[minimumCoverage];
-		}
-		if(solidDiff[minimumCoverage]>minimum)
-			break;
-		if(solidDiff[minimumCoverage]<cutOff){
-			m_minimumCoverage=minimumCoverage;
-			cout<<"Best Coverage <- "<<m_minimumCoverage<<endl;
-			break;
-		}
-	}
+	(cout)<<"MinimumCoverage <- "<<m_minimumCoverage<<endl;
 
-	if(minimumCoverage=="auto"){
-		cout<<"Using depletion curve (-minimumCoverage auto)"<<endl;
-		cout<<"m_minimumCoverage <- "<<m_minimumCoverage<<endl;
-	}else{
-		cout<<"Not using the depletion curve"<<endl;
-		cout<<"m_minimumCoverage <- "<<atoi(minimumCoverage.c_str())<<endl;
-		m_minimumCoverage=atoi(minimumCoverage.c_str());
-	}
+
+
 
 	CustomMap<LightVertex> graphWithoutData(buckets);
 	int edges=0;
-	for(CustomMap<int>::iterator i=wordCount.begin();i!=wordCount.end();i++){
+	for(CustomMap<int>::iterator i=words.begin();i!=words.end();i++){
 		if(i.second()>=m_minimumCoverage){
 			VERTEX_TYPE mer=i.first();
 			string merString=DeBruijnAssembler::idToWord(mer,wordSize+1);
@@ -211,9 +197,6 @@ int main(int argc,char*argv[]){
 	for(map<int,int>::iterator i=colorSizes.begin();i!=colorSizes.end();i++){
 		cout<<i->first<<" "<<i->second<<endl;
 	}
-	cout<<"Creating "<<outputDirectory<<endl;
-	string command = "mkdir -p "+outputDirectory;
-	system(command.c_str());
 	for(int i=1;i<=color;i++){
 		ostringstream command;
 		command<<"mkdir -p "<<outputDirectory<<"/";
