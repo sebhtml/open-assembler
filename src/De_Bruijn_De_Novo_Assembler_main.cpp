@@ -32,44 +32,38 @@ using namespace std;
 
 
 int main(int argc,char*argv[]){
-	ostringstream buffer;
-
+	DeBruijnAssembler::CommonHeader(&cout);
 	// show usage
-	buffer<<"Welcome to dna, De Novo Assembler."<<endl;
-	buffer<<"Notice: You need a 64-bits processor"<<endl;
-	buffer<<"Website: http://DeNovoAssembler.sf.net"<<endl;
-	buffer<<"Version: "<<SOFTWARE_VERSION<<endl;
-	buffer<<"License: GPLv3 (see http://fsf.org/)"<<endl;
-	buffer<<endl;
-	buffer<<"Usage:"<<endl;
-	buffer<<"dna_DeBruijnAssembler [options] <files (fasta, sff, or fastq)>"<<endl;
+	cout<<endl;
+	cout<<"Usage:"<<endl;
+	cout<<"dna_DeBruijnAssembler [options] <files (fasta, sff, or fastq)>"<<endl;
 
 	// show options
-	buffer<<" OPTIONS"<<endl;
+	cout<<" OPTIONS"<<endl;
 	vector<string> inputFiles;
 
 	string assemblyDirectory="Assembly";
-	buffer<<" -assemblyDirectory   default: "<<assemblyDirectory<<endl;
-	buffer<<"                      description: the directory where files will be written."<<endl;
+	cout<<" -assemblyDirectory   default: "<<assemblyDirectory<<endl;
+	cout<<"                      description: the directory where files will be written."<<endl;
 	int wordSize=21;
-	buffer<<" -wordSize            default: "<<wordSize<<" (maximum: 31)"<<endl;
-	buffer<<"                      description: the length of strings inside vertices, edges will be defined for words of length <wordSize>+1."<<endl;
+	cout<<" -wordSize            default: "<<wordSize<<" (maximum: 31)"<<endl;
+	cout<<"                      description: the length of strings inside vertices, edges will be defined for words of length <wordSize>+1."<<endl;
 	string m_minimumCoverageParameter="2";
-	buffer<<" -minimumCoverage     default: auto (with depletion curve)"<<endl;
+	cout<<" -minimumCoverage     default: auto (with depletion curve)"<<endl;
 	
 	int minimumContigSize=500;
-	//buffer<<" -minimumContigSize   default: "<<minimumContigSize<<endl;
-	//buffer<<"                      description: the minimum length of contigs generated with the graph."<<endl;
+	//cout<<" -minimumContigSize   default: "<<minimumContigSize<<endl;
+	//cout<<"                      description: the minimum length of contigs generated with the graph."<<endl;
 	uint64_t buckets=100000000;
-	buffer<<" -buckets             default: "<<buckets<<endl;
-	buffer<<"                      description: number of buckets"<<endl;
+	cout<<" -buckets             default: "<<buckets<<endl;
+	cout<<"                      description: number of buckets"<<endl;
 	bool DEBUGMODE=false;
-	buffer<<" [ -debug ]"<<endl;
+	//cout<<" [ -debug ]"<<endl;
 	string pairedInfo="none";
-	buffer<<" -pairedInfo          default: none"<<endl;
-	buffer<<"                      description: a file that contains paired information (For Solexa, and others)"<<endl;
-	buffer<<"                                   Note that the files must be in the same order in the <pairedInfo> file and in the command line."<<endl;
-	buffer<<endl;
+	//cout<<" -pairedInfo          default: none"<<endl;
+	//cout<<"                      description: a file that contains paired information (For Solexa, and others)"<<endl;
+	//cout<<"                                   Note that the files must be in the same order in the <pairedInfo> file and in the command line."<<endl;
+	cout<<endl;
 
 
 	// collect arguments
@@ -92,7 +86,7 @@ int main(int argc,char*argv[]){
 		}else if(option=="-wordSize"){
 			i++;
 			if(wordSize>31){
-				buffer<<"Wordsize cannot be greater than 31"<<endl;
+				cout<<"Wordsize cannot be greater than 31"<<endl;
 			}else{
 				wordSize=atoi(argv[i]);
 			}
@@ -101,59 +95,59 @@ int main(int argc,char*argv[]){
 		}
 	}
 
-	buffer<<endl;
-	buffer<<endl;
-	buffer<<"dna_DeBruijnAssembler -assemblyDirectory "<<assemblyDirectory<<" -minimumCoverage "<<m_minimumCoverageParameter<<" -buckets "<<buckets<<" -pairedInfo "<<pairedInfo<<  " -wordSize "<<wordSize ;
+	cout<<endl;
+	cout<<endl;
+	cout<<"  -assemblyDirectory="<<assemblyDirectory<<endl;
+	cout<<"  -minimumCoverage="<<m_minimumCoverageParameter<<endl;
+	cout<<"  -buckets="<<buckets<<endl;
+	cout<<"  -wordSize="<<wordSize<<endl;
+	cout<<" <FILES>"<<endl;
+	//cout<<"dna_DeBruijnAssembler -assemblyDirectory "<<assemblyDirectory<<" -minimumCoverage "<<m_minimumCoverageParameter<<" -buckets "<<buckets<<" -pairedInfo "<<pairedInfo<<  " -wordSize "<<wordSize ;
 	for(int i=0;i<(int)inputFiles.size();i++)
-		buffer<<" "<<inputFiles[i];
-	buffer<<endl;
+		cout<<" "<<inputFiles[i]<<endl;
+	cout<<endl;
 
 
 
 	string command=" mkdir -p "+assemblyDirectory+" # [dna] ";
 	system(command.c_str());
 	
-	string logFile=assemblyDirectory+"/Log.txt";
-	ofstream m_cout(logFile.c_str());
-	cout<<buffer.str()<<endl;
-	// switching to m_cout instead of cout
+	// switching to cout instead of cout
 	cout<<endl;
-	cout<<"See "<<logFile<<endl;
 
 
-	m_cout<<endl;
+	cout<<endl;
 	if(inputFiles.size()==0){
-		m_cout<<"Error: no files provided."<<endl;
+		cout<<"Error: no files provided."<<endl;
 		exit(0);
 	}
-	m_cout<<buffer.str();
-	m_cout<<endl;
-	m_cout<<"Writing log to "<<assemblyDirectory+"/Log.txt"<<endl;
+	cout<<endl;
 
-	m_cout<<endl;
+	cout<<endl;
 
 	// TODO: a class SequenceData
 	// to avoid loading all files in memory (only 1 at any moment)
-	m_cout<<"Indexing files"<<endl;
-	m_cout<<endl;
-	SequenceDataFull sequenceData(&inputFiles,&m_cout);
+	//cout<<"Indexing files"<<endl;
+	cout<<endl;
+	cout<<"********** Loading sequence data..."<<endl;
+	SequenceDataFull sequenceData(&inputFiles,&cout);
 
 	if(sequenceData.size()==0){
-		m_cout<<"Error: no reads provided."<<endl;
+		cout<<"Error: no reads provided."<<endl;
 		exit(0);
 	}
 
 
-	m_cout<<endl;
-	m_cout<<" Total reads: "<<sequenceData.size()<<endl;
-	m_cout<<" Total bases: "<<sequenceData.bases()<<endl;
-	m_cout<<endl;
+	cout<<endl;
+	cout<<" Total reads: "<<sequenceData.size()<<endl;
+	cout<<" Total bases: "<<sequenceData.bases()<<endl;
+	cout<<endl;
 
 
 
 	// starting the assembler
-	m_cout<<"Starting  De Bruijn assembler!."<<endl;
-	DeBruijnAssembler assembler(&m_cout);
+	//cout<<"Starting  De Bruijn assembler!."<<endl;
+	DeBruijnAssembler assembler(&cout);
 	// word size must be odd (2k+1)
 	// to avoid palindromes
 	assembler.setBuckets(buckets);
@@ -170,9 +164,45 @@ int main(int argc,char*argv[]){
 
 	//assembler.outputContigs();
 
-	m_cout<<endl;
-	m_cout<<"Files written in "+assemblyDirectory<<endl;
-	m_cout<<"Done."<<endl;
-	m_cout.close();
+	cout<<endl;
+	cout<<"Files written in "+assemblyDirectory<<endl;
+	cout<<"Done."<<endl;
+	string hawkeyeFile=assemblyDirectory+"/RunHawkeye.sh";
+	string bankFile=assemblyDirectory+"/CreateBank.sh";
+	ofstream fileStreamBank(bankFile.c_str());
+	ofstream fileStream(hawkeyeFile.c_str());
+	string currentDirectory;
+	string pwdFile=assemblyDirectory+"/pwd.txt";
+	string pwdCommand="pwd > "+pwdFile;
+	system(pwdCommand.c_str());
+	ifstream pwdFileStream(pwdFile.c_str());
+	pwdFileStream>>currentDirectory;
+	pwdFileStream.close();
+	fileStream<<"if test -d bank"<<endl;
+	fileStream<<"then"<<endl;
+	fileStream<<"	true"<<endl;
+	fileStream<<"else"<<endl;
+	fileStream<<"	bash CreateBank.sh > bank.log"<<endl;
+	fileStreamBank<<"bank-transact -m "<<AMOS_FILE_NAME<<" -b bank -c"<<endl;
+	fileStreamBank<<"cat";
+	for(int i=0;i<inputFiles.size();i++){
+		if(inputFiles[i][0]!='/'){
+			fileStreamBank<<" "<<currentDirectory<<"/"<<inputFiles[i];
+		}else{
+			fileStreamBank<<" "<<inputFiles[i];
+		}
+	}
+			
+	fileStreamBank<<" > reads.fasta"<<endl;
+	fileStreamBank<<"dna_fastaToAMOS reads.fasta reads.afg"<<endl;
+	fileStreamBank<<"bank-transact -m reads.afg -b bank"<<endl;
+	fileStream<<"fi"<<endl;
+	fileStream<<"hawkeye bank"<<endl;
+	fileStreamBank.close();
+	fileStream.close();
+	string mergerFile=assemblyDirectory+"/Merge.sh";
+	ofstream fileStreamMerger(mergerFile.c_str());
+	fileStreamMerger<<"dna_Merger "<<FASTA_FILE_NAME<<" Merger.fasta > merger.log"<<endl;
+	fileStreamMerger.close();
 	return 0;
 }

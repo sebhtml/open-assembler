@@ -1,5 +1,12 @@
-you need also a c++ compiler (standard: c++98) 
-and a UNIX box (mkdir, etc.).
+== Compile the software with gcc on GNU/Linux ==
 
-If you use GNU/Linux, simply type 'bash scripts/build.sh'. The executables
-will be in build/bin.
+export CXXFLAGS="-O6 -Wall -std=c++98 -fomit-frame-pointer -static  "
+export LDFLAGS=$CXXFLAGS
+./configure CXXFLAGS="$CXXFLAGS" LDFLAGS="$LDFLAGS" 
+make
+
+
+
+
+
+

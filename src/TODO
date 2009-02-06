@@ -1,12 +1,5 @@
-articlek
-don't start to thread in high coverage
-adjust repeat code on Spneumoniae
-remove 1-threading
-add d-threading in nextVertices also
 
-
-
-long-term:
-	code splitter
-	carry-forward
-	foward recursive threading, when possible
+add the merger inside the assembler.
+scaffolder
+code splitter
+carry-forward

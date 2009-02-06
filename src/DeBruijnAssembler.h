@@ -35,14 +35,16 @@
 #include<sstream>
 using namespace std;
 
-
+#define AMOS_FILE_NAME "contigs-amos.afg"
+#define FASTA_FILE_NAME "contigs.fasta"
+#define COVERAGE_FILE_NAME "contigs-coverage.txt"
 
 class DeBruijnAssembler{
 	int m_coverage_mean;
-	int m_coverage_stddev;
 	string m_graphFile;
 	string m_minimumCoverageParameter;
 	int m_minimumCoverage;
+	int m_REPEAT_DETECTION;
 	int m_wordSize;
 	double m_threshold;
 	int m_Coverage_From_DepletionCurve;
@@ -69,7 +71,7 @@ class DeBruijnAssembler{
 	void build_From_Scratch(SequenceDataFull*sequenceData);
 	void writeGraph();
 
-	void contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources);
+	void contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,vector<int>*repeatAnnotations);
 	vector<VERTEX_TYPE> getWalk(VERTEX_TYPE prefix,vector<VERTEX_TYPE>*path,int length,vector<map<int,map<char,int > > >*currentReadPositions);
 
 	char getLastSymbol(VERTEX_TYPE i);
@@ -89,6 +91,10 @@ class DeBruijnAssembler{
 
 	void writeContig_fasta(vector<VERTEX_TYPE>*path,ofstream*file,int i);
 	void writeContig_Amos(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);
+
+	void writeContig_Coverage(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);
+
+	void writeContig_RepeatAnnotation(vector<int>*repeatAnnotations,int i,ofstream*file,vector<VERTEX_TYPE>*path);
 public:
 	DeBruijnAssembler(ostream*m_cout);
 	void setPairedInfo(string a);
@@ -113,6 +119,7 @@ public:
 	static int m_NUCLEOTIDE_T;
 	static int m_NUCLEOTIDE_C;
 	static int m_NUCLEOTIDE_G;
+	static void CommonHeader(ostream*out);
 };
 
 #endif

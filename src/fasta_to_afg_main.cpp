@@ -1,7 +1,7 @@
 /*
 	dna: De Novo Assembler
     Copyright (C) 2008, 2009 Sébastien Boisvert
-	$Id: merger_main.cpp 45 2009-01-26 20:00:32Z boiseb01 $
+	$Id$
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ using namespace std;
 
 
 int main(int argc,char*argv[]){
+	DeBruijnAssembler::CommonHeader(&cout);
 	if(argc!=3){
 		cout<<"usage"<<endl;
 		cout<<"dna_fastaToAMOS fastaFile afgFile"<<endl;

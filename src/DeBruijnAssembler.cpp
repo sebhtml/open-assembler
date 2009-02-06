@@ -17,7 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
+#include"CoverageDistribution.h"
 #include<cmath>
 #include<cstdlib>
 #include<map>
@@ -58,7 +58,6 @@ DeBruijnAssembler::DeBruijnAssembler(ostream*m_cout){
 }
 
 void DeBruijnAssembler::setWordSize(int k){
-	m_Coverage_From_DepletionCurve=5;
 	m_wordSize=k;
 	m_threshold=0.015;
 	m_pairedAvailable=false;
@@ -94,7 +93,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	ostream&m_cout=*(this->m_cout);
 	m_cout<<endl;
 	m_cout<<endl;
-	m_cout<<"Collecting mers from reads"<<endl;
+	m_cout<<"********** Collecting mers from reads..."<<endl;
 	m_cout<<"k+1 = "<<m_wordSize+1<<endl;
 	CustomMap<int> words(m_buckets);
 	int last_vertices_size=-1;
@@ -124,65 +123,18 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 
 	m_cout<<endl;
 
-	(m_cout)<<"Quality analysis (Depletion curve), k+1 = "<<m_wordSize+1<<endl;
-	(m_cout)<<"MinimumCoverage NumberOfSolidMers NormalizedNumberOfSolidMers Change"<<endl;
-	map<int,int> solidCounts;
-	for(int minimumCoverage=1;minimumCoverage<=32;minimumCoverage++){
-		solidCounts[minimumCoverage]=0;
-	}
-	for(CustomMap<int>::iterator i=words.begin();i!=words.end();i++){
-		for(int minimumCoverage=1;minimumCoverage<=32;minimumCoverage++){
-			if(i.second()>=minimumCoverage){
-				solidCounts[minimumCoverage]++;
-			}
-		}
-	}
+	//
+	//
+	CoverageDistribution coverageDistributionObject(&words,m_assemblyDirectory);
+	m_minimumCoverage=coverageDistributionObject.getMinimumCoverage();
+	m_coverage_mean=coverageDistributionObject.getMeanCoverage();
 
-	map<int,double> solidRatio;
-	
-	for(int minimumCoverage=1;minimumCoverage<=32;minimumCoverage++){
-		solidRatio[minimumCoverage]=solidCounts[minimumCoverage]/(0.0+solidCounts[1]);
-	}
-	map<int,double> solidDiff;
-	for(int minimumCoverage=2;minimumCoverage<=32;minimumCoverage++){
-		solidDiff[minimumCoverage]=solidRatio[minimumCoverage-1]-solidRatio[minimumCoverage];
-	}
-
-	m_minimumCoverage=5;
-	double minimum=1;
-	for(int minimumCoverage=1;minimumCoverage<=32;minimumCoverage++){
-		m_cout<<minimumCoverage<<" "<<solidCounts[minimumCoverage]<<" "<<solidRatio[minimumCoverage];
-		if(minimumCoverage!=1)
-			m_cout<<" "<<solidDiff[minimumCoverage];
-		m_cout<<endl;
-	}
-	m_cout<<endl;
-	double cutOff=m_threshold;
-	m_cout<<"Cutoff: "<<cutOff<<endl;
-	for(int minimumCoverage=2;minimumCoverage<=32;minimumCoverage++){
-		if(solidDiff[minimumCoverage]<minimum){
-			m_minimumCoverage=minimumCoverage;
-			minimum=solidDiff[minimumCoverage];
-		}
-		if(solidDiff[minimumCoverage]>minimum)
-			break;
-		if(solidDiff[minimumCoverage]<cutOff){
-			m_minimumCoverage=minimumCoverage;
-			m_cout<<"Best Coverage <- "<<m_minimumCoverage<<endl;
-			break;
-		}
-	}
-
-	m_Coverage_From_DepletionCurve=m_minimumCoverage;
-	if(m_minimumCoverageParameter=="auto"){
-		m_cout<<"Using depletion curve (-minimumCoverage auto)"<<endl;
-		m_cout<<"m_minimumCoverage <- "<<m_minimumCoverage<<endl;
-	}else{
-		m_cout<<"Not using the depletion curve"<<endl;
-		m_cout<<"m_minimumCoverage <- "<<atoi(m_minimumCoverageParameter.c_str())<<endl;
+	if(m_minimumCoverageParameter!="auto"){
 		m_minimumCoverage=atoi(m_minimumCoverageParameter.c_str());
+		cout<<"Setting minimumCoverage <- "<<m_minimumCoverage<<endl;
 	}
-	m_cout<<endl;
+	m_REPEAT_DETECTION=3*m_coverage_mean;
+	(cout)<<"REPEAT_DETECTION_COVERAGE = 3*\\mu = "<<m_REPEAT_DETECTION<<endl;
 
 	uint64_t total_bases=0;
 	uint64_t solid_bases=0;
@@ -206,7 +158,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	}
 	m_solidMers=solidMers.size();
 	m_cout<<"Solid mers: "<<solid<<" / "<<words.size()<<" ---> "<<((solid+0.0)/words.size()+0.0)*100.0<<"%"<<endl;
-	m_cout<<" (this should be roughly twice the genome size)"<<endl;
+	//m_cout<<" (this should be roughly twice the genome size)"<<endl;
 	m_cout<<"Not-solid mers: "<<processed-solid<<" / "<<words.size()<<" ---> "<<(processed-solid+0.0)/words.size()*100.0<<"%"<<endl;
 
 	if(m_solidMers==0){
@@ -217,7 +169,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	words.clear();
 
 	// Don't load too much reads in edges, MAX: 15?
-	m_cout<<"Indexing solid mers in reads, building graph with solid mers."<<endl; // <-------
+	m_cout<<"********** Indexing solid mers in reads..."<<endl; // <-------
 	for(int readId=0;readId<(int)sequenceData->size();readId++){
 		if(readId%10000==0)
 			m_cout<<"Reads: "<<readId<<" / "<<sequenceData->size()<<endl;
@@ -359,7 +311,7 @@ void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
 	bool debug=m_DEBUG;
 	//debug=false;
 	bool useCache=false;
-
+	//useCache=true;
 
 	if(debug){
 		useCache=true;
@@ -375,7 +327,7 @@ void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
 		load_graphFrom_file();
 	}else{
 		build_From_Scratch(sequenceData);
-		if(debug==true)
+		if(true)
 			writeGraph();
 	}
 
@@ -485,7 +437,7 @@ void DeBruijnAssembler::setAssemblyDirectory(string assemblyDirectory){
 void DeBruijnAssembler::Walk_In_GRAPH(){
 
 	(*m_cout)<<endl;
-	(*m_cout)<<"Collecting sources"<<endl;
+	(*m_cout)<<"********** Collecting sources"<<endl;
 	vector<VERTEX_TYPE> withoutParents;
 	//for(MAP_TYPE<VERTEX_TYPE,MAP_TYPE<VERTEX_TYPE,vector<int> > >::iterator i=m_graph.begin();i!=m_graph.end();i++){
 	for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
@@ -494,46 +446,28 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			withoutParents.push_back(prefix);
 		}
 	}
-
-	uint64_t sumCoverage=0;
-	int edges=0;
-	for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
-		VERTEX_TYPE prefix=i.first();
-		vector<VERTEX_TYPE>children=(i).second().getChildren(prefix);
-		for(int j=0;j<children.size();j++){
-			sumCoverage+=(i).second().getAnnotations(children[j])->size();
-			edges++;
-		}
-	}
-	int meanCoverage=sumCoverage/edges;
-	uint64_t sum_ofSquaredDiffs=0;
-	for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
-		VERTEX_TYPE prefix=i.first();
-		vector<VERTEX_TYPE>children=(i).second().getChildren(prefix);
-		for(int j=0;j<children.size();j++){
-			int diff=meanCoverage-(i).second().getAnnotations(children[j])->size();
-			sum_ofSquaredDiffs+=diff*diff;
-		}
-	}
-	int  stddev=sqrt(sum_ofSquaredDiffs/(edges-1));
-	m_coverage_mean=meanCoverage;
-	m_coverage_stddev=stddev;
-	(*m_cout)<<"Mean: "<<meanCoverage<<endl;
-	(*m_cout)<<"Standard deviation: "<<stddev<<endl;
+	(*m_cout)<<"Done..., "<<withoutParents.size()<<" sources."<<endl;
+	
+	(*m_cout)<<endl;
 	ostream&m_cout=*(this->m_cout);	
 	vector<VERTEX_TYPE> sources=withoutParents;
 	set<VERTEX_TYPE> sourcesVisited;
 	vector<int> The_Discovery_Of_Sources;
 	vector<int>VisitsOfSources;
-	string assemblyAmos=m_assemblyDirectory+"/Assembly.afg";
-	string contigsFile=m_assemblyDirectory+"/fasta.contigs";
-	
+	string assemblyAmos=m_assemblyDirectory+"/"+AMOS_FILE_NAME;
+	string contigsFile=m_assemblyDirectory+"/"+FASTA_FILE_NAME;
+	string coverageFile=m_assemblyDirectory+"/"+COVERAGE_FILE_NAME;
+	string repeatAnnotationFile=m_assemblyDirectory+"/contigs-repeats.txt";
 	ofstream amosFile(assemblyAmos.c_str());
 	ofstream contigsFileStream(contigsFile.c_str());
+	ofstream coverageStream(coverageFile.c_str());
+	ofstream repeatAnnotation(repeatAnnotationFile.c_str());
 	int contigId=1;
+	int round=1;
 	while(sources.size()>0){
 		m_cout<<endl;
-		m_cout<<"[sources]: "<<sources.size()<<endl;
+		m_cout<<"Round: "<<round<<", "<<sources.size()<<" sources."<<endl;
+		round++;
 		The_Discovery_Of_Sources.push_back(sources.size());
 		vector<VERTEX_TYPE> newSources;
 		for(int i=0;i<(int)sources.size();i++){
@@ -550,12 +484,15 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 				vector<VERTEX_TYPE>path;
 				path.push_back(prefix);
 				vector<map<int,map<char,int> > > currentReadPositions;
-				contig_From_SINGLE(&currentReadPositions,&path,&newSources);
+				vector<int> repeatAnnotations;
+				contig_From_SINGLE(&currentReadPositions,&path,&newSources,&repeatAnnotations);
 				m_cout<<path.size()<<" vertices"<<endl;
 				if(path.size()<=2)
 					continue;
 				writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
 				writeContig_fasta(&path,&contigsFileStream,contigId);
+				writeContig_Coverage(&currentReadPositions,&path,&coverageStream,contigId);
+				writeContig_RepeatAnnotation(&repeatAnnotations,contigId,&repeatAnnotation,&path);
 				//m_contig_paths.push_back(path);
 				contigId++;
 			}
@@ -564,7 +501,9 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		VisitsOfSources.push_back(sourcesVisited.size());
 	}
 	amosFile.close();
+	repeatAnnotation.close();
 	contigsFileStream.close();
+	coverageStream.close();
 	m_cout<<endl;
 
 	(m_cout)<<"Source discovery"<<endl;
@@ -618,7 +557,7 @@ bool DeBruijnAssembler::DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VER
 
 
 
-void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources){
+void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,vector<int>*repeatAnnotations){
 	VERTEX_TYPE prefix=path->at(path->size()-1);
 	map<int,int> usedReads;
 	bool debug_print=m_DEBUG;
@@ -651,9 +590,14 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			(*m_cout)<<path->size()<<" progress."<<endl;
 		//(*m_cout)<<"Threading.. reads "<<endl;
 		//(*m_cout)<<"Coverage mean: "<<coverageMean<<" "<<annotations->size()<<endl; 
-		int HIGHCOVERAGETHRESHOLD=2*m_coverage_mean+m_coverage_stddev;
+		int HIGHCOVERAGETHRESHOLD=m_REPEAT_DETECTION;
 		if(annotations->size()>=HIGHCOVERAGETHRESHOLD&&m_DEBUG){
 			(*m_cout)<<"Coverage: "<<annotations->size()<<", refusing to start threading reads!"<<endl;
+		}
+		if(annotations->size()>=HIGHCOVERAGETHRESHOLD){
+			repeatAnnotations->push_back(1);
+		}else{
+			repeatAnnotations->push_back(0);
 		}
 		for(int h=0;h<(int)annotations->size();h++){
 			if(usedReads.count(annotations->at(h).readId)==0){
@@ -809,10 +753,17 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 	}
 
 	int best=-1;
-	double factor=1.1; // magic number
 	for(map<int,int>::iterator i=scoresSum.begin();i!=scoresSum.end();i++){
 		//(*m_cout)<<i->second<<endl;
 		bool isBest=true;
+		int currentIndex=i->first;
+		VERTEX_TYPE  y=children[currentIndex];
+		int coverage=(m_data->get(path->at(path->size()-1)).getAnnotations(y))->size();
+		double factor=coverage/(0.0+m_coverage_mean);
+		if(factor<1)
+			factor=1;
+		if(factor>1.6)
+			factor=1.6;
 		for(map<int,int>::iterator j=scoresSum.begin();j!=scoresSum.end();j++){
 			if(i->first==j->first)
 				continue;
@@ -953,7 +904,41 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 }
 
 
+void DeBruijnAssembler::writeContig_RepeatAnnotation(vector<int>*repeatAnnotations,int i,ofstream*file,vector<VERTEX_TYPE>*path){
+	(*file)<<"Contig"<<i<<endl;
+	int p=1;
+	for(int vertexOffset=0;vertexOffset<path->size();vertexOffset++){
+		if(vertexOffset==0){
+			while(p<=m_wordSize){
+				int edgeOffset=vertexOffset;
+				(*file)<<p<<" "<<repeatAnnotations->at(edgeOffset)<<endl;
+				p++;
+			}
+		}else{
+			int edgeOffset=vertexOffset-1;
+			(*file)<<p<<" "<<repeatAnnotations->at(edgeOffset)<<endl;
+			p++;
+		}
+	}
+}
 
+void DeBruijnAssembler::writeContig_Coverage(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i){
+	(*file)<<"Contig"<<i<<endl;
+	int p=1;
+	for(int vertexOffset=0;vertexOffset<path->size();vertexOffset++){
+		if(vertexOffset==0){
+			while(p<=m_wordSize){
+				int edgeOffset=vertexOffset;
+				(*file)<<p<<" "<<currentReadPositions->at(edgeOffset).size()<<endl;
+				p++;
+			}
+		}else{
+			int edgeOffset=vertexOffset-1;
+			(*file)<<p<<" "<<currentReadPositions->at(edgeOffset).size()<<endl;
+			p++;
+		}
+	}
+}
 
 /*
 
@@ -1069,7 +1054,7 @@ void DeBruijnAssembler::writeContig_Amos(vector<map<int,map<char,int> > >*curren
 void DeBruijnAssembler::writeContig_fasta(vector<VERTEX_TYPE>*path,ofstream*file,int i){
 	int columns=60;
 	string sequenceDNA=pathToDNA(path);
-	(*file)<<">Contig"<<i+1<<"   "<<sequenceDNA.length()<<endl;
+	(*file)<<">Contig"<<i<<"   "<<sequenceDNA.length()<<endl;
 	int j=0;
 	while(j<(int)sequenceDNA.length()){
 		(*file)<<sequenceDNA.substr(j,columns);
@@ -1098,4 +1083,14 @@ bool DeBruijnAssembler::is_d_Threading(AnnotationElement*annotation,vector<map<i
 		distanceInPath++;
 	//(*m_cout)<<"R "<<distanceInRead<<" C "<<distanceInPath<<endl;
 	return distanceInRead==distanceInPath; // allow error in read threading, if d !=1
+}
+
+
+void DeBruijnAssembler::CommonHeader(ostream*out){
+	*out<<"********** Starting..."<<endl;
+	*out<<"DNA: De Novo Assembler"<<endl;
+	*out<<"Documentation: http://denovoassembler.sf.net/"<<endl;
+	*out<<"License: http://www.gnu.org/licenses/gpl.html"<<endl;
+	*out<<"Publication: in preparation"<<endl;
+	*out<<"Version: "<<SOFTWARE_VERSION<<endl;
 }

@@ -1,4 +1,4 @@
 for i in $(ls|grep D)
 do
-	less $i/Merger.log
+	less $i/merger.log
 done

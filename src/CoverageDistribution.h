@@ -17,26 +17,21 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _LightVertex
-#define _LightVertex
 
-#include"Read.h"
-#include<vector>
-using namespace std;
 
-class LightVertex{
-	uint8_t m_children;
-	uint8_t m_parents;
-	uint32_t m_color;
+#ifndef _CoverageDistribution
+#define _CoverageDistribution
+
+#include"CustomMap.hpp"
+
+
+class CoverageDistribution{
+	int m_minimumCoverage;
+	int m_coverage_mean;
 public:
-	LightVertex();
-	vector<VERTEX_TYPE> getChildren(VERTEX_TYPE prefix,int wordSize);
-	vector<VERTEX_TYPE> getParents(VERTEX_TYPE prefix,int wordSize);
-	void addChild(VERTEX_TYPE suffix,int wordSize);
-	void addParent(VERTEX_TYPE v,int wordSize);
-	void setColor(uint32_t c);
-	uint32_t getColor();
+	CoverageDistribution(CustomMap<int>*words,string m_assemblyDirectory);
+	int getMinimumCoverage();
+	int getMeanCoverage();
 };
 
 #endif
-

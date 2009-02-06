@@ -30,7 +30,7 @@ VertexData::VertexData(){
 }
 
 
-void VertexData::addAnnotation(VERTEX_TYPE suffix,uint32_t read,uint16_t position,uint8_t strand){
+void VertexData::addAnnotation(VERTEX_TYPE suffix,uint32_t read,POSITION_TYPE position,uint8_t strand){
 	string a=DeBruijnAssembler::idToWord(suffix,DeBruijnAssembler::m_WordSize);
 	char symbol=a[a.length()-1];
 	AnnotationElement element;
