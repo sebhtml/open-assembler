@@ -131,6 +131,7 @@ int main(int argc,char*argv[]){
 
 	if(m_minimumCoverageParameter!="auto"){
 		m_minimumCoverage=atoi(m_minimumCoverageParameter.c_str());
+		cout<<"Setting minimumCoverage <- "<<m_minimumCoverage<<endl;
 	}
 
 

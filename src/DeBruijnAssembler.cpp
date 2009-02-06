@@ -131,6 +131,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 
 	if(m_minimumCoverageParameter!="auto"){
 		m_minimumCoverage=atoi(m_minimumCoverageParameter.c_str());
+		cout<<"Setting minimumCoverage <- "<<m_minimumCoverage<<endl;
 	}
 
 	uint64_t total_bases=0;
@@ -762,6 +763,8 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 		double factor=coverage/(0.0+m_coverage_mean);
 		if(factor<1)
 			factor=1;
+		if(factor>1.6)
+			factor=1.6;
 		for(map<int,int>::iterator j=scoresSum.begin();j!=scoresSum.end();j++){
 			if(i->first==j->first)
 				continue;

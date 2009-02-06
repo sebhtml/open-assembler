@@ -122,7 +122,6 @@ int main(int argc,char*argv[]){
 		exit(0);
 	}
 	cout<<endl;
-	cout<<"Writing log to "<<assemblyDirectory+"/Log.txt"<<endl;
 
 	cout<<endl;
 

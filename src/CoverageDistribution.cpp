@@ -1,7 +1,7 @@
 /*
 	dna: De Novo Assembler
     Copyright (C) 2008, 2009 Sébastien Boisvert
-	$Id: DeBruijnAssembler.cpp 95 2009-02-06 03:19:42Z seb $
+	$Id$
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,8 +39,12 @@ CoverageDistribution::CoverageDistribution(CustomMap<int>*words,string m_assembl
 
 	for(map<int,int>::iterator i=distributionOfCoverage.begin();i!=distributionOfCoverage.end();i++){
 		distributionStream<<i->first<<" "<<i->second<<endl;
-		if(i->first>1&&distributionOfCoverage[m_coverage_mean]<i->second&&MinimumCoverageFound==true){
+		if(MinimumCoverageFound==true&&
+	distributionOfCoverage.count(i->first+1)>0&&
+	MeanCoverageFound==false&&
+			distributionOfCoverage[i->first+1]<i->second){
 			m_coverage_mean=i->first;
+			MeanCoverageFound=true;
 		}
 		if(
 distributionOfCoverage.count(i->first+1)>0&&
