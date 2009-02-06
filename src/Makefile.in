@@ -49,37 +49,38 @@ am_dna_DeBruijnAssembler_OBJECTS =  \
 	De_Bruijn_De_Novo_Assembler_main.$(OBJEXT) Read.$(OBJEXT) \
 	DeBruijnAssembler.$(OBJEXT) Loader.$(OBJEXT) \
 	SffLoader.$(OBJEXT) VertexData.$(OBJEXT) \
-	SequenceDataFull.$(OBJEXT)
+	SequenceDataFull.$(OBJEXT) CoverageDistribution.$(OBJEXT)
 dna_DeBruijnAssembler_OBJECTS = $(am_dna_DeBruijnAssembler_OBJECTS)
 dna_DeBruijnAssembler_LDADD = $(LDADD)
 am_dna_DeBruijnSplitter_OBJECTS = splitter_main.$(OBJEXT) \
 	Loader.$(OBJEXT) Read.$(OBJEXT) DeBruijnAssembler.$(OBJEXT) \
 	VertexData.$(OBJEXT) SequenceDataFull.$(OBJEXT) \
-	SffLoader.$(OBJEXT) LightVertex.$(OBJEXT)
+	SffLoader.$(OBJEXT) LightVertex.$(OBJEXT) \
+	CoverageDistribution.$(OBJEXT)
 dna_DeBruijnSplitter_OBJECTS = $(am_dna_DeBruijnSplitter_OBJECTS)
 dna_DeBruijnSplitter_LDADD = $(LDADD)
 am_dna_Merger_OBJECTS = merger_main.$(OBJEXT) Read.$(OBJEXT) \
 	DeBruijnAssembler.$(OBJEXT) Loader.$(OBJEXT) \
 	SffLoader.$(OBJEXT) VertexData.$(OBJEXT) \
-	SequenceDataFull.$(OBJEXT)
+	SequenceDataFull.$(OBJEXT) CoverageDistribution.$(OBJEXT)
 dna_Merger_OBJECTS = $(am_dna_Merger_OBJECTS)
 dna_Merger_LDADD = $(LDADD)
 am_dna_Scaffolder_OBJECTS = scaffolder_main.$(OBJEXT) Read.$(OBJEXT) \
 	DeBruijnAssembler.$(OBJEXT) Loader.$(OBJEXT) \
 	SffLoader.$(OBJEXT) VertexData.$(OBJEXT) \
-	SequenceDataFull.$(OBJEXT)
+	SequenceDataFull.$(OBJEXT) CoverageDistribution.$(OBJEXT)
 dna_Scaffolder_OBJECTS = $(am_dna_Scaffolder_OBJECTS)
 dna_Scaffolder_LDADD = $(LDADD)
 am_dna_fastaToAMOS_OBJECTS = fasta_to_afg_main.$(OBJEXT) \
 	Read.$(OBJEXT) DeBruijnAssembler.$(OBJEXT) Loader.$(OBJEXT) \
 	SffLoader.$(OBJEXT) VertexData.$(OBJEXT) \
-	SequenceDataFull.$(OBJEXT)
+	SequenceDataFull.$(OBJEXT) CoverageDistribution.$(OBJEXT)
 dna_fastaToAMOS_OBJECTS = $(am_dna_fastaToAMOS_OBJECTS)
 dna_fastaToAMOS_LDADD = $(LDADD)
 am_dna_sffPairedToFasta_OBJECTS = SffLoader.$(OBJEXT) Read.$(OBJEXT) \
 	DeBruijnAssembler.$(OBJEXT) sffPairedToFasta_main.$(OBJEXT) \
 	VertexData.$(OBJEXT) Loader.$(OBJEXT) \
-	SequenceDataFull.$(OBJEXT)
+	SequenceDataFull.$(OBJEXT) CoverageDistribution.$(OBJEXT)
 dna_sffPairedToFasta_OBJECTS = $(am_dna_sffPairedToFasta_OBJECTS)
 dna_sffPairedToFasta_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@
@@ -188,15 +189,15 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 dna_DeBruijnAssembler_SOURCES = De_Bruijn_De_Novo_Assembler_main.cpp  DeBruijnAssembler.h  Read.cpp \
 DeBruijnAssembler.cpp                               Read.h Loader.cpp Loader.h  SffLoader.h SffLoader.cpp \
-VertexData.h VertexData.cpp  SequenceDataFull.h SequenceDataFull.cpp
+VertexData.h VertexData.cpp  SequenceDataFull.h SequenceDataFull.cpp CoverageDistribution.h CoverageDistribution.cpp
 
 dna_DeBruijnSplitter_SOURCES = splitter_main.cpp Loader.cpp Read.cpp DeBruijnAssembler.cpp VertexData.cpp SequenceDataFull.cpp SffLoader.cpp \
-LightVertex.h LightVertex.cpp
+LightVertex.h LightVertex.cpp CoverageDistribution.h CoverageDistribution.cpp
 
-dna_Merger_SOURCES = merger_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp
-dna_Scaffolder_SOURCES = scaffolder_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp
-dna_sffPairedToFasta_SOURCES = SffLoader.cpp SffLoader.h Read.h Read.cpp DeBruijnAssembler.cpp DeBruijnAssembler.h sffPairedToFasta_main.cpp VertexData.h VertexData.cpp CustomMap.hpp  Loader.cpp Loader.h SequenceDataFull.h SequenceDataFull.cpp
-dna_fastaToAMOS_SOURCES = fasta_to_afg_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp
+dna_Merger_SOURCES = merger_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp  CoverageDistribution.h CoverageDistribution.cpp
+dna_Scaffolder_SOURCES = scaffolder_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp  CoverageDistribution.h CoverageDistribution.cpp
+dna_sffPairedToFasta_SOURCES = SffLoader.cpp SffLoader.h Read.h Read.cpp DeBruijnAssembler.cpp DeBruijnAssembler.h sffPairedToFasta_main.cpp VertexData.h VertexData.cpp CustomMap.hpp  Loader.cpp Loader.h SequenceDataFull.h SequenceDataFull.cpp  CoverageDistribution.h CoverageDistribution.cpp
+dna_fastaToAMOS_SOURCES = fasta_to_afg_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp  CoverageDistribution.h CoverageDistribution.cpp
 all: all-am
 
 .SUFFIXES:
@@ -278,6 +279,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CoverageDistribution.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DeBruijnAssembler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/De_Bruijn_De_Novo_Assembler_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LightVertex.Po@am__quote@

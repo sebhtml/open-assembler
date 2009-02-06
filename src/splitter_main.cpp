@@ -20,6 +20,7 @@
 #include"CustomMap.hpp"
 #include<sstream>
 #include"LightVertex.h"
+#include"CoverageDistribution.h"
 #include<vector>
 #include"DeBruijnAssembler.h"
 #include"Read.h"
@@ -60,7 +61,7 @@ int main(int argc,char*argv[]){
 	string outputDirectory="parts";
 	int wordSize=21;
 	int buckets=100000000;
-	string m_minimumCoverageParameter="auto";
+	string m_minimumCoverageParameter="2";
 	vector<string> inputFiles;
 
 	// collect arguments
@@ -113,6 +114,8 @@ int main(int argc,char*argv[]){
 	}
 
 
+
+
 	// depletion curve analysis
 	//
 	//
@@ -120,39 +123,15 @@ int main(int argc,char*argv[]){
 	int m_coverage_mean=0;
 	int m_minimumCoverage=0;
 	//
-	cout<<"********** Writing coverage distribution..."<<endl;
-	map<int,int>  distributionOfCoverage;
-	for(CustomMap<int>::iterator i=words.begin();i!=words.end();i++){
-		distributionOfCoverage[i.second()]++;
-	}
-	string distributionFile=m_assemblyDirectory+"/CoverageDistribution.txt";
-	//cout<<distributionFile<<endl;
-	ofstream   distributionStream(distributionFile.c_str());
-	//distributionStream<<
-	m_coverage_mean=2;
-	bool found=false;
-	m_minimumCoverage=2;
+	//
+
+	CoverageDistribution coverageDistributionObject(&words,outputDirectory);
+	m_minimumCoverage=coverageDistributionObject.getMinimumCoverage();
+	m_coverage_mean=coverageDistributionObject.getMeanCoverage();
+
 	if(m_minimumCoverageParameter!="auto"){
 		m_minimumCoverage=atoi(m_minimumCoverageParameter.c_str());
 	}
-
-	for(map<int,int>::iterator i=distributionOfCoverage.begin();i!=distributionOfCoverage.end();i++){
-		distributionStream<<i->first<<" "<<i->second<<endl;
-		if(i->first>1&&distributionOfCoverage[m_coverage_mean]<i->second){
-			m_coverage_mean=i->first;
-		}
-		if(m_minimumCoverageParameter=="auto"&&
-distributionOfCoverage.count(i->first+1)>0&&
-distributionOfCoverage[i->first]<distributionOfCoverage[i->first+1]&&found==false){
-			found=true;
-			m_minimumCoverage=i->first;
-		}
-	}
-	//cout<<"before"<<endl;
-	distributionStream.close();
-	//cout<<"after"<<endl;
-	cout<<endl;
-	(cout)<<"MinimumCoverage <- "<<m_minimumCoverage<<endl;
 
 
 	cout<<"********** Building graph..."<<endl;
@@ -197,14 +176,20 @@ distributionOfCoverage[i->first]<distributionOfCoverage[i->first+1]&&found==fals
 		colorSizes[i.second().getColor()]++;
 	}
 	for(map<int,int>::iterator i=colorSizes.begin();i!=colorSizes.end();i++){
-		cout<<i->first<<" "<<i->second<<endl;
+		//cout<<i->first<<" "<<i->second<<endl;
 	}
+	string createFiles=outputDirectory+"/CreateDirectories.sh";
+	ofstream streamCreate(createFiles.c_str());
+	int Threshold=100;
 	for(int i=1;i<=color;i++){
-		ostringstream command;
-		command<<"mkdir -p "<<outputDirectory<<"/";
-		command<<i;
-		system(command.str().c_str());
+		if(colorSizes[i]<Threshold)
+			continue;
+		streamCreate<<"mkdir -p "<<outputDirectory<<"/";
+		streamCreate<<i<<endl;
 	}
+	streamCreate.close();
+	command="bash "+createFiles;
+	system(command.c_str());
 
 	map<string,FILE*> fileStreams;
 
@@ -220,17 +205,19 @@ distributionOfCoverage[i->first]<distributionOfCoverage[i->first+1]&&found==fals
 				continue;
 			VERTEX_TYPE mer=DeBruijnAssembler::wordId(sequence.substr(0,wordSize).c_str());
 			VERTEX_TYPE revMer=DeBruijnAssembler::wordId(DeBruijnAssembler::reverseComplement(DeBruijnAssembler::idToWord(mer,wordSize)).c_str());
-			if(graphWithoutData.find(mer)){
+			if(graphWithoutData.find(mer)&&colorSizes[graphWithoutData.get(mer).getColor()]>=Threshold){
 				ostringstream file;
-				file<<outputDirectory<<"/"<<graphWithoutData.get(mer).getColor()<<"/"<<inputFiles[i]<<".fasta";
+				string baseName=inputFiles[i].substr(inputFiles[i].find_last_of("/")+1);
+				file<<outputDirectory<<"/"<<graphWithoutData.get(mer).getColor()<<"/"<<baseName<<".fasta";				
 				if(fileStreams.count(file.str())==0){
-					//cout<<"adding "<<file.str()<<endl;
+					cout<<"adding "<<file.str()<<endl;
 					FILE*fp=fopen(file.str().c_str(),"w+");
+					cout<<fp<<endl;
 					fileStreams[file.str()]=fp;
 				}
 				fprintf(fileStreams[file.str()],">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
 			}
-			if(graphWithoutData.find(revMer)){
+			if(graphWithoutData.find(revMer)&&colorSizes[graphWithoutData.get(revMer).getColor()]>=Threshold){
 				ostringstream file;
 				file<<outputDirectory<<"/"<<graphWithoutData.get(revMer).getColor()<<"/"<<inputFiles[i]<<".fasta";
 				if(fileStreams.count(file.str())==0){

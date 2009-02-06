@@ -17,7 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
+#include"CoverageDistribution.h"
 #include<cmath>
 #include<cstdlib>
 #include<map>
@@ -124,37 +124,14 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	m_cout<<endl;
 
 	//
-	m_cout<<"********** Writing coverage distribution..."<<endl;
-	map<int,int>  distributionOfCoverage;
-	for(CustomMap<int>::iterator i=words.begin();i!=words.end();i++){
-		distributionOfCoverage[i.second()]++;
-	}
-	string distributionFile=m_assemblyDirectory+"/CoverageDistribution.txt";
-	ofstream   distributionStream(distributionFile.c_str());
-	//distributionStream<<
-	m_coverage_mean=2;
-	bool found=false;
-	m_minimumCoverage=2;
+	//
+	CoverageDistribution coverageDistributionObject(&words,m_assemblyDirectory);
+	m_minimumCoverage=coverageDistributionObject.getMinimumCoverage();
+	m_coverage_mean=coverageDistributionObject.getMeanCoverage();
+
 	if(m_minimumCoverageParameter!="auto"){
 		m_minimumCoverage=atoi(m_minimumCoverageParameter.c_str());
 	}
-
-	for(map<int,int>::iterator i=distributionOfCoverage.begin();i!=distributionOfCoverage.end();i++){
-		distributionStream<<i->first<<" "<<i->second<<endl;
-		if(i->first>1&&distributionOfCoverage[m_coverage_mean]<i->second){
-			m_coverage_mean=i->first;
-		}
-		if(m_minimumCoverageParameter=="auto"&&
-distributionOfCoverage.count(i->first+1)>0&&
-distributionOfCoverage[i->first]<distributionOfCoverage[i->first+1]&&found==false){
-			found=true;
-			m_minimumCoverage=i->first;
-		}
-	}
-	distributionStream.close();
-	m_cout<<endl;
-	(m_cout)<<"MinimumCoverage <- "<<m_minimumCoverage<<endl;
-
 
 	uint64_t total_bases=0;
 	uint64_t solid_bases=0;
@@ -331,7 +308,7 @@ void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
 	bool debug=m_DEBUG;
 	//debug=false;
 	bool useCache=false;
-	useCache=true;
+	//useCache=true;
 
 	if(debug){
 		useCache=true;
