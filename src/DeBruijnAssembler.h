@@ -41,11 +41,9 @@ using namespace std;
 
 class DeBruijnAssembler{
 	int m_coverage_mean;
-	int m_coverage_stddev;
 	string m_graphFile;
 	string m_minimumCoverageParameter;
 	int m_minimumCoverage;
-	double m_alpha;
 	int m_REPEAT_DETECTION;
 	int m_wordSize;
 	double m_threshold;

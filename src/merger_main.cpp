@@ -30,6 +30,134 @@
 
 using namespace std;
 
+/*
+
+
+		---------------------------->
+	-------------------------->
+
+
+
+
+*/
+vector<Read*> forwardOverlapTailToHead(vector<Read*> contigSequences){
+	cout<<"forwardOverlapTailToHead"<<endl;
+	int offset=50;
+	bool reducing=true;
+	while(reducing){
+		map<string,vector<int> > index;
+		for(int i=0;i<contigSequences.size();i++){
+			if(i%1000==0){
+				cout<<i<<" / "<<contigSequences.size()<<endl;
+			}
+			string sequence=contigSequences[i]->getSeq();
+			if(sequence.length()<100)
+				continue;
+			string revWord=(sequence.substr(offset,wordSize));
+			index[revWord].push_back(i);
+		}
+		cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
+
+		vector<Read*> newContigs;
+		set<int> contigUsage;
+		for(int i=0;i<contigSequences.size();i++){
+			if(contigUsage.count(i)!=0)
+				continue;
+			string sequence=contigSequences[i]->getSeq();
+			if(sequence.length()<100)
+				continue;
+			vector<int> hits;
+			for(int j=0;j<sequence.length();j++){
+				string word=sequence.substr(j,wordSize);
+				if(word.length()<wordSize)
+					continue;
+				vector<int> localHits=index[word];
+				for(int k=0;k<localHits.size();k++){
+					if(localHits[k]==i)
+						continue;
+					if(contigUsage.count(localHits[k])!=0)
+						continue;
+					hits.push_back(localHits[k]);
+				}
+			}
+			if(m_DEBUG)
+				cout<<hits.size()<<" hits"<<endl;
+
+			for(int j=0;j<hits.size();j++){
+				string QuerySequence=sequence;
+				string subjectSequenceRaw=contigSequences[hits[j]]->getSeq();
+				string SubjectSequenceRev=(subjectSequenceRaw);
+				string startingSeed=QuerySequence.substr(offset,wordSize);
+				string endingSeed=(subjectSequenceRaw.substr(offset,wordSize));
+				int AlignmentStartInQuery=0;
+				int AlignmentStartInSubject=0;
+				int AlignmentEndInQuery=0;
+				int AlignmentEndInSubject=0;
+				while(AlignmentStartInQuery<QuerySequence.length()&&QuerySequence.substr(AlignmentStartInQuery,wordSize)!=startingSeed)
+					AlignmentStartInQuery++;
+				while(AlignmentEndInQuery<QuerySequence.length()&&QuerySequence.substr(AlignmentEndInQuery,wordSize)!=endingSeed)
+					AlignmentEndInQuery++;
+				while(AlignmentStartInSubject<SubjectSequenceRev.length()&&SubjectSequenceRev.substr(AlignmentStartInSubject,wordSize)!=startingSeed)
+					AlignmentStartInSubject++;
+				while(AlignmentEndInSubject<SubjectSequenceRev.length()&&SubjectSequenceRev.substr(AlignmentEndInSubject,wordSize)!=endingSeed)
+					AlignmentEndInSubject++;
+
+
+/*
+ 			------------------------------------->
+	------------------------------>
+
+*/
+				int found=0;
+				set<string> currentIndex;
+				if(m_DEBUG){
+					cout<<"Query: "<<AlignmentStartInQuery<<"-"<<AlignmentEndInQuery<<endl;
+					cout<<"Subject: "<<AlignmentStartInSubject<<"-"<<AlignmentEndInSubject<<endl;
+					cout<<QuerySequence.substr(AlignmentStartInQuery,AlignmentEndInQuery-AlignmentStartInQuery)<<endl;
+					cout<<SubjectSequenceRev.substr(AlignmentStartInSubject,AlignmentEndInSubject-AlignmentStartInSubject)<<endl;
+				}
+				if(AlignmentEndInQuery>AlignmentStartInQuery&&AlignmentEndInSubject>AlignmentStartInSubject){
+					for(int iteratorI=AlignmentStartInQuery;iteratorI<=AlignmentEndInQuery;iteratorI++){
+						currentIndex.insert(QuerySequence.substr(iteratorI,wordSize));
+					}
+					for(int iteratorI=AlignmentStartInSubject;iteratorI<=AlignmentEndInSubject;iteratorI++){
+						if(currentIndex.count(SubjectSequenceRev.substr(iteratorI,wordSize))>0)
+							found++;
+					}
+				}
+				bool isTheSame=found/(AlignmentEndInSubject-AlignmentStartInSubject+0.0)>0.90;
+				if(m_DEBUG){
+					cout<<AlignmentEndInQuery-AlignmentStartInQuery<<endl;
+					cout<<AlignmentEndInSubject-AlignmentStartInSubject<<endl;
+					cout<<isTheSame<<endl;
+					cout<<found<<endl;
+				}
+				if(isTheSame&&contigUsage.count(i)==0&&contigUsage.count(hits[j])==0){
+					//cout<<"Alignment! "<<AlignmentEndInQuery-AlignmentStartInQuery<<endl;
+					ostringstream newName;
+					newName<<"Contig_"<<contigSequences[hits[j]]->getId()<<"_F"<<contigSequences[i]->getId()<<"_F_";
+					
+					string sequence=SubjectSequenceRev.substr(0,AlignmentStartInSubject)+QuerySequence.substr(AlignmentStartInQuery);
+					Read*read=new Read(newName.str().c_str(),sequence.c_str());
+					newContigs.push_back(read);
+					contigUsage.insert(i);
+					contigUsage.insert(hits[j]);
+				}
+			}
+		}
+
+		for(int i=0;i<contigSequences.size();i++){
+			if(contigUsage.count(i)==0)
+				newContigs.push_back(contigSequences[i]);
+		}
+		reducing=contigSequences.size()>newContigs.size();
+		contigSequences=newContigs;
+	}
+	return contigSequences;
+}
+
+
+
 void applyColor(int i,int color,map<int,int>*contigToColor,map<int,set<int> >*contigs_graph){
 	if((*contigToColor)[i]==color)
 		return;
@@ -122,7 +250,13 @@ vector<Read*> reverseOverlapHeadToHead(vector<Read*> contigSequences){
 */
 				int found=0;
 				set<string> currentIndex;
-				if(AlignmentEndInQuery>AlignmentStartInQuery&&AlignmentEndInSubject>AlignmentEndInSubject){
+				if(m_DEBUG){
+					cout<<"Query: "<<AlignmentStartInQuery<<"-"<<AlignmentEndInQuery<<endl;
+					cout<<"Subject: "<<AlignmentStartInSubject<<"-"<<AlignmentEndInSubject<<endl;
+					cout<<QuerySequence.substr(AlignmentStartInQuery,AlignmentEndInQuery-AlignmentStartInQuery)<<endl;
+					cout<<SubjectSequenceRev.substr(AlignmentStartInSubject,AlignmentEndInSubject-AlignmentStartInSubject)<<endl;
+				}
+				if(AlignmentEndInQuery>AlignmentStartInQuery&&AlignmentEndInSubject>AlignmentStartInSubject){
 					for(int iteratorI=AlignmentStartInQuery;iteratorI<=AlignmentEndInQuery;iteratorI++){
 						currentIndex.insert(QuerySequence.substr(iteratorI,wordSize));
 					}
@@ -132,8 +266,12 @@ vector<Read*> reverseOverlapHeadToHead(vector<Read*> contigSequences){
 					}
 				}
 				bool isTheSame=found/(AlignmentEndInSubject-AlignmentStartInSubject+0.0)>0.90;
-				//cout<<AlignmentEndInQuery-AlignmentStartInQuery<<endl;
-				//cout<<AlignmentEndInSubject-AlignmentStartInSubject<<endl;
+				if(m_DEBUG){
+					cout<<AlignmentEndInQuery-AlignmentStartInQuery<<endl;
+					cout<<AlignmentEndInSubject-AlignmentStartInSubject<<endl;
+					cout<<isTheSame<<endl;
+					cout<<found<<endl;
+				}
 				if(isTheSame&&contigUsage.count(i)==0&&contigUsage.count(hits[j])==0){
 					//cout<<"Alignment! "<<AlignmentEndInQuery-AlignmentStartInQuery<<endl;
 					ostringstream newName;
@@ -322,7 +460,7 @@ vector<Read*> mergeForward(vector<Read*> contigSequences){
 						cout<<"Forward the same"<<endl;
 					contigs_graph[i].insert(*matchContig);
 					contigs_graph[*matchContig].insert(i);
-					//used=true;
+					used=true;
 				}
 			}
 		}
@@ -466,11 +604,11 @@ vector<Read*> reverseMerge(vector<Read*> contigSequences){
 					}
 				}
 				bool theSame=(notFound/(wordSize+0.0))/shortContig.length()<0.01;
-				cout<<"Not found "<<notFound/wordSize<<", "<<shortContig.length()<<endl;
+				//cout<<"Not found "<<notFound/wordSize<<", "<<shortContig.length()<<endl;
 				if(theSame){
 					contigs_graph[i].insert(*matchContig);
 					contigs_graph[*matchContig].insert(i);
-					//used=true;
+					used=true;
 				}
 			}
 		}
@@ -548,7 +686,7 @@ int main(int argc,char*argv[]){
 
 	//for(int i=0;i<contigs.size();i++)
 		//cout<<strlen(contigs[i]->getSeq())<<endl;
-	vector<Read*> theBestContigs=(reverseOverlapHeadToHead(reverseMerge(mergeForward(contigs))));
+	vector<Read*> theBestContigs=forwardOverlapTailToHead(reverseOverlapHeadToHead(reverseMerge(mergeForward(contigs))));
 
 	ofstream f(outputFile.c_str());
 	for(int j=0;j<theBestContigs.size();j++){

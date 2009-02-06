@@ -27,40 +27,29 @@
 #include<map>
 #include<string>
 #include<stdlib.h>
+#include<queue>
 #include<iostream>
 using namespace std;
 
-void applyColor(VERTEX_TYPE v,CustomMap<LightVertex>*graph,int color,int wordSize){
-	cout<<color<<endl;
-	graph->get(v).setColor(color);
-	vector<VERTEX_TYPE>parents=graph->get(v).getParents(v,wordSize);
-	vector<VERTEX_TYPE>children=graph->get(v).getChildren(v,wordSize);
-
-	//cout<<DeBruijnAssembler::idToWord(v,wordSize)<<"    "<<color<<endl;
-	//cout<<parents.size()<<" parents"<<endl;
-	for(int k=0;k<parents.size();k++){
-		//cout<<DeBruijnAssembler::idToWord(parents[k],wordSize)<<endl;
-	}
-	//cout<<children.size()<<" children"<<endl;
-
-	for(int k=0;k<children.size();k++){
-		//cout<<DeBruijnAssembler::idToWord(children[k],wordSize)<<endl;
-	}
-	if(parents.size()==0&&children.size()==0){
-		cout<<DeBruijnAssembler::idToWord(v,wordSize)<<endl;
-		cout<<"ERROR"<<endl;
-	}
-	for(int k=0;k<parents.size();k++){
-		
-		if(graph->get(parents[k]).getColor()==color)
-			continue;
-		applyColor(parents[k],graph,color,wordSize);
-	}
-	
-	for(int k=0;k<children.size();k++){
-		if(graph->get(children[k]).getColor()==color)
-			continue;
-		applyColor(children[k],graph,color,wordSize);
+void applyColor(VERTEX_TYPE v2,CustomMap<LightVertex>*graph,int color,int wordSize){
+	queue<VERTEX_TYPE> stackOfVertices;
+	stackOfVertices.push(v2);
+	while(stackOfVertices.size()>0){
+		VERTEX_TYPE v=stackOfVertices.front();
+		stackOfVertices.pop();
+		graph->get(v).setColor(color);
+		vector<VERTEX_TYPE>parents=graph->get(v).getParents(v,wordSize);
+		for(vector<VERTEX_TYPE>::iterator i=parents.begin();i!=parents.end();i++){
+			if(graph->get(*i).getColor()==-1){
+				stackOfVertices.push(*i);
+			}
+		}
+		vector<VERTEX_TYPE>children=graph->get(v).getChildren(v,wordSize);
+		for(vector<VERTEX_TYPE>::iterator i=children.begin();i!=children.end();i++){
+			if(graph->get(*i).getColor()==-1){
+				stackOfVertices.push(*i);
+			}
+		}
 	}
 }
 
@@ -253,7 +242,7 @@ int main(int argc,char*argv[]){
 					FILE*fp=fopen(file.str().c_str(),"w+");
 					fileStreams[file.str()]=fp;
 				}
-				fprintf(fileStreams[file.str()],"%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
+				fprintf(fileStreams[file.str()],">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
 			}
 			if(graphWithoutData.find(revMer)){
 				ostringstream file;
@@ -262,7 +251,7 @@ int main(int argc,char*argv[]){
 					FILE*fp=fopen(file.str().c_str(),"w+");
 					fileStreams[file.str()]=fp;
 				}
-				fprintf(fileStreams[file.str()],"%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
+				fprintf(fileStreams[file.str()],">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
 			}
 		}
 	}
