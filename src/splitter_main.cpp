@@ -97,6 +97,7 @@ int main(int argc,char*argv[]){
 	system(command.c_str());
 	CustomMap<int> words(buckets);
 	
+	cout<<"********** Loading mers from files..."<<endl;
 	for(int i=0;i<inputFiles.size();i++){
 		vector<Read*> reads;
 		Loader loader(&cout);
@@ -147,14 +148,14 @@ distributionOfCoverage[i->first]<distributionOfCoverage[i->first+1]&&found==fals
 			m_minimumCoverage=i->first;
 		}
 	}
-	cout<<"before"<<endl;
+	//cout<<"before"<<endl;
 	distributionStream.close();
-	cout<<"after"<<endl;
+	//cout<<"after"<<endl;
 	cout<<endl;
 	(cout)<<"MinimumCoverage <- "<<m_minimumCoverage<<endl;
 
 
-
+	cout<<"********** Building graph..."<<endl;
 
 	CustomMap<LightVertex> graphWithoutData(buckets);
 	int edges=0;
@@ -182,6 +183,7 @@ distributionOfCoverage[i->first]<distributionOfCoverage[i->first+1]&&found==fals
 	cout<<"Total: "<<edges<<" edges."<<endl;
 	// find connected components, but how?
 	int color=1;
+	cout<<"********** Finding connected parts..."<<endl;
 	for(CustomMap<LightVertex>::iterator i=graphWithoutData.begin();i!=graphWithoutData.end();i++){
 		if(graphWithoutData.get(i.first()).getColor()!=-1)
 			continue;
@@ -206,6 +208,7 @@ distributionOfCoverage[i->first]<distributionOfCoverage[i->first+1]&&found==fals
 
 	map<string,FILE*> fileStreams;
 
+	cout<<"********** Spitting sequences..."<<endl;
 	for(int i=0;i<inputFiles.size();i++){
 		vector<Read*> reads;
 		Loader loader(&cout);
