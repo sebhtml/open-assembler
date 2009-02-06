@@ -133,6 +133,8 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		m_minimumCoverage=atoi(m_minimumCoverageParameter.c_str());
 		cout<<"Setting minimumCoverage <- "<<m_minimumCoverage<<endl;
 	}
+	m_REPEAT_DETECTION=3*m_coverage_mean;
+	(cout)<<"REPEAT_DETECTION_COVERAGE = 3*\\mu = "<<m_REPEAT_DETECTION<<endl;
 
 	uint64_t total_bases=0;
 	uint64_t solid_bases=0;
@@ -447,9 +449,6 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	(*m_cout)<<"Done..., "<<withoutParents.size()<<" sources."<<endl;
 	
 	(*m_cout)<<endl;
-	m_REPEAT_DETECTION=2*m_coverage_mean;
-	(*m_cout)<<"REPEAT_DETECTION_COVERAGE = "<<m_REPEAT_DETECTION<<endl;
-	(*m_cout)<<"Detected coverage: "<<m_coverage_mean<<endl;
 	ostream&m_cout=*(this->m_cout);	
 	vector<VERTEX_TYPE> sources=withoutParents;
 	set<VERTEX_TYPE> sourcesVisited;

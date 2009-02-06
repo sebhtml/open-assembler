@@ -20,11 +20,12 @@
 #ifndef _AnnotationElement
 #define _AnnotationElement
 
+#define POSITION_TYPE uint32_t
 
 class AnnotationElement{
 public:
 	uint32_t readId;
-	uint16_t readPosition;
+	POSITION_TYPE readPosition;
 	uint8_t readStrand;
 
 };

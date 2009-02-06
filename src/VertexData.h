@@ -52,7 +52,7 @@ public:
 	vector<VERTEX_TYPE> getParents(VERTEX_TYPE prefix);
 	vector<AnnotationElement>*getAnnotations(VERTEX_TYPE suffix);
 	void addParent(VERTEX_TYPE parent);
-	void addAnnotation(VERTEX_TYPE suffix,uint32_t read,uint16_t position,uint8_t strand);
+	void addAnnotation(VERTEX_TYPE suffix,uint32_t read,POSITION_TYPE position,uint8_t strand);
 	bool hasChild(VERTEX_TYPE suffix);
 	void addPaired(VERTEX_TYPE kmer_apart,int distance);
 	VertexData();
