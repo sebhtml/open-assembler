@@ -32,28 +32,38 @@ CoverageDistribution::CoverageDistribution(CustomMap<int>*words,string m_assembl
 	string distributionFile=m_assemblyDirectory+"/CoverageDistribution.txt";
 	ofstream   distributionStream(distributionFile.c_str());
 	//distributionStream<<
-	m_coverage_mean=2;
-	m_minimumCoverage=2;
-	bool MinimumCoverageFound=false;
-	bool MeanCoverageFound=false;
+	m_coverage_mean=100;
+	m_minimumCoverage=1;
 
 	for(map<int,int>::iterator i=distributionOfCoverage.begin();i!=distributionOfCoverage.end();i++){
 		distributionStream<<i->first<<" "<<i->second<<endl;
-		if(MinimumCoverageFound==true&&
-	distributionOfCoverage.count(i->first+1)>0&&
-	MeanCoverageFound==false&&
-			distributionOfCoverage[i->first+1]<i->second){
-			m_coverage_mean=i->first;
-			MeanCoverageFound=true;
-		}
+		int coverage=i->first;
 		if(
-distributionOfCoverage.count(i->first+1)>0&&
-distributionOfCoverage[i->first]<distributionOfCoverage[i->first+1]&&MinimumCoverageFound==false){
-			MinimumCoverageFound=true;
-			m_minimumCoverage=i->first;
+		coverage!=1&&
+		(distributionOfCoverage.count(coverage-1)==0||
+			distributionOfCoverage[coverage-1]<=distributionOfCoverage[coverage]) &&
+		(distributionOfCoverage.count(coverage+1)==0||
+			distributionOfCoverage[coverage+1]<=distributionOfCoverage[coverage]) &&
+		distributionOfCoverage[coverage]>distributionOfCoverage[m_coverage_mean]){
+			m_coverage_mean=coverage;
 		}
 	}
 	distributionStream.close();
+
+	for(int coverage=1;coverage<=m_coverage_mean;coverage++){
+		if(
+		distributionOfCoverage.count(coverage-1)>0 &&
+			distributionOfCoverage[coverage-1]>=distributionOfCoverage[coverage] &&
+		distributionOfCoverage.count(coverage+1)>0 &&
+			distributionOfCoverage[coverage+1]>=distributionOfCoverage[coverage] &&
+
+		distributionOfCoverage[coverage]<distributionOfCoverage[m_minimumCoverage]&&
+		coverage < m_coverage_mean &&
+		(m_minimumCoverage==1|| coverage<m_minimumCoverage)){
+			cout<<"got min : "<<coverage<<endl;
+			m_minimumCoverage=coverage;
+		}
+	}
 
 	cout<<endl;
 	(cout)<<"MinimumCoverage <- "<<m_minimumCoverage<<endl;

@@ -763,10 +763,12 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 		VERTEX_TYPE  y=i->first;
 		int coverage=coverageOfEdges[y];
 		double factor=coverage/(0.0+m_coverage_mean);
-		if(factor<1)
-			factor=1;
-		if(factor>2)
-			factor=2;
+		int minFactor=1;
+		int maxFactor=1.6;
+		if(factor<minFactor)
+			factor=minFactor;
+		if(factor>maxFactor)
+			factor=maxFactor;
 		for(map<VERTEX_TYPE,int>::iterator j=scoresSum.begin();j!=scoresSum.end();j++){
 			if(i->first==j->first)
 				continue;
