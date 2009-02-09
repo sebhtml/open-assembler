@@ -139,8 +139,8 @@ int main(int argc,char*argv[]){
 
 
 	cout<<endl;
-	cout<<" Total reads: "<<sequenceData.size()<<endl;
-	cout<<" Total bases: "<<sequenceData.bases()<<endl;
+	cout<<"Total reads: "<<sequenceData.size()<<endl;
+	cout<<"Total bases: "<<sequenceData.bases()<<endl;
 	cout<<endl;
 
 

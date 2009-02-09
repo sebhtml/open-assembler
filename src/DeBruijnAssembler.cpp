@@ -715,6 +715,20 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 		return children;
 	}
 
+	if(children.size()==1 // if only 1 next and (a,b) is trivial...  a has one child , b has one parent
+		){
+		VERTEX_TYPE a=path->at(path->size()-1);
+		VERTEX_TYPE b=children[0];
+		if(m_data->get(a).getChildren(a).size()==1&&
+			m_data->get(b).getParents(b).size()==1){
+			//cout<<"\"Trivial edge\""<<endl;
+			vector<VERTEX_TYPE> output;
+			output.push_back(b);
+			return output;
+		}
+	}
+
+
 	if(children.size()>1&&m_DEBUG){
 		(*m_cout)<<"More than 1 children: "<<children.size()<<endl;
 	}
@@ -731,80 +745,128 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 	//(*m_cout)<<"previous position to check "<<path->size()-2<<endl;
 
 	map<VERTEX_TYPE,int > scoresSum;
+	map<VERTEX_TYPE,int> numbers;
 	map<VERTEX_TYPE,int> scoresMax;
 	map<VERTEX_TYPE,int>  coverageOfEdges;
+	map<VERTEX_TYPE,vector<int> > valuesForEdge;
 	ostringstream debugBuffer;
 	//(*m_cout)<<"Children"<<endl;
-	for(int i=0;i<(int)children.size();i++){
+	for(vector<VERTEX_TYPE>::iterator i=children.begin();i!=children.end();i++){
 
 		//(*m_cout)<<"Child "<<idToWord(children[i],m_wordSize)<<endl;
-		VERTEX_TYPE y=children[i];
-		vector<AnnotationElement>*thisEdgeData=(m_data->get(path->at(path->size()-1)).getAnnotations(y));
-		coverageOfEdges[y]=thisEdgeData->size();
+		vector<AnnotationElement>*thisEdgeData=(m_data->get(path->at(path->size()-1)).getAnnotations(*i));
+		coverageOfEdges[*i]=thisEdgeData->size();
 		for(int j=0;j<(int)thisEdgeData->size();j++){
 			uint32_t readId=thisEdgeData->at(j).readId;
 
-			//(*m_cout)<<readId<<" "<<thisEdgeData->at(j).readStrand<<" "<<thisEdgeData->at(j).readPosition<<endl;
 			if(is_d_Threading(&(thisEdgeData->at(j)),currentReadPositions,path,usedReads,true)){
-				if(thisEdgeData->at(j).readPosition>=scoresMax[i]){
-					scoresMax[i]=thisEdgeData->at(j).readPosition;
+				if(thisEdgeData->at(j).readPosition>=scoresMax[*i]){
+					scoresMax[*i]=thisEdgeData->at(j).readPosition;
 				}
 
-				scoresSum[i]+=thisEdgeData->at(j).readPosition;
+				scoresSum[*i]+=thisEdgeData->at(j).readPosition;
+				numbers[*i]++;
+				valuesForEdge[*i].push_back(thisEdgeData->at(j).readPosition);
 			}
 		}
 	}
 
+	cout<<"Debug scores"<<endl;
+	for(map<VERTEX_TYPE,int>::iterator i=scoresSum.begin();i!=scoresSum.end();i++){
+		vector<int> values=valuesForEdge[i->first];
+		for(vector<int>::iterator j=values.begin();j!=values.end();j++){
+			cout<<" "<<*j;
+		}
+		cout<<endl;
+	}
+
+
 	VERTEX_TYPE best=0;
 	bool foundBest=false;
+
+	// best Sum
 	for(map<VERTEX_TYPE,int>::iterator i=scoresSum.begin();i!=scoresSum.end();i++){
-		//(*m_cout)<<i->second<<endl;
+		if(foundBest==true)
+			break;
 		bool isBest=true;
-		VERTEX_TYPE  y=i->first;
-		int coverage=coverageOfEdges[y];
-		double factor=coverage/(0.0+m_coverage_mean);
-		int minFactor=1;
-		int maxFactor=1.6;
-		if(factor<minFactor)
-			factor=minFactor;
-		if(factor>maxFactor)
-			factor=maxFactor;
 		for(map<VERTEX_TYPE,int>::iterator j=scoresSum.begin();j!=scoresSum.end();j++){
 			if(i->first==j->first)
 				continue;
-			if(i->second> factor*  j->second){
-			}else{
+			if(!(i->second > 1.1*j->second)){
 				isBest=false;
 			}
 		}
 		if(isBest){
 			foundBest=true;
-			best=y;
+			best=i->first;
 		}
 	}
-	
-/*
-	if(best==-1){
-		for(map<int,int>::iterator i=scoresMax.begin();i!=scoresMax.end();i++){
-			//(*m_cout)<<i->second<<endl;
-			bool isBest=true;
-			for(map<int,int>::iterator j=scoresMax.begin();j!=scoresMax.end();j++){
-				if(i->first==j->first)
-					continue;
-				if(i->second> factor*  j->second){
-				}else{
-					isBest=false;
-				}
+
+	// best max
+	for(map<VERTEX_TYPE,int>::iterator i=scoresMax.begin();i!=scoresMax.end();i++){
+		if(foundBest==true)
+			break;
+		bool isBest=true;
+		for(map<VERTEX_TYPE,int>::iterator j=scoresMax.begin();j!=scoresMax.end();j++){
+			if(i->first==j->first)
+				continue;
+			if(!(i->second > 1.01*j->second)){
+				isBest=false;
 			}
-			if(isBest)
-				best=i->first;
 		}
-
+		if(isBest){
+			foundBest=true;
+			best=i->first;
+		}
 	}
 
-*/
+	// best number
+	for(map<VERTEX_TYPE,int>::iterator i=numbers.begin();i!=numbers.end();i++){
+		if(foundBest==true)
+			break;
+		bool isBest=true;
+		for(map<VERTEX_TYPE,int>::iterator j=numbers.begin();j!=numbers.end();j++){
+			if(i->first==j->first)
+				continue;
+			if(!(i->second > 1.6*j->second)){
+				isBest=false;
+			}
+		}
+		if(isBest){
+			foundBest=true;
+			best=i->first;
+		}
+	}
 
-	if(best==-1){
+	if(children.size()==2&&
+		foundBest==false){
+		// attempt to detect homopolymer...
+		string firstOne=DeBruijnAssembler::idToWord(children[0],m_wordSize);
+		string secondOne=DeBruijnAssembler::idToWord(children[1],m_wordSize);
+		int trailingHomoPolymerSize=0;
+		while(
+m_wordSize-2-trailingHomoPolymerSize>0 &&
+firstOne[m_wordSize-2-trailingHomoPolymerSize]==
+			secondOne[m_wordSize-2-trailingHomoPolymerSize]&&
+			firstOne[m_wordSize-2]==firstOne[m_wordSize-2-trailingHomoPolymerSize]
+			){
+			trailingHomoPolymerSize++;
+		}
+		if(trailingHomoPolymerSize>1){
+			cout<<"Trailing homopolymer W00t "<<trailingHomoPolymerSize<<endl;
+			cout<<firstOne<<endl;
+			cout<<secondOne<<endl;
+			foundBest=true;
+			if(firstOne[m_wordSize-1]==firstOne[m_wordSize-2]){ // take the shortest one.
+				best=children[1];
+			}else{
+				best=children[0];
+			}
+		}
+	}
+
+
+	if(foundBest==false){
 		for(int i=0;i<children.size();i++){
 			if(newSources!=NULL){
 				newSources->push_back(children[i]);
@@ -813,7 +875,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 		}
 	}else{
 		for(int i=0;i<children.size();i++){
-			if(children[i]!=children[best]&&newSources!=NULL&&!DETECT_BUBBLE(path,children[i],best)){
+			if(children[i]!=best&&newSources!=NULL&&!DETECT_BUBBLE(path,children[i],best)){
 				newSources->push_back(children[i]);
 				(*m_cout)<<"Adding alternative source: "<<idToWord(children[i],m_wordSize)<<endl;
 			}
@@ -821,18 +883,14 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 
 	}
 
-/*
-	if(newSources!=NULL){
-		children=removeBubblesAndTips(children,path,currentReadPositions);
-	}
-*/
 	if(foundBest==true){
 		vector<VERTEX_TYPE> output;
-		output.push_back(children[best]);
+		output.push_back(best);
 		return output;
 	}
 	//(*m_cout)<<debugBuffer.str()<<endl;
 	vector<VERTEX_TYPE> output;
+
 	if(newSources!=NULL&&m_DEBUG){
 		(*m_cout)<<"No children scored. "<<endl;
 		vector<VERTEX_TYPE> allChildren=m_data->get(path->at(path->size()-1)).getChildren(path->at(path->size()-1));

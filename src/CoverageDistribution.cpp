@@ -60,7 +60,7 @@ CoverageDistribution::CoverageDistribution(CustomMap<int>*words,string m_assembl
 		distributionOfCoverage[coverage]<distributionOfCoverage[m_minimumCoverage]&&
 		coverage < m_coverage_mean &&
 		(m_minimumCoverage==1|| coverage<m_minimumCoverage)){
-			cout<<"got min : "<<coverage<<endl;
+			//cout<<"got min : "<<coverage<<endl;
 			m_minimumCoverage=coverage;
 		}
 	}
