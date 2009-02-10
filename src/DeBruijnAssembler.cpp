@@ -1177,6 +1177,8 @@ bool DeBruijnAssembler::is_d_Threading(AnnotationElement*annotation,vector<map<i
 	if(beforeAdding)
 		distanceInPath++;
 	//(*m_cout)<<"R "<<distanceInRead<<" C "<<distanceInPath<<endl;
+	m_carry_forward_offset=0;
+	//return distanceInPath==distanceInRead;
 	if(distanceInPath==distanceInRead){
 		m_carry_forward_offset=0;
 		return true;

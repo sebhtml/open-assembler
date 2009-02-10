@@ -206,26 +206,34 @@ int main(int argc,char*argv[]){
 				continue;
 			VERTEX_TYPE mer=DeBruijnAssembler::wordId(sequence.substr(0,wordSize).c_str());
 			VERTEX_TYPE revMer=DeBruijnAssembler::wordId(DeBruijnAssembler::reverseComplement(DeBruijnAssembler::idToWord(mer,wordSize)).c_str());
+			string baseName=inputFiles[i].substr(inputFiles[i].find_last_of("/")+1);
 			if(graphWithoutData.find(mer)&&colorSizes[graphWithoutData.get(mer).getColor()]>=Threshold){
 				ostringstream file;
-				string baseName=inputFiles[i].substr(inputFiles[i].find_last_of("/")+1);
 				file<<outputDirectory<<"/"<<graphWithoutData.get(mer).getColor()<<"/"<<baseName<<".fasta";				
 				if(fileStreams.count(file.str())==0){
-					cout<<"adding "<<file.str()<<endl;
+					//cout<<"adding "<<file.str()<<endl;
 					FILE*fp=fopen(file.str().c_str(),"w+");
 					fileStreams[file.str()]=fp;
 				}
-				cout<<fileStreams[file.str()]<<endl;
+				//cout<<fileStreams[file.str()]<<endl;
+				//cout<<"baseName "<<baseName<<endl;
 				fprintf(fileStreams[file.str()],">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
 			}
 			if(graphWithoutData.find(revMer)&&colorSizes[graphWithoutData.get(revMer).getColor()]>=Threshold){
 				ostringstream file;
-				file<<outputDirectory<<"/"<<graphWithoutData.get(revMer).getColor()<<"/"<<inputFiles[i]<<".fasta";
+				file<<outputDirectory<<"/"<<graphWithoutData.get(revMer).getColor()<<"/"<<baseName<<".fasta";
 				if(fileStreams.count(file.str())==0){
 					FILE*fp=fopen(file.str().c_str(),"w+");
 					fileStreams[file.str()]=fp;
 				}
-				fprintf(fileStreams[file.str()],">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
+				if(fileStreams.count(file.str())==0)
+					cout<<"Error: no file found."<<endl;
+
+				FILE*filePTR=fileStreams[file.str()];
+				if(filePTR==NULL){
+					cout<<"Error: "<<file.str()<<" leads to NULL object."<<endl;
+				}
+				fprintf(filePTR,">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
 			}
 		}
 	}
