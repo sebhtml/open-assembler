@@ -41,6 +41,7 @@ using namespace std;
 
 class DeBruijnAssembler{
 	int m_coverage_mean;
+	int m_carry_forward_offset;
 	string m_graphFile;
 	string m_minimumCoverageParameter;
 	int m_minimumCoverage;

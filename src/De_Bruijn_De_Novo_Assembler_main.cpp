@@ -48,9 +48,9 @@ int main(int argc,char*argv[]){
 	int wordSize=21;
 	cout<<" -wordSize            default: "<<wordSize<<" (maximum: 31)"<<endl;
 	cout<<"                      description: the length of strings inside vertices, edges will be defined for words of length <wordSize>+1."<<endl;
-	string m_minimumCoverageParameter="auto";
-	cout<<" -minimumCoverage     default: auto (with depletion curve)"<<endl;
-	
+	string m_minimumCoverageParameter="2";
+	cout<<" -minimumCoverage     default: "<<m_minimumCoverageParameter<<""<<endl;
+	cout<<"    auto if you want to use the depletion curve"<<endl;
 	int minimumContigSize=500;
 	//cout<<" -minimumContigSize   default: "<<minimumContigSize<<endl;
 	//cout<<"                      description: the minimum length of contigs generated with the graph."<<endl;

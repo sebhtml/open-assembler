@@ -213,9 +213,9 @@ int main(int argc,char*argv[]){
 				if(fileStreams.count(file.str())==0){
 					cout<<"adding "<<file.str()<<endl;
 					FILE*fp=fopen(file.str().c_str(),"w+");
-					cout<<fp<<endl;
 					fileStreams[file.str()]=fp;
 				}
+				cout<<fileStreams[file.str()]<<endl;
 				fprintf(fileStreams[file.str()],">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
 			}
 			if(graphWithoutData.find(revMer)&&colorSizes[graphWithoutData.get(revMer).getColor()]>=Threshold){

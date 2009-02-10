@@ -31,6 +31,8 @@ Read::Read(const char*id,const char*sequence){
 	strcpy(m_sequence,sequence);
 	strcpy(m_id,id);
 	//cout<<strlen(sequence)<<endl;
+	m_startForward=0;
+	m_startReverse=0;
 }
 
 Read::~Read(){
@@ -72,4 +74,20 @@ bool Read::isValidDNA(string*x){
 			return false;
 	}
 	return true;
+}
+
+int Read::getStartForward(){
+	return m_startForward;
+}
+
+int Read::getStartReverse(){
+	return m_startReverse;
+}
+
+void Read::setStartForward(int i){
+	m_startForward=i;
+}
+
+void Read::setStartReverse(int i){
+	m_startReverse=i;
 }

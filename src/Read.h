@@ -38,6 +38,8 @@ using namespace std;
 class Read{
 	char*m_id;
 	char*m_sequence;
+	int m_startForward;
+	int m_startReverse;
 public:
 	Read(const char*id,const char*sequence);
 	char*getId();
@@ -45,6 +47,10 @@ public:
 	char*getSeq();
 	vector<VERTEX_TYPE>getHighQualityMers(int wordSize);
 	bool isValidDNA(string*x);
+	int getStartForward();
+	int getStartReverse();
+	void setStartForward(int i);
+	void setStartReverse(int i);
 };
 
 #endif
