@@ -61,7 +61,7 @@ int main(int argc,char*argv[]){
 	string outputDirectory="parts";
 	int wordSize=21;
 	int buckets=100000000;
-	string m_minimumCoverageParameter="2";
+	string m_minimumCoverageParameter="1";
 	vector<string> inputFiles;
 
 	// collect arguments
@@ -94,7 +94,7 @@ int main(int argc,char*argv[]){
 
 
 	cout<<"Creating "<<outputDirectory<<endl;
-	string command = "mkdir -p "+outputDirectory;
+	string command = "rm -rf "+outputDirectory+"; mkdir -p "+outputDirectory;
 	system(command.c_str());
 	CustomMap<int> words(buckets);
 	
@@ -192,7 +192,6 @@ int main(int argc,char*argv[]){
 	command="bash "+createFiles;
 	system(command.c_str());
 
-	map<string,FILE*> fileStreams;
 
 	cout<<"********** Spitting sequences..."<<endl;
 	for(int i=0;i<inputFiles.size();i++){
@@ -210,37 +209,20 @@ int main(int argc,char*argv[]){
 			if(graphWithoutData.find(mer)&&colorSizes[graphWithoutData.get(mer).getColor()]>=Threshold){
 				ostringstream file;
 				file<<outputDirectory<<"/"<<graphWithoutData.get(mer).getColor()<<"/"<<baseName<<".fasta";				
-				if(fileStreams.count(file.str())==0){
-					//cout<<"adding "<<file.str()<<endl;
-					FILE*fp=fopen(file.str().c_str(),"w+");
-					fileStreams[file.str()]=fp;
-				}
-				//cout<<fileStreams[file.str()]<<endl;
-				//cout<<"baseName "<<baseName<<endl;
-				fprintf(fileStreams[file.str()],">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
+				FILE*fp=fopen(file.str().c_str(),"a+");
+				fprintf(fp,">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
+				fclose(fp);
 			}
 			if(graphWithoutData.find(revMer)&&colorSizes[graphWithoutData.get(revMer).getColor()]>=Threshold){
 				ostringstream file;
 				file<<outputDirectory<<"/"<<graphWithoutData.get(revMer).getColor()<<"/"<<baseName<<".fasta";
-				if(fileStreams.count(file.str())==0){
-					FILE*fp=fopen(file.str().c_str(),"w+");
-					fileStreams[file.str()]=fp;
-				}
-				if(fileStreams.count(file.str())==0)
-					cout<<"Error: no file found."<<endl;
-
-				FILE*filePTR=fileStreams[file.str()];
-				if(filePTR==NULL){
-					cout<<"Error: "<<file.str()<<" leads to NULL object."<<endl;
-				}
-				fprintf(filePTR,">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
+				FILE*fp=fopen(file.str().c_str(),"a+");
+				fprintf(fp,">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
+				fclose(fp);
 			}
 		}
 	}
 
-	for(map<string,FILE*>::iterator i=fileStreams.begin();i!=fileStreams.end();i++){
-		fclose(i->second);
-	}
 
 	return 0;
 }
