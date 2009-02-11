@@ -57,11 +57,11 @@ void applyColor(VERTEX_TYPE v2,CustomMap<LightVertex>*graph,int color,int wordSi
 int main(int argc,char*argv[]){
 	DeBruijnAssembler::CommonHeader(&cout);
 	cout<<"usage"<<endl;
-	cout<<"dna_DeBruijnSplitter [-outputDirectory parts] [-wordSize 21] [-buckets 100000000] [-minimumCoverage auto] <sequence files>"<<endl;
+	string m_minimumCoverageParameter="1";
+	cout<<"dna_DeBruijnSplitter [-outputDirectory parts] [-wordSize 21] [-buckets 100000000] [-minimumCoverage "<<m_minimumCoverageParameter<<"] <sequence files>"<<endl;
 	string outputDirectory="parts";
 	int wordSize=21;
 	int buckets=100000000;
-	string m_minimumCoverageParameter="1";
 	vector<string> inputFiles;
 
 	// collect arguments
