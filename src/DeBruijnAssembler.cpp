@@ -21,6 +21,7 @@
 #include<cmath>
 #include<cstdlib>
 #include<map>
+#include<queue>
 #include<iostream>
 #include"DeBruijnAssembler.h"
 #include<fstream>
@@ -455,15 +456,12 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			for(vector<VERTEX_TYPE>::iterator j=theParents.begin();j!=theParents.end();j++){
 				if(m_data->get(*j).IsEliminated())
 					continue;
-				int trivialSize=0;
-				int MaxDepth=100;
+				int MaxDepth=120;
 				VERTEX_TYPE currentNode=*j;
 				set<VERTEX_TYPE> stuffVisited;
-				int reachedDepth=visitVertices(currentNode,&stuffVisited,MaxDepth,0);
-				if(reachedDepth!=MaxDepth)
-					cout<<"Depth: "<<reachedDepth<<endl;
+				int reachedDepth=visitVertices(currentNode,&stuffVisited,MaxDepth);
+				cout<<"Depth: "<<reachedDepth<<endl;
 				if(reachedDepth<MaxDepth){
-					//cout<<"Removing a spurious edge, source length was "<<trivialSize<<endl;
 					m_data->get(*j).eliminateNow();
 					removing=true;
 					spuriousRemoval++;
@@ -569,12 +567,14 @@ void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 bool DeBruijnAssembler::DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VERTEX_TYPE b){
 	set<VERTEX_TYPE> stuffFromA;
 	set<VERTEX_TYPE> stuffFromB;
-	int maxDepth=30;
-	visitVertices(a,&stuffFromA,maxDepth,0);
-	visitVertices(b,&stuffFromB,maxDepth,0);
+	int maxDepth=100;
+	visitVertices(a,&stuffFromA,maxDepth);
+	visitVertices(b,&stuffFromB,maxDepth);
 	for(set<VERTEX_TYPE>::iterator i=stuffFromA.begin();i!=stuffFromA.end();i++){
-		if(stuffFromB.count(*i)>0)
+		if(stuffFromB.count(*i)>0){
+			cout<<"Bubble!"<<endl;
 			return true;
+		}
 	}
 	return false;
 }
@@ -1241,18 +1241,32 @@ void DeBruijnAssembler::CommonHeader(ostream*out){
 }
 
 // DFS (?) accumulate 
-int DeBruijnAssembler::visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int maxDepth,int currentDepth){
-	if(currentDepth>=maxDepth)
-		return currentDepth;
-	nodes->insert(a);
-	int bestDepth=currentDepth;
-	vector<VERTEX_TYPE> children=m_data->get(a).getChildren(a);
-	for(vector<VERTEX_TYPE>::iterator i=children.begin();i!=children.end();i++){
-		if(nodes->count(*i)>0)
-			continue;
-		int d=visitVertices(*i,nodes,maxDepth,currentDepth+1);
-		if(d>bestDepth)
-			bestDepth=d;
+int DeBruijnAssembler::visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int maxDepth){
+	queue<VERTEX_TYPE> dataQueue;
+	queue<VERTEX_TYPE> depthQueue;
+	dataQueue.push(a);
+	depthQueue.push(0);
+	int bestDepth=0;
+	while(dataQueue.size()>0){
+		VERTEX_TYPE aNode=dataQueue.front();
+		dataQueue.pop();
+		int aNodeDepth=depthQueue.front();
+		depthQueue.pop();
+
+		if(aNodeDepth>bestDepth)
+			bestDepth=aNodeDepth;
+
+		nodes->insert(aNode);
+		vector<VERTEX_TYPE> children=m_data->get(aNode).getChildren(aNode);
+		for(vector<VERTEX_TYPE>::iterator i=children.begin();i!=children.end();i++){
+			VERTEX_TYPE otherNode=*i;
+			if(aNodeDepth+1>maxDepth)
+				continue;
+			if(nodes->count(otherNode)>0)
+				continue;
+			dataQueue.push(otherNode);
+			depthQueue.push(aNodeDepth+1);
+		}
 	}
 	return bestDepth;
 }
