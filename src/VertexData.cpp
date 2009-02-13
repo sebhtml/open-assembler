@@ -26,6 +26,7 @@
 using namespace std;
 
 VertexData::VertexData(){
+	m_isEliminated=false;
 	m_parents=0;
 }
 
@@ -125,14 +126,18 @@ vector<VERTEX_TYPE> VertexData::getChildren(VERTEX_TYPE prefix){
 	return output;
 }
 
-vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix){
+vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix,CustomMap<VertexData>*m_data){
 	string a=DeBruijnAssembler::idToWord(prefix,DeBruijnAssembler::m_WordSize);
 	vector<VERTEX_TYPE> output;
 	//cout<<a<<endl;
 	//cout<<(int)m_parents<<endl;
+	//cout<<"parents " <<m_parents<<endl;
 	for(int i=0;i<4;i++){
 		uint8_t toCheck=m_parents;
-		toCheck=toCheck>>i;
+		//00001000
+		//10000000
+		toCheck=(toCheck<<(7-i));
+		toCheck=toCheck>>7;
 		if(toCheck==1){
 			char symbol='A';
 			if(i==0){
@@ -146,10 +151,17 @@ vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix){
 			}
 			string sequence=symbol+a.substr(0,DeBruijnAssembler::m_WordSize-1);
 			//cout<<sequence<<endl;
-			output.push_back(DeBruijnAssembler::wordId(sequence.c_str()));
+			VERTEX_TYPE dataNode=DeBruijnAssembler::wordId(sequence.c_str());
+			output.push_back(dataNode);
 		}
 	}
-	return output;
+	vector<VERTEX_TYPE> removedFree;
+	for(vector<VERTEX_TYPE>::iterator i=output.begin();i!=output.end();i++){
+		if(m_data->get(*i).IsEliminated())
+			continue;
+		removedFree.push_back(*i);
+	}
+	return removedFree;
 }
 
 
@@ -160,3 +172,12 @@ void VertexData::addPaired(VERTEX_TYPE kmer_apart,int distance){
 
 VertexData::~VertexData(){
 }
+
+void VertexData::eliminateNow(){
+	m_isEliminated=true;
+}
+
+bool VertexData::IsEliminated(){
+	return m_isEliminated;
+}
+

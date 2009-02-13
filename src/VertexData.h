@@ -22,6 +22,7 @@
 
 #include<map>
 #include<vector>
+#include "CustomMap.hpp"
 #include"Read.h"
 #include"AnnotationElement.h"
 #include<stdint.h>
@@ -38,6 +39,8 @@ class VertexData{
 	// 5	Unused
 	// 6	Unused
 	// 7	Unused
+	
+	bool m_isEliminated;
 	uint8_t m_parents;
 	vector<int> m_distances;
 	vector<VERTEX_TYPE> m_kmer_apart;
@@ -49,7 +52,7 @@ class VertexData{
 	
 public:
 	vector<VERTEX_TYPE> getChildren(VERTEX_TYPE prefix);
-	vector<VERTEX_TYPE> getParents(VERTEX_TYPE prefix);
+	vector<VERTEX_TYPE> getParents(VERTEX_TYPE prefix,CustomMap<VertexData>*m_data);
 	vector<AnnotationElement>*getAnnotations(VERTEX_TYPE suffix);
 	void addParent(VERTEX_TYPE parent);
 	void addAnnotation(VERTEX_TYPE suffix,uint32_t read,POSITION_TYPE position,uint8_t strand);
@@ -57,6 +60,8 @@ public:
 	void addPaired(VERTEX_TYPE kmer_apart,int distance);
 	VertexData();
 	~VertexData();
+	bool IsEliminated();
+	void eliminateNow();
 };
 
 #endif

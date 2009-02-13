@@ -312,7 +312,7 @@ void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
 	//debug=false;
 	bool useCache=false;
 	//useCache=true;
-	bool writeGraphFile=false;
+	bool writeGraphFile=useCache;
 	if(debug){
 		useCache=true;
 	}
@@ -435,6 +435,59 @@ void DeBruijnAssembler::setAssemblyDirectory(string assemblyDirectory){
 
 
 void DeBruijnAssembler::Walk_In_GRAPH(){
+	(*m_cout)<<endl;
+	(*m_cout)<<"********** Removing spurious edges"<<endl;
+	bool removing=true;
+	int spuriousRemoval=0;
+	int removalRound=1;
+	int totalSourcesCount=0;
+	while(removing==true){
+		removing=false;
+		int localRemovals=0;
+		int id=0;
+		cout<<endl;
+		cout<<"Round "<<removalRound<<endl;
+		for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
+			VERTEX_TYPE prefix=i.first();
+			if(i.second().IsEliminated())
+				continue;
+			if(id%100000==0){
+				cout<<id+1<<" / "<<m_data->size()<<endl;
+			}
+			vector<VERTEX_TYPE> theParents=i.second().getParents(prefix,m_data);
+			//(*m_cout)<<theParents.size()<<endl;
+			if(theParents.size()>1){
+				//(*m_cout)<<theParents.size()<<endl;
+				for(vector<VERTEX_TYPE>::iterator j=theParents.begin();j!=theParents.end();j++){
+					if(m_data->get(*j).IsEliminated())
+						continue;
+					int trivialSize=0;
+					int MaxTrivialSize=100;
+					VERTEX_TYPE currentNode=*j;
+					vector<VERTEX_TYPE> currentNodeParents=m_data->get(currentNode).getParents(currentNode,m_data);
+					while(trivialSize<=MaxTrivialSize&&
+						currentNodeParents.size()==1){
+						trivialSize++;
+						currentNode=currentNodeParents[0];
+						currentNodeParents=m_data->get(currentNode).getParents(currentNode,m_data);
+					}
+					//(*m_cout)<<"TrivialSize "<<trivialSize<<endl;
+					if(currentNodeParents.size()==0){
+						//cout<<"Removing a spurious edge, source length was "<<trivialSize<<endl;
+						m_data->get(*j).eliminateNow();
+						removing=true;
+						localRemovals++;
+					}
+				}
+			}
+			id++;
+		}
+		cout<<id+1<<" / "<<m_data->size()<<endl;
+		cout<<"Round"<<removalRound<<", "<<localRemovals<<" spurious edges removed."<<endl;
+		removalRound++;
+		spuriousRemoval+=localRemovals;
+	}
+	(*m_cout)<<"Removed "<<spuriousRemoval<<" edges"<<endl;
 
 	(*m_cout)<<endl;
 	(*m_cout)<<"********** Collecting sources"<<endl;
@@ -442,7 +495,10 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	//for(MAP_TYPE<VERTEX_TYPE,MAP_TYPE<VERTEX_TYPE,vector<int> > >::iterator i=m_graph.begin();i!=m_graph.end();i++){
 	for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
 		VERTEX_TYPE prefix=i.first();
-		if(i.second().getParents(prefix).size()==0){
+		if(i.second().IsEliminated())
+			continue;
+		vector<VERTEX_TYPE> theParents=i.second().getParents(prefix,m_data);
+		if(theParents.size()==0){
 			withoutParents.push_back(prefix);
 		}
 	}
@@ -567,6 +623,11 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 	int lowCoverageLength=0;
 	vector<VERTEX_TYPE> prefixNextVertices=nextVertices(path,currentReadPositions,newSources,&usedReads);
 	while(prefixNextVertices.size()==1){
+		if(m_data->get(prefix).IsEliminated()==true){
+			cout<<"Skipping spurious edge"<<endl;
+			return;
+		}
+
 		prefix=prefixNextVertices[0];
 		path->push_back(prefix);
 
@@ -607,7 +668,8 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 					// add a read when it starts at its beginning...
 				if(annotations->size()<HIGHCOVERAGETHRESHOLD&&
 			((annotations->at(h).readStrand=='F'&&annotations->at(h).readPosition==m_sequenceData->at(annotations->at(h).readId)->getStartForward())||
-			(annotations->at(h).readStrand=='R'&&annotations->at(h).readPosition==m_sequenceData->at(annotations->at(h).readId)->getStartReverse()))
+			(annotations->at(h).readStrand=='R'&&annotations->at(h).readPosition==m_sequenceData->at(annotations->at(h).readId)->getStartReverse())||
+			path->size()<200)
 				){ // add at most a given amount of "new reads" to avoid depletion
 					(*currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition; // = 0
 					//(*m_cout)<<path->size()<<" "<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
@@ -738,7 +800,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 		VERTEX_TYPE a=path->at(path->size()-1);
 		VERTEX_TYPE b=children[0];
 		if(m_data->get(a).getChildren(a).size()==1&&
-			m_data->get(b).getParents(b).size()==1){
+			m_data->get(b).getParents(b,m_data).size()==1){
 			//cout<<"\"Trivial edge\""<<endl;
 			vector<VERTEX_TYPE> output;
 			output.push_back(b);
