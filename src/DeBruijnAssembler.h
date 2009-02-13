@@ -96,6 +96,9 @@ class DeBruijnAssembler{
 	void writeContig_Coverage(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);
 
 	void writeContig_RepeatAnnotation(vector<int>*repeatAnnotations,int i,ofstream*file,vector<VERTEX_TYPE>*path);
+
+
+	int visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int maxDepth,int currentDepth);
 public:
 	DeBruijnAssembler(ostream*m_cout);
 	void setPairedInfo(string a);

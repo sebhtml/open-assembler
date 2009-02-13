@@ -1,5 +1,7 @@
 #!/usr/bin/ruby
 
+require 'set'
+
 if ARGV.size!=2
 	puts "usage"
 	puts "plotGraph.rb fastaFile graphFile"
@@ -10,14 +12,14 @@ end
 
 f=File.open ARGV[0] 
 f.gets
+seq=""
 
-seq=f.gets.strip
 while l=f.gets
 	seq<< l.strip
 end
 f.close
 
-puts seq
+#puts seq
 
 graph={}
 k=22
@@ -30,8 +32,8 @@ while i<seq.length
 	end
 	prefix=word[0..(k-2)]
 	suffix=word[1..(k-1)]
-	if graph[word].nil?
-		graph[prefix]=[]
+	if graph[prefix].nil?
+		graph[prefix]=Set.new
 	end
 	graph[prefix]<<  suffix
 end

@@ -439,54 +439,40 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	(*m_cout)<<"********** Removing spurious edges"<<endl;
 	bool removing=true;
 	int spuriousRemoval=0;
-	int removalRound=1;
-	int totalSourcesCount=0;
-	while(removing==true){
-		removing=false;
-		int localRemovals=0;
-		int id=0;
-		cout<<endl;
-		cout<<"Round "<<removalRound<<endl;
-		for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
-			VERTEX_TYPE prefix=i.first();
-			if(i.second().IsEliminated())
-				continue;
-			if(id%100000==0){
-				cout<<id+1<<" / "<<m_data->size()<<endl;
-			}
-			vector<VERTEX_TYPE> theParents=i.second().getParents(prefix,m_data);
+	int id=0;
+	cout<<endl;
+	for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
+		VERTEX_TYPE prefix=i.first();
+		if(i.second().IsEliminated())
+			continue;
+		if(id%100000==0){
+			cout<<id+1<<" / "<<m_data->size()<<endl;
+		}
+		vector<VERTEX_TYPE> theParents=i.second().getParents(prefix,m_data);
+		//(*m_cout)<<theParents.size()<<endl;
+		if(theParents.size()>1){
 			//(*m_cout)<<theParents.size()<<endl;
-			if(theParents.size()>1){
-				//(*m_cout)<<theParents.size()<<endl;
-				for(vector<VERTEX_TYPE>::iterator j=theParents.begin();j!=theParents.end();j++){
-					if(m_data->get(*j).IsEliminated())
-						continue;
-					int trivialSize=0;
-					int MaxTrivialSize=100;
-					VERTEX_TYPE currentNode=*j;
-					vector<VERTEX_TYPE> currentNodeParents=m_data->get(currentNode).getParents(currentNode,m_data);
-					while(trivialSize<=MaxTrivialSize&&
-						currentNodeParents.size()==1){
-						trivialSize++;
-						currentNode=currentNodeParents[0];
-						currentNodeParents=m_data->get(currentNode).getParents(currentNode,m_data);
-					}
-					//(*m_cout)<<"TrivialSize "<<trivialSize<<endl;
-					if(currentNodeParents.size()==0){
-						//cout<<"Removing a spurious edge, source length was "<<trivialSize<<endl;
-						m_data->get(*j).eliminateNow();
-						removing=true;
-						localRemovals++;
-					}
+			for(vector<VERTEX_TYPE>::iterator j=theParents.begin();j!=theParents.end();j++){
+				if(m_data->get(*j).IsEliminated())
+					continue;
+				int trivialSize=0;
+				int MaxDepth=100;
+				VERTEX_TYPE currentNode=*j;
+				set<VERTEX_TYPE> stuffVisited;
+				int reachedDepth=visitVertices(currentNode,&stuffVisited,MaxDepth,0);
+				if(reachedDepth!=MaxDepth)
+					cout<<"Depth: "<<reachedDepth<<endl;
+				if(reachedDepth<MaxDepth){
+					//cout<<"Removing a spurious edge, source length was "<<trivialSize<<endl;
+					m_data->get(*j).eliminateNow();
+					removing=true;
+					spuriousRemoval++;
 				}
 			}
-			id++;
 		}
-		cout<<id+1<<" / "<<m_data->size()<<endl;
-		cout<<"Round"<<removalRound<<", "<<localRemovals<<" spurious edges removed."<<endl;
-		removalRound++;
-		spuriousRemoval+=localRemovals;
+		id++;
 	}
+	cout<<id+1<<" / "<<m_data->size()<<endl;
 	(*m_cout)<<"Removed "<<spuriousRemoval<<" edges"<<endl;
 
 	(*m_cout)<<endl;
@@ -578,36 +564,17 @@ void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 
 
 
-// get a walk from a vertex, with a path, up to maxSize,
-// the path is not added in the walk
-vector<VERTEX_TYPE> DeBruijnAssembler::getWalk(VERTEX_TYPE prefix,vector<VERTEX_TYPE>*path,int length,vector<map<int,map<char,int> > >*currentReadPositions){
-	vector<VERTEX_TYPE> subPath;
-	vector<VERTEX_TYPE> path1=*path;
-	path1.push_back(prefix);
-	subPath.push_back(prefix);
-	vector<VERTEX_TYPE> nextVertices1=m_data->get(path1.at(path1.size()-1)).getChildren(path1.at(path1.size()-1));
-	while((int)nextVertices1.size()==1&&(int)subPath.size()<=length){
-		prefix=nextVertices1[0];
-		path1.push_back(prefix);
-		nextVertices1=m_data->get(path1.at(path1.size()-1)).getChildren(path1.at(path1.size()-1));
-		subPath.push_back(prefix);
-	}
-	return subPath;
-}
+
 
 bool DeBruijnAssembler::DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VERTEX_TYPE b){
-	int maxSize=500;
-	vector<VERTEX_TYPE> n1=getWalk(a,path,maxSize,NULL);
-	vector<VERTEX_TYPE> n2=getWalk(b,path,maxSize,NULL);
-	set<VERTEX_TYPE> n1_Table;
-	for(int i=0;i<(int)n1.size();i++){
-		n1_Table.insert(n1[i]);
-	}
-	for(int i=0;i<(int)n2.size();i++){
-		if(n1_Table.count(n2[i])>0){
-			(*m_cout)<<"BUBBLE DeTeCtEd."<<endl;
+	set<VERTEX_TYPE> stuffFromA;
+	set<VERTEX_TYPE> stuffFromB;
+	int maxDepth=30;
+	visitVertices(a,&stuffFromA,maxDepth,0);
+	visitVertices(b,&stuffFromB,maxDepth,0);
+	for(set<VERTEX_TYPE>::iterator i=stuffFromA.begin();i!=stuffFromA.end();i++){
+		if(stuffFromB.count(*i)>0)
 			return true;
-		}
 	}
 	return false;
 }
@@ -1271,4 +1238,21 @@ void DeBruijnAssembler::CommonHeader(ostream*out){
 	*out<<"License: http://www.gnu.org/licenses/gpl.html"<<endl;
 	*out<<"Publication: in preparation"<<endl;
 	*out<<"Version: "<<SOFTWARE_VERSION<<endl;
+}
+
+// DFS (?) accumulate 
+int DeBruijnAssembler::visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int maxDepth,int currentDepth){
+	if(currentDepth>=maxDepth)
+		return currentDepth;
+	nodes->insert(a);
+	int bestDepth=currentDepth;
+	vector<VERTEX_TYPE> children=m_data->get(a).getChildren(a);
+	for(vector<VERTEX_TYPE>::iterator i=children.begin();i!=children.end();i++){
+		if(nodes->count(*i)>0)
+			continue;
+		int d=visitVertices(*i,nodes,maxDepth,currentDepth+1);
+		if(d>bestDepth)
+			bestDepth=d;
+	}
+	return bestDepth;
 }
