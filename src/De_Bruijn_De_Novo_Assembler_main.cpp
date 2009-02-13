@@ -125,8 +125,6 @@ int main(int argc,char*argv[]){
 
 	cout<<endl;
 
-	// TODO: a class SequenceData
-	// to avoid loading all files in memory (only 1 at any moment)
 	//cout<<"Indexing files"<<endl;
 	cout<<endl;
 	cout<<"********** Loading sequence data..."<<endl;

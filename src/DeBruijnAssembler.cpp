@@ -596,7 +596,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::getWalk(VERTEX_TYPE prefix,vector<VERTEX_
 }
 
 bool DeBruijnAssembler::DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VERTEX_TYPE b){
-	int maxSize=200;
+	int maxSize=500;
 	vector<VERTEX_TYPE> n1=getWalk(a,path,maxSize,NULL);
 	vector<VERTEX_TYPE> n2=getWalk(b,path,maxSize,NULL);
 	set<VERTEX_TYPE> n1_Table;
@@ -654,11 +654,10 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			(*m_cout)<<path->size()<<" progress."<<endl;
 		//(*m_cout)<<"Threading.. reads "<<endl;
 		//(*m_cout)<<"Coverage mean: "<<coverageMean<<" "<<annotations->size()<<endl; 
-		int HIGHCOVERAGETHRESHOLD=m_REPEAT_DETECTION;
-		if(annotations->size()>=HIGHCOVERAGETHRESHOLD&&m_DEBUG){
+		if(annotations->size()>=m_REPEAT_DETECTION&&m_DEBUG){
 			(*m_cout)<<"Coverage: "<<annotations->size()<<", refusing to start threading reads!"<<endl;
 		}
-		if(annotations->size()>=HIGHCOVERAGETHRESHOLD){
+		if(annotations->size()>=m_REPEAT_DETECTION){
 			repeatAnnotations->push_back(1);
 		}else{
 			repeatAnnotations->push_back(0);
@@ -666,7 +665,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		for(int h=0;h<(int)annotations->size();h++){
 			if(usedReads.count(annotations->at(h).readId)==0){
 					// add a read when it starts at its beginning...
-				if(annotations->size()<HIGHCOVERAGETHRESHOLD&&
+				if(annotations->size()<m_REPEAT_DETECTION&&
 			((annotations->at(h).readStrand=='F'&&annotations->at(h).readPosition==m_sequenceData->at(annotations->at(h).readId)->getStartForward())||
 			(annotations->at(h).readStrand=='R'&&annotations->at(h).readPosition==m_sequenceData->at(annotations->at(h).readId)->getStartReverse())||
 			path->size()<200)
@@ -726,6 +725,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 	(*m_cout)<<"Prefix "<<idToWord(prefix,m_wordSize)<<" "<<children.size()<<endl;
 	// add newSources
 	for(int j=0;j<(int)children.size();j++){
+		VERTEX_TYPE vertexValue=children[j];
 		(*m_cout)<<"Adding "<<idToWord(children[j],m_wordSize)<<endl;
 		newSources->push_back(children[j]);
 	}
@@ -947,18 +947,26 @@ firstOne[m_wordSize-2-trailingHomoPolymerSize]==
 			}
 		}
 	}
-
+	VERTEX_TYPE prefix=path->at(path->size()-1);
 
 	if(foundBest==false){
 		for(int i=0;i<children.size();i++){
 			if(newSources!=NULL){
-				newSources->push_back(children[i]);
+				VERTEX_TYPE dataVertex=children[i];
+				if(m_data->get(dataVertex).getParents(dataVertex,m_data).size()>1||
+				m_data->get(prefix).getAnnotations(dataVertex)->size()>=m_REPEAT_DETECTION)
+					continue;
+				newSources->push_back(dataVertex);
 				(*m_cout)<<"Adding alternative source: "<<idToWord(children[i],m_wordSize)<<endl;
 			}
 		}
 	}else{
 		for(int i=0;i<children.size();i++){
 			if(children[i]!=best&&newSources!=NULL&&!DETECT_BUBBLE(path,children[i],best)){
+				VERTEX_TYPE dataVertex=children[i];
+				if(m_data->get(dataVertex).getParents(dataVertex,m_data).size()>1||
+				m_data->get(prefix).getAnnotations(dataVertex)->size()>=m_REPEAT_DETECTION)
+					continue;
 				newSources->push_back(children[i]);
 				(*m_cout)<<"Adding alternative source: "<<idToWord(children[i],m_wordSize)<<endl;
 			}
