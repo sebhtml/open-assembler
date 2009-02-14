@@ -456,12 +456,12 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			for(vector<VERTEX_TYPE>::iterator j=theParents.begin();j!=theParents.end();j++){
 				if(m_data->get(*j).IsEliminated())
 					continue;
-				int MaxDepth=120;
+				int MaxDepth=50;
 				VERTEX_TYPE currentNode=*j;
 				set<VERTEX_TYPE> stuffVisited;
-				int reachedDepth=visitVertices(currentNode,&stuffVisited,MaxDepth);
-				cout<<"Depth: "<<reachedDepth<<endl;
+				int reachedDepth=visitVertices(currentNode,&stuffVisited,MaxDepth,true);
 				if(reachedDepth<MaxDepth){
+					//cout<<"Depth: "<<reachedDepth<<", "<<stuffVisited.size()<<" nodes"<<endl;
 					m_data->get(*j).eliminateNow();
 					removing=true;
 					spuriousRemoval++;
@@ -525,8 +525,19 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 				path.push_back(prefix);
 				vector<map<int,map<char,int> > > currentReadPositions;
 				vector<int> repeatAnnotations;
-				contig_From_SINGLE(&currentReadPositions,&path,&newSources,&repeatAnnotations);
+				vector<VERTEX_TYPE> localNewSources;
+				contig_From_SINGLE(&currentReadPositions,&path,&localNewSources,&repeatAnnotations);
 				m_cout<<path.size()<<" vertices"<<endl;
+				set<VERTEX_TYPE> indexOfVerticesForTheContig;
+				int validSources=0;
+				for(vector<VERTEX_TYPE>::iterator k=localNewSources.begin();k!=localNewSources.end();k++){
+					if(m_data->get(*k).IsAssembled())
+						continue;
+					// assemble vertices cannot be sources..
+					validSources++;
+					newSources.push_back(*k);
+				}
+				cout<<localNewSources.size()<<" new sources, "<<validSources<<" valid."<<endl;
 				if(path.size()<=2)
 					continue;
 				writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
@@ -567,9 +578,9 @@ void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 bool DeBruijnAssembler::DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VERTEX_TYPE b){
 	set<VERTEX_TYPE> stuffFromA;
 	set<VERTEX_TYPE> stuffFromB;
-	int maxDepth=100;
-	visitVertices(a,&stuffFromA,maxDepth);
-	visitVertices(b,&stuffFromB,maxDepth);
+	int maxDepth=50;
+	visitVertices(a,&stuffFromA,maxDepth,false);
+	visitVertices(b,&stuffFromB,maxDepth,false);
 	for(set<VERTEX_TYPE>::iterator i=stuffFromA.begin();i!=stuffFromA.end();i++){
 		if(stuffFromB.count(*i)>0){
 			cout<<"Bubble!"<<endl;
@@ -594,10 +605,9 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			cout<<"Skipping spurious edge"<<endl;
 			return;
 		}
-
+		m_data->get(prefix).assemble();
 		prefix=prefixNextVertices[0];
 		path->push_back(prefix);
-
 		map<int,map<char,int> > a;
 		(*currentReadPositions).push_back(a);
 		//(*m_cout)<<"Pushing "<<idToWord(prefix,m_wordSize)<<endl;
@@ -691,11 +701,13 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 	}
 	(*m_cout)<<"Prefix "<<idToWord(prefix,m_wordSize)<<" "<<children.size()<<endl;
 	// add newSources
+	/*
 	for(int j=0;j<(int)children.size();j++){
 		VERTEX_TYPE vertexValue=children[j];
 		(*m_cout)<<"Adding "<<idToWord(children[j],m_wordSize)<<endl;
 		newSources->push_back(children[j]);
 	}
+	*/
 	if(!debug_print)
 		return;
 	//return;
@@ -759,6 +771,12 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 	// start when nothing is done yet
 	//(*m_cout)<<currentReadPositions->size()<<" "<<path->size()<<endl;
 	if(currentReadPositions->size()==0){//||currentReadPositions->size()<path->size())
+		if(children.size()==2&&DETECT_BUBBLE(path,children[0],children[1])){
+			vector<VERTEX_TYPE> output;
+			cout<<"Early Bubble."<<endl;
+			output.push_back(children[0]);
+			return output;
+		}
 		return children;
 	}
 
@@ -920,22 +938,24 @@ firstOne[m_wordSize-2-trailingHomoPolymerSize]==
 		for(int i=0;i<children.size();i++){
 			if(newSources!=NULL){
 				VERTEX_TYPE dataVertex=children[i];
-				if(m_data->get(dataVertex).getParents(dataVertex,m_data).size()>1||
+				int nParents=m_data->get(dataVertex).getParents(dataVertex,NULL).size();
+				if(nParents>1||
 				m_data->get(prefix).getAnnotations(dataVertex)->size()>=m_REPEAT_DETECTION)
 					continue;
 				newSources->push_back(dataVertex);
-				(*m_cout)<<"Adding alternative source: "<<idToWord(children[i],m_wordSize)<<endl;
+				(*m_cout)<<"Adding alternative source: "<<idToWord(children[i],m_wordSize)<<", "<<nParents<<" parents"<<endl;
 			}
 		}
 	}else{
 		for(int i=0;i<children.size();i++){
 			if(children[i]!=best&&newSources!=NULL&&!DETECT_BUBBLE(path,children[i],best)){
 				VERTEX_TYPE dataVertex=children[i];
-				if(m_data->get(dataVertex).getParents(dataVertex,m_data).size()>1||
+				int nParents=m_data->get(dataVertex).getParents(dataVertex,NULL).size();
+				if(nParents>1||
 				m_data->get(prefix).getAnnotations(dataVertex)->size()>=m_REPEAT_DETECTION)
 					continue;
 				newSources->push_back(children[i]);
-				(*m_cout)<<"Adding alternative source: "<<idToWord(children[i],m_wordSize)<<endl;
+				(*m_cout)<<"Adding alternative source: "<<idToWord(children[i],m_wordSize)<<", "<<nParents<<" parents"<<endl;
 			}
 		}
 
@@ -1241,7 +1261,7 @@ void DeBruijnAssembler::CommonHeader(ostream*out){
 }
 
 // DFS (?) accumulate 
-int DeBruijnAssembler::visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int maxDepth){
+int DeBruijnAssembler::visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int maxDepth,bool parents){
 	queue<VERTEX_TYPE> dataQueue;
 	queue<VERTEX_TYPE> depthQueue;
 	dataQueue.push(a);
@@ -1257,8 +1277,13 @@ int DeBruijnAssembler::visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int ma
 			bestDepth=aNodeDepth;
 
 		nodes->insert(aNode);
-		vector<VERTEX_TYPE> children=m_data->get(aNode).getChildren(aNode);
-		for(vector<VERTEX_TYPE>::iterator i=children.begin();i!=children.end();i++){
+		vector<VERTEX_TYPE> elements;
+		if(parents==true)
+			elements=m_data->get(aNode).getParents(aNode,m_data);
+		else
+			elements=m_data->get(aNode).getChildren(aNode);
+
+		for(vector<VERTEX_TYPE>::iterator i=elements.begin();i!=elements.end();i++){
 			VERTEX_TYPE otherNode=*i;
 			if(aNodeDepth+1>maxDepth)
 				continue;

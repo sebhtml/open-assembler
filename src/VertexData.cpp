@@ -27,6 +27,7 @@ using namespace std;
 
 VertexData::VertexData(){
 	m_isEliminated=false;
+	m_assembled=false;
 	m_parents=0;
 }
 
@@ -157,7 +158,8 @@ vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix,CustomMap<VertexDa
 	}
 	vector<VERTEX_TYPE> removedFree;
 	for(vector<VERTEX_TYPE>::iterator i=output.begin();i!=output.end();i++){
-		if(m_data->get(*i).IsEliminated())
+		if(m_data!=NULL&&
+			m_data->get(*i).IsEliminated())
 			continue;
 		removedFree.push_back(*i);
 	}
@@ -181,3 +183,10 @@ bool VertexData::IsEliminated(){
 	return m_isEliminated;
 }
 
+void VertexData::assemble(){
+	m_assembled=true;
+}
+
+bool VertexData::IsAssembled(){
+	return m_assembled;
+}

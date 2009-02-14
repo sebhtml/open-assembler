@@ -41,6 +41,7 @@ class VertexData{
 	// 7	Unused
 	
 	bool m_isEliminated;
+	bool m_assembled;
 	uint8_t m_parents;
 	vector<int> m_distances;
 	vector<VERTEX_TYPE> m_kmer_apart;
@@ -62,6 +63,8 @@ public:
 	~VertexData();
 	bool IsEliminated();
 	void eliminateNow();
+	void assemble();
+	bool IsAssembled();
 };
 
 #endif
