@@ -19,8 +19,9 @@
 
 #ifndef _CustomMap
 #define _CustomMap
-
+#include<cmath>
 #include<stdint.h>
+#include<stdlib.h>
 #include<iostream>
 using namespace std;
 
@@ -104,9 +105,27 @@ public:
   		key = key + (key << 6);
   		key = key ^ (key >> 22);
 		//cout<<t<<" "<<(uint32_t) key<<endl;
-		key=key%m_table_size;
-  		return (uint32_t) key;
+		uint32_t value=key%m_table_size;
+  		return value;
 	}
+
+
+	uint32_t hash6432shift2(uint64_t key){
+		return ((uint32_t)key)%m_table_size;
+		uint32_t a=0;
+		int nBitsOutput=log(m_table_size)/log(2);
+		for(int i=0;i<64;i+=nBitsOutput){
+			uint64_t key2=(key<<(64-i-nBitsOutput));
+			key2=(key2>>(64-nBitsOutput));
+			a=a | key2;
+		}
+		if(a>=m_table_size){
+			cout<<"Error hash"<<endl;
+			exit(0);
+		}
+		return a;
+	}
+
 	iterator begin(){
 		uint32_t bucket=0;
 		Entry<VALUE>*current=m_buckets[bucket];
@@ -205,6 +224,12 @@ public:
 	}
 	~CustomMap(){
 		clear();
+	}
+	int buckets(){
+		return m_table_size;
+	}
+	Entry<VALUE>*bucketAt(int i){
+		return m_buckets[i];
 	}
 };
 

@@ -118,6 +118,24 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	m_cout<<"Reads: "<<sequenceData->size()<<" / "<<sequenceData->size()<<endl;
 	m_cout<<"Mers: "<<words.size()<<endl;
 
+	cout<<"********** Buckets analysis"<<endl;
+	cout<<"Buckets: "<<words.buckets()<<endl;
+	cout<<"Elements: "<<words.size()<<endl;
+	map<int,int> bucketsDistribution;
+	for(int i=0;i<words.buckets();i++){
+		Entry<int>*pointer=words.bucketAt(i);
+		int count=0;
+		while(pointer!=NULL){
+			count++;
+			pointer=pointer->m_next;
+		}
+		bucketsDistribution[count]++;
+	}
+
+	cout<<"Distribution of buckets, count, density"<<endl;
+	for(map<int,int>::iterator i=bucketsDistribution.begin();i!=bucketsDistribution.end();i++){
+		cout<<i->first<<" "<<i->second<<endl;
+	}
 
 	int processed=0;
 	int solid=0;
@@ -135,7 +153,9 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		cout<<"Setting minimumCoverage <- "<<m_minimumCoverage<<endl;
 	}
 	m_REPEAT_DETECTION=3*m_coverage_mean;
-	(cout)<<"REPEAT_DETECTION_COVERAGE = 3*\\mu = "<<m_REPEAT_DETECTION<<endl;
+	if(m_minimumCoverage>m_coverage_mean)
+		m_REPEAT_DETECTION=4*m_minimumCoverage;
+	(cout)<<"REPEAT_DETECTION_COVERAGE =  "<<m_REPEAT_DETECTION<<endl;
 
 	uint64_t total_bases=0;
 	uint64_t solid_bases=0;

@@ -126,6 +126,8 @@ vector<Read*> forwardOverlapTailToHead(vector<Read*> contigSequences){
 					}
 				}
 				bool isTheSame=found/(AlignmentEndInSubject-AlignmentStartInSubject+0.0)>0.90;
+				if((AlignmentEndInSubject-AlignmentStartInSubject)<100)
+					isTheSame=false;
 				if(m_DEBUG){
 					cout<<AlignmentEndInQuery-AlignmentStartInQuery<<endl;
 					cout<<AlignmentEndInSubject-AlignmentStartInSubject<<endl;
@@ -268,6 +270,8 @@ vector<Read*> reverseOverlapTailToTail(vector<Read*> contigSequences){
 					}
 				}
 				bool isTheSame=found/(AlignmentEndInSubject-AlignmentStartInSubject+0.0)>0.90;
+				if((AlignmentEndInSubject-AlignmentStartInSubject)<100)
+					isTheSame=false;
 				if(m_DEBUG){
 					cout<<AlignmentEndInQuery-AlignmentStartInQuery<<endl;
 					cout<<AlignmentEndInSubject-AlignmentStartInSubject<<endl;
@@ -400,6 +404,8 @@ vector<Read*> reverseOverlapHeadToHead(vector<Read*> contigSequences){
 					}
 				}
 				bool isTheSame=found/(AlignmentEndInSubject-AlignmentStartInSubject+0.0)>0.90;
+				if((AlignmentEndInSubject-AlignmentStartInSubject)<100)
+					isTheSame=false;
 				if(m_DEBUG){
 					cout<<AlignmentEndInQuery-AlignmentStartInQuery<<endl;
 					cout<<AlignmentEndInSubject-AlignmentStartInSubject<<endl;

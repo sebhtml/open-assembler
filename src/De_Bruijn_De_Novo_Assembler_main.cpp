@@ -54,9 +54,9 @@ int main(int argc,char*argv[]){
 	int minimumContigSize=500;
 	//cout<<" -minimumContigSize   default: "<<minimumContigSize<<endl;
 	//cout<<"                      description: the minimum length of contigs generated with the graph."<<endl;
-	uint64_t buckets=100000000;
+	uint64_t buckets=134217728;
 	cout<<" -buckets             default: "<<buckets<<endl;
-	cout<<"                      description: number of buckets"<<endl;
+	cout<<"                      description: number of buckets, default: 2**27, should be a power of 2."<<endl;
 	bool DEBUGMODE=false;
 	//cout<<" [ -debug ]"<<endl;
 	string pairedInfo="none";
@@ -82,7 +82,8 @@ int main(int argc,char*argv[]){
 			DEBUGMODE=true;
 		}else if(option=="-buckets"){
 			i++;
-			buckets=atoi(argv[i]);
+			istringstream localBuffer(argv[i]);
+			localBuffer>>buckets;
 		}else if(option=="-wordSize"){
 			i++;
 			if(wordSize>31){
