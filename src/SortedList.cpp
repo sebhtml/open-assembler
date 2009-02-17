@@ -70,3 +70,7 @@ void SortedList::sort(){
 	m_list.sort();
 }
 
+void SortedList::clear(){
+	m_list.clear();
+}
+

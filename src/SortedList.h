@@ -35,6 +35,7 @@ public:
 	vector<VERTEX_TYPE> elementsWithALeastCCoverage(int c);
 	map<int,int>getDistributionOfCoverage();
 	void sort();
+	void clear();
 };
 
 #endif

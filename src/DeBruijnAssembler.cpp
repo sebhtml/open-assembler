@@ -170,6 +170,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	//uint64_t solid_bases=0;
 	
 	vector<VERTEX_TYPE> solidMers=myList.elementsWithALeastCCoverage(m_minimumCoverage);
+	myList.clear();
 	cout<<"c-confident mers: "<<solidMers.size()<<", c="<<m_minimumCoverage<<endl;
 	m_solidMers=solidMers.size();
 	if(m_solidMers==0){
@@ -192,6 +193,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	}
 	graphNodesList.sort();
 	vector<VERTEX_TYPE> nodes=graphNodesList.elementsWithALeastCCoverage(1);
+	graphNodesList.clear();
 	for(vector<VERTEX_TYPE>::iterator i=nodes.begin();i!=nodes.end();i++){
 		m_data.add(*i);
 	}
