@@ -57,11 +57,10 @@ void applyColor(VERTEX_TYPE v2,GraphDataLight*graph,int color,int wordSize){
 int main(int argc,char*argv[]){
 	DeBruijnAssembler::CommonHeader(&cout);
 	cout<<"usage"<<endl;
-	string m_minimumCoverageParameter="1";
-	cout<<"dna_DeBruijnSplitter [-outputDirectory parts] [-wordSize 21] [-buckets 100000000] [-minimumCoverage "<<m_minimumCoverageParameter<<"] <sequence files>"<<endl;
+	string m_minimumCoverageParameter="2";
+	cout<<"dna_DeBruijnSplitter [-outputDirectory parts] [-wordSize 21]  [-minimumCoverage "<<m_minimumCoverageParameter<<"] <sequence files>"<<endl;
 	string outputDirectory="parts";
 	int wordSize=21;
-	int buckets=100000000;
 	vector<string> inputFiles;
 
 	// collect arguments
@@ -73,9 +72,6 @@ int main(int argc,char*argv[]){
 		}else if(option=="-minimumCoverage"){
 			i++;
 			m_minimumCoverageParameter=argv[i];
-		}else if(option=="-buckets"){
-			i++;
-			buckets=atoi(argv[i]);
 		}else if(option=="-wordSize"){
 			i++;
 			if(wordSize>31){
