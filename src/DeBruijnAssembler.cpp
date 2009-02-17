@@ -43,7 +43,7 @@ int min(int a,int b){
 	return b;
 }
 
-int abs(int a){
+int abs_f(int a){
 	if(a<0)
 		return -a;
 	return a;

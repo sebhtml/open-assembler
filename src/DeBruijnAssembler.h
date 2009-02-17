@@ -39,6 +39,9 @@ using namespace std;
 #define FASTA_FILE_NAME "contigs.fasta"
 #define COVERAGE_FILE_NAME "contigs-coverage.txt"
 
+
+
+
 class DeBruijnAssembler{
 	int m_coverage_mean;
 	int m_carry_forward_offset;

@@ -5,7 +5,7 @@ autoreconf
 # -pedantic 
 # 
 
-export CXXFLAGS="-O6 -Wall -std=c++98 -fomit-frame-pointer -static  "
+export CXXFLAGS="-O6 -Wall -pedantic -W -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -std=c++98 -fomit-frame-pointer -static -funroll-loops -Weffc++ -Wold-style-cast "
 export LDFLAGS=$CXXFLAGS
 mkdir -p build
 ./configure CXXFLAGS="$CXXFLAGS" LDFLAGS="$LDFLAGS" --prefix=$(pwd)/build
