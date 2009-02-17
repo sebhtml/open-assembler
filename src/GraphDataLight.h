@@ -1,7 +1,7 @@
 /*
 	dna: De Novo Assembler
     Copyright (C) 2008, 2009 Sébastien Boisvert
-	$Id$
+	$Id: DeBruijnAssembler.cpp 116 2009-02-16 21:19:41Z boiseb01 $
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,20 +17,26 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _AnnotationElement
-#define _AnnotationElement
 
-//#define POSITION_TYPE uint32_t
-#define POSITION_TYPE uint16_t
 
-class AnnotationElement{
+#ifndef _GraphDataLight
+#define _GraphDataLight
+
+#include"LightVertex.h"
+#include<vector>
+using namespace std;
+
+
+class GraphDataLight{
+	vector<VERTEX_TYPE> m_nodes;
+	vector<LightVertex> m_node_data;
 public:
-	uint32_t readId;
-	POSITION_TYPE readPosition;
-	uint8_t readStrand;
-
+	LightVertex*get(VERTEX_TYPE a);
+	vector<VERTEX_TYPE>*getNodes();
+	vector<LightVertex>*getNodeData();
+	int size();
+	void add(VERTEX_TYPE a);
+	bool find(VERTEX_TYPE a);
 };
 
-
 #endif
-

@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#include"GraphDataLight.h"
 #include<sstream>
 #include"LightVertex.h"
 #include"SortedList.h"
@@ -32,22 +32,22 @@
 #include<iostream>
 using namespace std;
 
-void applyColor(VERTEX_TYPE v2,CustomMap<LightVertex>*graph,int color,int wordSize){
+void applyColor(VERTEX_TYPE v2,GraphDataLight*graph,int color,int wordSize){
 	queue<VERTEX_TYPE> stackOfVertices;
 	stackOfVertices.push(v2);
 	while(stackOfVertices.size()>0){
 		VERTEX_TYPE v=stackOfVertices.front();
 		stackOfVertices.pop();
-		graph->get(v).setColor(color);
-		vector<VERTEX_TYPE>parents=graph->get(v).getParents(v,wordSize);
+		graph->get(v)->setColor(color);
+		vector<VERTEX_TYPE>parents=graph->get(v)->getParents(v,wordSize);
 		for(vector<VERTEX_TYPE>::iterator i=parents.begin();i!=parents.end();i++){
-			if(graph->get(*i).getColor()==-1){
+			if(graph->get(*i)->getColor()==-1){
 				stackOfVertices.push(*i);
 			}
 		}
-		vector<VERTEX_TYPE>children=graph->get(v).getChildren(v,wordSize);
+		vector<VERTEX_TYPE>children=graph->get(v)->getChildren(v,wordSize);
 		for(vector<VERTEX_TYPE>::iterator i=children.begin();i!=children.end();i++){
-			if(graph->get(*i).getColor()==-1){
+			if(graph->get(*i)->getColor()==-1){
 				stackOfVertices.push(*i);
 			}
 		}
@@ -96,7 +96,6 @@ int main(int argc,char*argv[]){
 	cout<<"Creating "<<outputDirectory<<endl;
 	string command = "rm -rf "+outputDirectory+"; mkdir -p "+outputDirectory;
 	system(command.c_str());
-	//CustomMap<int> words(buckets);
 	SortedList myList;
 	
 	cout<<"********** Loading mers from files..."<<endl;
@@ -141,11 +140,26 @@ int main(int argc,char*argv[]){
 
 	cout<<"********** Building graph..."<<endl;
 
-	CustomMap<LightVertex> graphWithoutData(buckets);
 	vector<VERTEX_TYPE> solidMers=myList.elementsWithALeastCCoverage(m_minimumCoverage);
+	GraphDataLight graphWithoutData;
+	SortedList graphNodesList;
+	for(vector<VERTEX_TYPE>::iterator i=solidMers.begin();i!=solidMers.end();i++){
+		VERTEX_TYPE node=*i;
+		string wordString=DeBruijnAssembler::idToWord(node,wordSize+1);
+		VERTEX_TYPE prefix=DeBruijnAssembler::wordId(wordString.substr(0,wordSize).c_str());
+		VERTEX_TYPE suffix=DeBruijnAssembler::wordId(wordString.substr(1,wordSize).c_str());
+		graphNodesList.add(prefix);
+		graphNodesList.add(suffix);
+	}
+	graphNodesList.sort();
+	vector<VERTEX_TYPE> nodes=graphNodesList.elementsWithALeastCCoverage(1);
+	graphNodesList.clear();
+	for(vector<VERTEX_TYPE>::iterator i=nodes.begin();i!=nodes.end();i++){
+		graphWithoutData.add(*i);
+	}
+
+	
 	int edges=0;
-	//for(CustomMap<int>::iterator i=words.begin();i!=words.end();i++){
-		//if(i.second()>=m_minimumCoverage){
 	for(vector<VERTEX_TYPE>::iterator myIterator=solidMers.begin();myIterator!=solidMers.end();myIterator++){
 		VERTEX_TYPE mer=*myIterator;
 		string merString=DeBruijnAssembler::idToWord(mer,wordSize+1);
@@ -153,16 +167,8 @@ int main(int argc,char*argv[]){
 		string suffix=merString.substr(1,wordSize);
 		VERTEX_TYPE prefixInteger=DeBruijnAssembler::wordId(prefix.c_str());
 		VERTEX_TYPE suffixInteger=DeBruijnAssembler::wordId(suffix.c_str());
-		if(!graphWithoutData.find(prefixInteger)){
-			LightVertex vertex;
-			graphWithoutData.add(prefixInteger,vertex);
-		}
-		if(!graphWithoutData.find(suffixInteger)){
-			LightVertex vertex;
-			graphWithoutData.add(suffixInteger,vertex);
-		}
-		graphWithoutData.get(prefixInteger).addChild(suffixInteger,wordSize);
-		graphWithoutData.get(suffixInteger).addParent(prefixInteger,wordSize);
+		graphWithoutData.get(prefixInteger)->addChild(suffixInteger,wordSize);
+		graphWithoutData.get(suffixInteger)->addParent(prefixInteger,wordSize);
 		edges++;
 		//}
 	}
@@ -170,17 +176,19 @@ int main(int argc,char*argv[]){
 	// find connected components, but how?
 	int color=1;
 	cout<<"********** Finding connected parts..."<<endl;
-	for(CustomMap<LightVertex>::iterator i=graphWithoutData.begin();i!=graphWithoutData.end();i++){
-		if(graphWithoutData.get(i.first()).getColor()!=-1)
+	vector<VERTEX_TYPE>*graphNodes=graphWithoutData.getNodes();
+	vector<LightVertex>*graphNodeData=graphWithoutData.getNodeData();
+	for(int i=0;i<graphNodes->size();i++){
+		if(graphNodeData->at(i).getColor()!=-1)
 			continue;
-		applyColor(i.first(),&graphWithoutData,color,wordSize);
+		applyColor(graphNodes->at(i),&graphWithoutData,color,wordSize);
 		color++;
 	}
 	color--;
 	cout<<color<<" colors"<<endl;
 	map<int,int> colorSizes;
-	for(CustomMap<LightVertex>::iterator i=graphWithoutData.begin();i!=graphWithoutData.end();i++){
-		colorSizes[i.second().getColor()]++;
+	for(int i=0;i<graphNodes->size();i++){
+		colorSizes[graphNodeData->at(i).getColor()]++;
 	}
 	for(map<int,int>::iterator i=colorSizes.begin();i!=colorSizes.end();i++){
 		//cout<<i->first<<" "<<i->second<<endl;
@@ -207,21 +215,21 @@ int main(int argc,char*argv[]){
 		for(int j=0;j<reads.size();j++){
 			string sequence=reads.at(j)->getSeq();
 			string word=sequence.substr(0,wordSize);
-			if(!reads.at(j)->isValidDNA(&word))
+			if(!reads.at(j)->isValidDNA(word.c_str()))
 				continue;
 			VERTEX_TYPE mer=DeBruijnAssembler::wordId(sequence.substr(0,wordSize).c_str());
 			VERTEX_TYPE revMer=DeBruijnAssembler::wordId(DeBruijnAssembler::reverseComplement(DeBruijnAssembler::idToWord(mer,wordSize)).c_str());
 			string baseName=inputFiles[i].substr(inputFiles[i].find_last_of("/")+1);
-			if(graphWithoutData.find(mer)&&colorSizes[graphWithoutData.get(mer).getColor()]>=Threshold){
+			if(graphWithoutData.find(mer)&&colorSizes[graphWithoutData.get(mer)->getColor()]>=Threshold){
 				ostringstream file;
-				file<<outputDirectory<<"/"<<graphWithoutData.get(mer).getColor()<<"/"<<baseName<<".fasta";				
+				file<<outputDirectory<<"/"<<graphWithoutData.get(mer)->getColor()<<"/"<<baseName<<".fasta";				
 				FILE*fp=fopen(file.str().c_str(),"a+");
 				fprintf(fp,">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
 				fclose(fp);
 			}
-			if(graphWithoutData.find(revMer)&&colorSizes[graphWithoutData.get(revMer).getColor()]>=Threshold){
+			if(graphWithoutData.find(revMer)&&colorSizes[graphWithoutData.get(revMer)->getColor()]>=Threshold){
 				ostringstream file;
-				file<<outputDirectory<<"/"<<graphWithoutData.get(revMer).getColor()<<"/"<<baseName<<".fasta";
+				file<<outputDirectory<<"/"<<graphWithoutData.get(revMer)->getColor()<<"/"<<baseName<<".fasta";
 				FILE*fp=fopen(file.str().c_str(),"a+");
 				fprintf(fp,">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
 				fclose(fp);

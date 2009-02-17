@@ -1,14 +1,14 @@
-bin_PROGRAMS = dna_DeBruijnAssembler dna_sffPairedToFasta  dna_Scaffolder dna_fastaToAMOS 
-#dna_DeBruijnSplitter 
+bin_PROGRAMS = dna_DeBruijnAssembler dna_sffPairedToFasta  dna_Scaffolder dna_fastaToAMOS dna_DeBruijnSplitter 
 
 dna_DeBruijnAssembler_SOURCES = De_Bruijn_De_Novo_Assembler_main.cpp  DeBruijnAssembler.h  Read.cpp \
 DeBruijnAssembler.cpp                               Read.h Loader.cpp Loader.h  SffLoader.h SffLoader.cpp \
 VertexData.h VertexData.cpp  SequenceDataFull.h SequenceDataFull.cpp CoverageDistribution.h CoverageDistribution.cpp \
 SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp Merger.h Merger.cpp 
 
-#dna_DeBruijnSplitter_SOURCES = splitter_main.cpp Loader.cpp Read.cpp DeBruijnAssembler.cpp VertexData.cpp SequenceDataFull.cpp SffLoader.cpp \
-#LightVertex.h LightVertex.cpp CoverageDistribution.h CoverageDistribution.cpp  \
-#SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp
+dna_DeBruijnSplitter_SOURCES =  LightVertex.h LightVertex.cpp  \
+SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp GraphDataLight.h GraphDataLight.cpp \
+splitter_main.cpp Loader.cpp Read.cpp DeBruijnAssembler.cpp VertexData.cpp SequenceDataFull.cpp SffLoader.cpp \
+CoverageDistribution.h CoverageDistribution.cpp  
 
 #dna_Merger_SOURCES = merger_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp  CoverageDistribution.h CoverageDistribution.cpp \
 #SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp
