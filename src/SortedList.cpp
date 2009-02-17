@@ -34,8 +34,8 @@ void SortedList::add(VERTEX_TYPE a){
 vector<VERTEX_TYPE> SortedList::elementsWithALeastCCoverage(int c){
 	vector<VERTEX_TYPE> output;
 	vector<VERTEX_TYPE>::iterator i=m_list.begin();
-	int currentCount=1;
 	while(i!=m_list.end()){
+		int currentCount=1;
 		VERTEX_TYPE currentValue=*i;
 		i++;
 		while(i!=m_list.end()&&*i==currentValue){
