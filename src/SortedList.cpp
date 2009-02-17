@@ -45,6 +45,7 @@ vector<VERTEX_TYPE> SortedList::elementsWithALeastCCoverage(int c){
 		if(currentCount>=c)
 			output.push_back(currentValue);
 	}
+	cout<<"Element: "<<output.size()<<", c="<<c<<endl;
 	return output;
 }
 
