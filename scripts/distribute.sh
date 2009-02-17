@@ -1,3 +1,7 @@
+#!/bin/bash
+
+# distribute computation on a multi-core machine.
+
 cpu=30
 
 while true
@@ -9,11 +13,15 @@ do
 			echo 1 > /dev/null
 		else
 			cd $i
-			if $(ps aux|grep dna|wc -l) -lt $cpu
-			then
+			processes=$(ps aux|grep dna|wc -l)
+			if test $processes -lt $cpu
+			then	
+				echo "Starting $i ($processes / $cpu)"
 				dna_DeBruijnAssembler *.fasta > 1 &
 				touch DONE
+				sleep 0.01
 			fi
+			cd ..
 		fi
 	done
 	sleep 1
