@@ -111,7 +111,6 @@ int main(int argc,char*argv[]){
 			}
 		}
 	}
-
 	myList.sort();
 
 
@@ -123,6 +122,7 @@ int main(int argc,char*argv[]){
 	int m_minimumCoverage=0;
 	//
 	//
+	cout<<endl;
 
 	CoverageDistribution coverageDistributionObject(myList.getDistributionOfCoverage(),outputDirectory);
 	m_minimumCoverage=coverageDistributionObject.getMinimumCoverage();
@@ -136,6 +136,7 @@ int main(int argc,char*argv[]){
 	cout<<endl;
 	cout<<"********** Building graph..."<<endl;
 	cout<<endl;
+	cout<<"Extracting edges"<<endl;
 	vector<VERTEX_TYPE> solidMers=myList.elementsWithALeastCCoverage(m_minimumCoverage);
 	GraphDataLight graphWithoutData;
 	SortedList graphNodesList;
@@ -148,6 +149,7 @@ int main(int argc,char*argv[]){
 		graphNodesList.add(suffix);
 	}
 	graphNodesList.sort();
+	cout<<"Extracting vertices"<<endl;
 	vector<VERTEX_TYPE> nodes=graphNodesList.elementsWithALeastCCoverage(1);
 	graphNodesList.clear();
 	for(vector<VERTEX_TYPE>::iterator i=nodes.begin();i!=nodes.end();i++){
