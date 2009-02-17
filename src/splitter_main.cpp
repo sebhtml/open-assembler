@@ -133,9 +133,9 @@ int main(int argc,char*argv[]){
 		cout<<"Setting minimumCoverage <- "<<m_minimumCoverage<<endl;
 	}
 
-
+	cout<<endl;
 	cout<<"********** Building graph..."<<endl;
-
+	cout<<endl;
 	vector<VERTEX_TYPE> solidMers=myList.elementsWithALeastCCoverage(m_minimumCoverage);
 	GraphDataLight graphWithoutData;
 	SortedList graphNodesList;
@@ -171,7 +171,9 @@ int main(int argc,char*argv[]){
 	cout<<"Total: "<<edges<<" edges."<<endl;
 	// find connected components, but how?
 	int color=1;
+	cout<<endl;
 	cout<<"********** Finding connected parts..."<<endl;
+	cout<<endl;
 	vector<VERTEX_TYPE>*graphNodes=graphWithoutData.getNodes();
 	vector<LightVertex>*graphNodeData=graphWithoutData.getNodeData();
 	for(int i=0;i<graphNodes->size();i++){
