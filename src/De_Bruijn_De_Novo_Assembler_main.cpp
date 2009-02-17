@@ -118,17 +118,10 @@ int main(int argc,char*argv[]){
 	system(command.c_str());
 	
 	// switching to cout instead of cout
-	cout<<endl;
-
-
-	cout<<endl;
 	if(inputFiles.size()==0){
 		cout<<"Error: no files provided."<<endl;
 		exit(0);
 	}
-	cout<<endl;
-
-	cout<<endl;
 
 	//cout<<"Indexing files"<<endl;
 	cout<<endl;
