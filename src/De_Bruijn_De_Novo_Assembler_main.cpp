@@ -167,6 +167,8 @@ int main(int argc,char*argv[]){
 	fileStream<<"	true"<<endl;
 	fileStream<<"else"<<endl;
 	fileStream<<"	bash CreateBank.sh > bank.log"<<endl;
+	fileStream<<"fi"<<endl;
+	fileStream.close();
 	fileStreamBank<<"bank-transact -m "<<AMOS_FILE_NAME<<" -b bank -c"<<endl;
 	fileStreamBank<<"cat";
 	for(int i=0;i<inputFiles.size();i++){
@@ -210,8 +212,27 @@ int main(int argc,char*argv[]){
 
 	string readmeFile=assemblyDirectory+"/README.txt";
 	ofstream readmeStream(readmeFile.c_str());
+	readmeStream<<"********** Assembly files"<<endl;
+	readmeStream<<"LargeMergedContigs.fasta - final contigs"<<endl;
 	readmeStream<<"contigs-amos.afg - AMOS MESSAGE of the assembly"<<endl;
-//contigs-coverage.txt  contigs.fasta  contigs-repeats.txt  CoverageDistribution.txt  CreateBank.sh  LargeMergedContigs.fasta  pwd.txt  README.txt  RunHawkeye.sh
+	readmeStream<<"contigs.fasta - all contigs, not merged"<<endl;
+	readmeStream<<endl;
+	readmeStream<<"********** Assembly meta data"<<endl;
+
+	readmeStream<<"contigs-coverage.txt - coverage at each position of contigs"<<endl;
+	readmeStream<<"contigs-repeats.txt - repeat detection at each position of contigs"<<endl;
+	readmeStream<<endl;
+	readmeStream<<"********* Quality analysis"<<endl;
+	readmeStream<<"CoverageDistribution.txt - coverage distribution"<<endl;
+	readmeStream<<endl;
+	readmeStream<<"********** Shell scripts"<<endl;
+	readmeStream<<"CreateBank.sh - Create an AMOS bank"<<endl;
+
+	readmeStream<<"RunHawkeye.sh - run hawkeye"<<endl;
+	readmeStream<<endl;
+	readmeStream<<"********** Other files"<<endl;
+	readmeStream<<"pwd.txt - working directory"<<endl;
+	readmeStream<<"README.txt - description of files"<<endl;
 	readmeStream.close();
 	return 0;
 }

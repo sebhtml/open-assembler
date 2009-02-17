@@ -372,7 +372,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		if(id%100000==0){
 			cout<<id+1<<" / "<<m_data.size()<<endl;
 		}
-		vector<VERTEX_TYPE> theParents=nodeDataInstance->getParents(prefix,&m_data);
+		vector<VERTEX_TYPE> theParents=nodeDataInstance->getParents(prefix,NULL);
 		//(*m_cout)<<theParents.size()<<endl;
 		if(theParents.size()>1){
 			//(*m_cout)<<theParents.size()<<endl;
