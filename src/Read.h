@@ -46,7 +46,7 @@ public:
 	~Read();
 	char*getSeq();
 	vector<VERTEX_TYPE>getHighQualityMers(int wordSize);
-	bool isValidDNA(string*x);
+	bool isValidDNA(const char*x);
 	int getStartForward();
 	int getStartReverse();
 	void setStartForward(int i);

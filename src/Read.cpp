@@ -57,7 +57,7 @@ vector<VERTEX_TYPE>Read::getHighQualityMers(int wordSize){
 	for(int j=0;j<(int)sequence.length()-(wordSize);j++){
 		string wordFoward=sequence.substr(j,wordSize+1);
 		string wordReverse;
-		if(!isValidDNA(&wordFoward))
+		if(!isValidDNA(wordFoward.c_str()))
 			continue;
 		wordReverse=DeBruijnAssembler::reverseComplement(wordFoward);
 		highQualityMers.push_back(DeBruijnAssembler::wordId(wordFoward.c_str()));
@@ -67,9 +67,10 @@ vector<VERTEX_TYPE>Read::getHighQualityMers(int wordSize){
 	return highQualityMers;
 }
 
-bool Read::isValidDNA(string*x){
-	for(int i=0;i<x->length();i++){
-		char a=x->at(i);
+bool Read::isValidDNA(const char*x){
+	int len=strlen(x);
+	for(int i=0;i<len;i++){
+		char a=x[i];
 		if(!(a=='A'||a=='T'||a=='C'||a=='G'))
 			return false;
 	}

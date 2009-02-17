@@ -940,13 +940,15 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 	if(strand=='R')
 		sequence=reverseComplement(sequence);
 	bool foundGoodHit=false;
-	for(int readPosition=0;readPosition<(int)sequence.length();readPosition++){
-		string wholeWord=sequence.substr(readPosition,m_wordSize+1);
-		if(readPosition>10000){
-			//(*m_cout)<<"WTF "<<sequence.length()<<" "<<strlen(read->getSeq())<<strand<<endl;
+	int maxSize=sequence.length()-m_wordSize;
+	char*myWord=(char*)malloc(m_wordSize+2);
+	for(int readPosition=0;readPosition<(int)maxSize;readPosition++){
+		for(int i=0;i<m_wordSize+1;i++){
+			myWord[i]=sequence[readPosition+i];
 		}
-		if((int)wholeWord.length()==m_wordSize+1&&read->isValidDNA(&wholeWord)
-		&&BinarySearch(solidMers,wordId(wholeWord.c_str()))!=-1){
+		myWord[m_wordSize+1]='\0';
+		if(read->isValidDNA(myWord)
+		&&BinarySearch(solidMers,wordId(myWord))!=-1){
 			if(foundGoodHit==false){
 				foundGoodHit=true;
 				//cout<<"Starting in: "<<readPosition<<endl;
@@ -956,13 +958,15 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 					sequenceData->at(readId)->setStartReverse(readPosition);
 				}
 			}
-			VERTEX_TYPE prefix=wordId(wholeWord.substr(0,m_wordSize).c_str());
-			VERTEX_TYPE suffix=wordId(wholeWord.substr(1,m_wordSize).c_str());
+			VERTEX_TYPE suffix=wordId(myWord+1);
+			myWord[m_wordSize]='\0';
+			VERTEX_TYPE prefix=wordId(myWord);
 
 			m_data.get(prefix)->addAnnotation(suffix,readId,readPosition,strand);
 			m_data.get(suffix)->addParent(prefix);
 		}
 	}
+	free(myWord);
 }
 
 
