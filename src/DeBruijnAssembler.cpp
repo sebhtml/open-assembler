@@ -1168,7 +1168,7 @@ void DeBruijnAssembler::CommonHeader(ostream*out){
 	*out<<"Documentation: http://denovoassembler.sf.net/"<<endl;
 	*out<<"License: http://www.gnu.org/licenses/gpl.html"<<endl;
 	*out<<"Publication: in preparation"<<endl;
-	*out<<"Version: "<<SOFTWARE_VERSION<<endl;
+	*out<<"Version: "<<"$Id$"<<endl;
 }
 
 // DFS (?) accumulate 

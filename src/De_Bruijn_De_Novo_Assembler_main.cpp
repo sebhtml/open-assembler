@@ -25,6 +25,7 @@
 #include<fstream>
 #include<stdint.h>
 #include<stdlib.h>
+#include"Merger.h"
 
 
 using namespace std;
@@ -51,8 +52,8 @@ int main(int argc,char*argv[]){
 	cout<<" -minimumCoverage     default: "<<m_minimumCoverageParameter<<""<<endl;
 	cout<<"    auto if you want to use the distribution curve"<<endl;
 	int minimumContigSize=500;
-	//cout<<" -minimumContigSize   default: "<<minimumContigSize<<endl;
-	//cout<<"                      description: the minimum length of contigs generated with the graph."<<endl;
+	cout<<" -minimumContigSize   default: "<<minimumContigSize<<endl;
+	cout<<"                      description: the minimum length of contigs generated with the graph."<<endl;
 	/*
 	uint64_t buckets=134217728;
 	cout<<" -buckets             default: "<<buckets<<endl;
@@ -88,6 +89,10 @@ int main(int argc,char*argv[]){
 			istringstream localBuffer(argv[i]);
 			localBuffer>>buckets;
 */
+
+		}else if(option=="-minimumContigSize"){
+			i++;
+			minimumContigSize=atoi(argv[i]);
 		}else if(option=="-wordSize"){
 			i++;
 			if(wordSize>31){
@@ -184,16 +189,31 @@ int main(int argc,char*argv[]){
 		}
 	}
 			
-	fileStreamBank<<" > reads.fasta"<<endl;
-	fileStreamBank<<"dna_fastaToAMOS reads.fasta reads.afg"<<endl;
-	fileStreamBank<<"bank-transact -m reads.afg -b bank"<<endl;
-	fileStream<<"fi"<<endl;
-	fileStream<<"hawkeye bank"<<endl;
-	fileStreamBank.close();
-	fileStream.close();
-	string mergerFile=assemblyDirectory+"/Merge.sh";
-	ofstream fileStreamMerger(mergerFile.c_str());
-	fileStreamMerger<<"dna_Merger "<<FASTA_FILE_NAME<<" Merger.fasta > merger.log"<<endl;
-	fileStreamMerger.close();
+
+	Merger merger;
+	vector<Read*> finalContigs;
+	Loader loader(&cout);
+	string fastaFile=assemblyDirectory+"/"+FASTA_FILE_NAME;
+	int columns=60;
+	loader.load(fastaFile,&finalContigs);
+	vector<Read*> mergedContigs=merger.mergeContigs(finalContigs);
+	string mergedContigsFile=assemblyDirectory+"/LargeMergedContigs.fasta";
+	ofstream streamForMergedContigs(mergedContigsFile.c_str());
+	for(vector<Read*>::iterator i=mergedContigs.begin();i!=mergedContigs.end();i++){
+		string dnaSequence=(*i)->getSeq();
+		string name=(*i)->getId();
+		int lengthOfContig=dnaSequence.length();
+		int j=0;
+		streamForMergedContigs<<">"<<name<<" "<<lengthOfContig<<" nucleotides"<<endl;
+		while(j<lengthOfContig){
+			streamForMergedContigs<<dnaSequence.substr(j,columns)<<endl;
+			j+=columns;
+		}
+	}
+
+	string readmeFile=assemblyDirectory+"/README.txt";
+	ofstream readmeStream(readmeFile.c_str());
+	readmeStream<<""<<endl;
+	readmeStream.close();
 	return 0;
 }

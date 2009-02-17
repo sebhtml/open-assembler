@@ -31,8 +31,8 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 bin_PROGRAMS = dna_DeBruijnAssembler$(EXEEXT) \
-	dna_sffPairedToFasta$(EXEEXT) dna_Merger$(EXEEXT) \
-	dna_Scaffolder$(EXEEXT) dna_fastaToAMOS$(EXEEXT)
+	dna_sffPairedToFasta$(EXEEXT) dna_Scaffolder$(EXEEXT) \
+	dna_fastaToAMOS$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in TODO
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -50,17 +50,9 @@ am_dna_DeBruijnAssembler_OBJECTS =  \
 	SffLoader.$(OBJEXT) VertexData.$(OBJEXT) \
 	SequenceDataFull.$(OBJEXT) CoverageDistribution.$(OBJEXT) \
 	SortedList.$(OBJEXT) GraphData.$(OBJEXT) \
-	BinarySearch.$(OBJEXT)
+	BinarySearch.$(OBJEXT) Merger.$(OBJEXT)
 dna_DeBruijnAssembler_OBJECTS = $(am_dna_DeBruijnAssembler_OBJECTS)
 dna_DeBruijnAssembler_LDADD = $(LDADD)
-am_dna_Merger_OBJECTS = merger_main.$(OBJEXT) Read.$(OBJEXT) \
-	DeBruijnAssembler.$(OBJEXT) Loader.$(OBJEXT) \
-	SffLoader.$(OBJEXT) VertexData.$(OBJEXT) \
-	SequenceDataFull.$(OBJEXT) CoverageDistribution.$(OBJEXT) \
-	SortedList.$(OBJEXT) GraphData.$(OBJEXT) \
-	BinarySearch.$(OBJEXT)
-dna_Merger_OBJECTS = $(am_dna_Merger_OBJECTS)
-dna_Merger_LDADD = $(LDADD)
 am_dna_Scaffolder_OBJECTS = CoverageDistribution.$(OBJEXT) \
 	scaffolder_main.$(OBJEXT) Read.$(OBJEXT) \
 	DeBruijnAssembler.$(OBJEXT) Loader.$(OBJEXT) \
@@ -97,10 +89,9 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(dna_DeBruijnAssembler_SOURCES) $(dna_Merger_SOURCES) \
-	$(dna_Scaffolder_SOURCES) $(dna_fastaToAMOS_SOURCES) \
-	$(dna_sffPairedToFasta_SOURCES)
-DIST_SOURCES = $(dna_DeBruijnAssembler_SOURCES) $(dna_Merger_SOURCES) \
+SOURCES = $(dna_DeBruijnAssembler_SOURCES) $(dna_Scaffolder_SOURCES) \
+	$(dna_fastaToAMOS_SOURCES) $(dna_sffPairedToFasta_SOURCES)
+DIST_SOURCES = $(dna_DeBruijnAssembler_SOURCES) \
 	$(dna_Scaffolder_SOURCES) $(dna_fastaToAMOS_SOURCES) \
 	$(dna_sffPairedToFasta_SOURCES)
 ETAGS = etags
@@ -191,15 +182,15 @@ top_srcdir = @top_srcdir@
 dna_DeBruijnAssembler_SOURCES = De_Bruijn_De_Novo_Assembler_main.cpp  DeBruijnAssembler.h  Read.cpp \
 DeBruijnAssembler.cpp                               Read.h Loader.cpp Loader.h  SffLoader.h SffLoader.cpp \
 VertexData.h VertexData.cpp  SequenceDataFull.h SequenceDataFull.cpp CoverageDistribution.h CoverageDistribution.cpp \
-SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp
+SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp Merger.h Merger.cpp 
 
 
 #dna_DeBruijnSplitter_SOURCES = splitter_main.cpp Loader.cpp Read.cpp DeBruijnAssembler.cpp VertexData.cpp SequenceDataFull.cpp SffLoader.cpp \
 #LightVertex.h LightVertex.cpp CoverageDistribution.h CoverageDistribution.cpp  \
 #SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp
-dna_Merger_SOURCES = merger_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp  CoverageDistribution.h CoverageDistribution.cpp \
-SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp
 
+#dna_Merger_SOURCES = merger_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp  CoverageDistribution.h CoverageDistribution.cpp \
+#SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp
 dna_Scaffolder_SOURCES = CoverageDistribution.h CoverageDistribution.cpp scaffolder_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp  SequenceDataFull.cpp \
  SortedList.h SortedList.cpp VertexData.h VertexData.cpp   GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp
 
@@ -269,9 +260,6 @@ clean-binPROGRAMS:
 dna_DeBruijnAssembler$(EXEEXT): $(dna_DeBruijnAssembler_OBJECTS) $(dna_DeBruijnAssembler_DEPENDENCIES) 
 	@rm -f dna_DeBruijnAssembler$(EXEEXT)
 	$(CXXLINK) $(dna_DeBruijnAssembler_OBJECTS) $(dna_DeBruijnAssembler_LDADD) $(LIBS)
-dna_Merger$(EXEEXT): $(dna_Merger_OBJECTS) $(dna_Merger_DEPENDENCIES) 
-	@rm -f dna_Merger$(EXEEXT)
-	$(CXXLINK) $(dna_Merger_OBJECTS) $(dna_Merger_LDADD) $(LIBS)
 dna_Scaffolder$(EXEEXT): $(dna_Scaffolder_OBJECTS) $(dna_Scaffolder_DEPENDENCIES) 
 	@rm -f dna_Scaffolder$(EXEEXT)
 	$(CXXLINK) $(dna_Scaffolder_OBJECTS) $(dna_Scaffolder_LDADD) $(LIBS)
@@ -294,13 +282,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/De_Bruijn_De_Novo_Assembler_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GraphData.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Loader.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Merger.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Read.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SequenceDataFull.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SffLoader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SortedList.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/VertexData.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fasta_to_afg_main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/merger_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scaffolder_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sffPairedToFasta_main.Po@am__quote@
 
