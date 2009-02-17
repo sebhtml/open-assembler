@@ -63,7 +63,7 @@ CoverageDistribution::CoverageDistribution(map<int,int>distributionOfCoverage,st
 
 	cout<<endl;
 	(cout)<<"MinimumCoverage <- "<<m_minimumCoverage<<endl;
-	(cout)<<"MeanCoverage <- "<<m_coverage_mean<<endl;
+	(cout)<<"PeakCoverage <- "<<m_coverage_mean<<endl;
 }
 
 int CoverageDistribution::getMeanCoverage(){

@@ -52,9 +52,9 @@ vector<VERTEX_TYPE> SortedList::elementsWithALeastCCoverage(int c){
 map<int,int> SortedList::getDistributionOfCoverage(){
 	map<int,int> m_coverageDistribution;
 	vector<VERTEX_TYPE>::iterator i=m_list.begin();
-	int currentCount=1;
 	while(i!=m_list.end()){
 		VERTEX_TYPE currentValue=*i;
+		int currentCount=1;
 		i++;
 		while(i!=m_list.end()&&*i==currentValue){
 			currentCount++;

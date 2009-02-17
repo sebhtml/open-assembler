@@ -133,7 +133,7 @@ void Loader::load(string file,vector<Read*>*reads){
 		add(reads,&id,&sequence,&quality);
 	}
 	f.close();
-	(*m_cout)<<m_total<<endl;
+	(*m_cout)<<"Reads: "<<m_total<<endl;
 }
 
 int Loader::getBases(){

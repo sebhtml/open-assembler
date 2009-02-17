@@ -49,7 +49,7 @@ int main(int argc,char*argv[]){
 	cout<<"                      description: the length of strings inside vertices, edges will be defined for words of length <wordSize>+1."<<endl;
 	string m_minimumCoverageParameter="2";
 	cout<<" -minimumCoverage     default: "<<m_minimumCoverageParameter<<""<<endl;
-	cout<<"    auto if you want to use the depletion curve"<<endl;
+	cout<<"    auto if you want to use the distribution curve"<<endl;
 	int minimumContigSize=500;
 	//cout<<" -minimumContigSize   default: "<<minimumContigSize<<endl;
 	//cout<<"                      description: the minimum length of contigs generated with the graph."<<endl;
@@ -100,8 +100,6 @@ int main(int argc,char*argv[]){
 		}
 	}
 
-	cout<<endl;
-	cout<<endl;
 	cout<<"  -assemblyDirectory="<<assemblyDirectory<<endl;
 	cout<<"  -minimumCoverage="<<m_minimumCoverageParameter<<endl;
 	//cout<<"  -buckets="<<buckets<<endl;
@@ -124,7 +122,6 @@ int main(int argc,char*argv[]){
 	}
 
 	//cout<<"Indexing files"<<endl;
-	cout<<endl;
 	cout<<"********** Loading sequence data..."<<endl;
 	SequenceDataFull sequenceData(&inputFiles,&cout);
 
@@ -137,7 +134,6 @@ int main(int argc,char*argv[]){
 	cout<<endl;
 	cout<<"Total reads: "<<sequenceData.size()<<endl;
 	cout<<"Total bases: "<<sequenceData.bases()<<endl;
-	cout<<endl;
 
 
 
@@ -160,9 +156,8 @@ int main(int argc,char*argv[]){
 
 	//assembler.outputContigs();
 
-	cout<<endl;
-	cout<<"Files written in "+assemblyDirectory<<endl;
-	cout<<"Done."<<endl;
+	//cout<<"Files written in "+assemblyDirectory<<endl;
+	cout<<"Done!"<<endl;
 	string hawkeyeFile=assemblyDirectory+"/RunHawkeye.sh";
 	string bankFile=assemblyDirectory+"/CreateBank.sh";
 	ofstream fileStreamBank(bankFile.c_str());

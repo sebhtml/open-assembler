@@ -96,8 +96,8 @@ string DeBruijnAssembler::reverseComplement(string a){
 void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	ostream&m_cout=*(this->m_cout);
 	m_cout<<endl;
-	m_cout<<endl;
 	m_cout<<"********** Collecting mers from reads..."<<endl;
+	cout<<endl;
 	m_cout<<"k+1 = "<<m_wordSize+1<<endl;
 	SortedList myList;
 	int last_vertices_size=-1;
@@ -182,6 +182,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 
 
 	m_cout<<"********** Building graph"<<endl;
+	cout<<endl;
 	SortedList graphNodesList;
 	for(vector<VERTEX_TYPE>::iterator i=solidMers.begin();i!=solidMers.end();i++){
 		VERTEX_TYPE node=*i;
@@ -197,9 +198,10 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	for(vector<VERTEX_TYPE>::iterator i=nodes.begin();i!=nodes.end();i++){
 		m_data.add(*i);
 	}
+	cout<<endl;
 
-	// Don't load too much reads in edges, MAX: 15?
 	m_cout<<"********** Indexing solid mers in reads..."<<endl; // <-------
+	cout<<endl;
 	for(int readId=0;readId<(int)sequenceData->size();readId++){
 		if(readId%10000==0)
 			m_cout<<"Reads: "<<readId<<" / "<<sequenceData->size()<<endl;
@@ -377,7 +379,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			for(vector<VERTEX_TYPE>::iterator j=theParents.begin();j!=theParents.end();j++){
 				if(m_data.get(*j)->IsEliminated())
 					continue;
-				int MaxDepth=50;
+				int MaxDepth=30; // changed from 50 to 30 here
 				VERTEX_TYPE currentNode=*j;
 				set<VERTEX_TYPE> stuffVisited;
 				int reachedDepth=visitVertices(currentNode,&stuffVisited,MaxDepth,true);
@@ -393,9 +395,9 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	}
 	cout<<id+1<<" / "<<m_data.size()<<endl;
 	(*m_cout)<<"Removed "<<spuriousRemoval<<" edges"<<endl;
-
-	(*m_cout)<<endl;
-	(*m_cout)<<"********** Collecting sources"<<endl;
+	cout<<endl;
+	(*m_cout)<<"********** Collecting sources..."<<endl;
+	cout<<endl;
 	vector<VERTEX_TYPE> withoutParents;
 	//for(MAP_TYPE<VERTEX_TYPE,MAP_TYPE<VERTEX_TYPE,vector<int> > >::iterator i=m_graph.begin();i!=m_graph.end();i++){
 	for(int myDataIterator=0;myDataIterator<nodes->size();myDataIterator++){
@@ -426,6 +428,9 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	ofstream repeatAnnotation(repeatAnnotationFile.c_str());
 	int contigId=1;
 	int round=1;
+
+	cout<<"********** Assembling contigs..."<<endl;
+
 	while(sources.size()>0){
 		m_cout<<endl;
 		m_cout<<"Round: "<<round<<", "<<sources.size()<<" sources."<<endl;
@@ -480,12 +485,14 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	coverageStream.close();
 	m_cout<<endl;
 
-	(m_cout)<<"Source discovery"<<endl;
+/*
+	(m_cout)<<"********** Sources discovery..."<<endl;
 	(m_cout)<<"Iteration Sources Cumulative"<<endl;
 	for(int i=0;i<(int)The_Discovery_Of_Sources.size();i++)
 		(m_cout)<<i+1<<" "<<The_Discovery_Of_Sources[i]<<" "<<VisitsOfSources[i]<<endl;
 
 	(m_cout)<<endl;
+*/
 	return;
 }
 
@@ -1156,6 +1163,7 @@ bool DeBruijnAssembler::is_d_Threading(AnnotationElement*annotation,vector<map<i
 
 void DeBruijnAssembler::CommonHeader(ostream*out){
 	*out<<"********** Starting..."<<endl;
+	*out<<endl;
 	*out<<"DNA: De Novo Assembler"<<endl;
 	*out<<"Documentation: http://denovoassembler.sf.net/"<<endl;
 	*out<<"License: http://www.gnu.org/licenses/gpl.html"<<endl;
