@@ -23,12 +23,8 @@
 #include<map>
 using namespace std;
 
-CoverageDistribution::CoverageDistribution(CustomMap<int>*words,string m_assemblyDirectory){
+CoverageDistribution::CoverageDistribution(map<int,int>distributionOfCoverage,string m_assemblyDirectory){
 	cout<<"********** Writing coverage distribution..."<<endl;
-	map<int,int>  distributionOfCoverage;
-	for(CustomMap<int>::iterator i=words->begin();i!=words->end();i++){
-		distributionOfCoverage[i.second()]++;
-	}
 	string distributionFile=m_assemblyDirectory+"/CoverageDistribution.txt";
 	ofstream   distributionStream(distributionFile.c_str());
 	//distributionStream<<

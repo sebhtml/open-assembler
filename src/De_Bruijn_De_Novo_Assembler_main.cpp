@@ -22,7 +22,6 @@
 #include"SequenceDataFull.h"
 #include"Loader.h"
 #include"DeBruijnAssembler.h"
-#include"CustomMap.hpp"
 #include<fstream>
 #include<stdint.h>
 #include<stdlib.h>
@@ -54,9 +53,12 @@ int main(int argc,char*argv[]){
 	int minimumContigSize=500;
 	//cout<<" -minimumContigSize   default: "<<minimumContigSize<<endl;
 	//cout<<"                      description: the minimum length of contigs generated with the graph."<<endl;
+	/*
 	uint64_t buckets=134217728;
 	cout<<" -buckets             default: "<<buckets<<endl;
 	cout<<"                      description: number of buckets, default: 2**27, should be a power of 2."<<endl;
+
+*/
 	bool DEBUGMODE=false;
 	//cout<<" [ -debug ]"<<endl;
 	string pairedInfo="none";
@@ -80,10 +82,12 @@ int main(int argc,char*argv[]){
 			m_minimumCoverageParameter=argv[i];
 		}else if(option=="-debug"){
 			DEBUGMODE=true;
+/*
 		}else if(option=="-buckets"){
 			i++;
 			istringstream localBuffer(argv[i]);
 			localBuffer>>buckets;
+*/
 		}else if(option=="-wordSize"){
 			i++;
 			if(wordSize>31){
@@ -100,7 +104,7 @@ int main(int argc,char*argv[]){
 	cout<<endl;
 	cout<<"  -assemblyDirectory="<<assemblyDirectory<<endl;
 	cout<<"  -minimumCoverage="<<m_minimumCoverageParameter<<endl;
-	cout<<"  -buckets="<<buckets<<endl;
+	//cout<<"  -buckets="<<buckets<<endl;
 	cout<<"  -wordSize="<<wordSize<<endl;
 	cout<<" <FILES>"<<endl;
 	//cout<<"dna_DeBruijnAssembler -assemblyDirectory "<<assemblyDirectory<<" -minimumCoverage "<<m_minimumCoverageParameter<<" -buckets "<<buckets<<" -pairedInfo "<<pairedInfo<<  " -wordSize "<<wordSize ;
@@ -149,12 +153,12 @@ int main(int argc,char*argv[]){
 	DeBruijnAssembler assembler(&cout);
 	// word size must be odd (2k+1)
 	// to avoid palindromes
-	assembler.setBuckets(buckets);
+	//assembler.setBuckets(buckets);
 	assembler.setWordSize(wordSize);
 	//assembler.setMinimumContigSize(minimumContigSize);
 	assembler.setMinimumCoverage(m_minimumCoverageParameter);
 	assembler.setAssemblyDirectory(assemblyDirectory);
-	assembler.setPairedInfo(pairedInfo);
+	//assembler.setPairedInfo(pairedInfo);
 	if(DEBUGMODE)
 		assembler.debug();
 

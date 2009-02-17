@@ -28,8 +28,8 @@
 #include"VertexData.h"
 #include"Read.h"
 #include<map>
-#include"CustomMap.hpp"
 #include<set>
+#include"GraphData.h"
 #include<cstring>
 #include<vector>
 #include<sstream>
@@ -54,7 +54,8 @@ class DeBruijnAssembler{
 	string m_pairedInfoFile;
 	bool m_DEBUG;
 	uint64_t m_solidMers;
-	CustomMap<VertexData>*m_data;
+	//CustomMap<VertexData>*m_data;
+	GraphData m_data;
 
 	SequenceDataFull*m_sequenceData;
 	// map edges to reads
@@ -88,7 +89,7 @@ class DeBruijnAssembler{
 	void Walk_In_GRAPH();
 
 
-	void indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData,CustomMap<int>*solidMers);
+	void indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData,vector<VERTEX_TYPE>*solidMers);
 
 	void writeContig_fasta(vector<VERTEX_TYPE>*path,ofstream*file,int i);
 	void writeContig_Amos(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);

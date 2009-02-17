@@ -17,9 +17,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include"CustomMap.hpp"
 #include<sstream>
 #include"LightVertex.h"
+#include"SortedList.h"
 #include"CoverageDistribution.h"
 #include<vector>
 #include"DeBruijnAssembler.h"
@@ -96,7 +96,8 @@ int main(int argc,char*argv[]){
 	cout<<"Creating "<<outputDirectory<<endl;
 	string command = "rm -rf "+outputDirectory+"; mkdir -p "+outputDirectory;
 	system(command.c_str());
-	CustomMap<int> words(buckets);
+	//CustomMap<int> words(buckets);
+	SortedList myList;
 	
 	cout<<"********** Loading mers from files..."<<endl;
 	for(int i=0;i<inputFiles.size();i++){
@@ -106,14 +107,17 @@ int main(int argc,char*argv[]){
 		for(int j=0;j<reads.size();j++){
 			vector<VERTEX_TYPE> mers=reads.at(j)->getHighQualityMers(wordSize);
 			for(int k=0;k<mers.size();k++){
+		/*
 				if(!words.find(mers[k]))
 					words.add(mers[k],0);
 				words.set(mers[k],words.get(mers[k])+1);
+	*/
+				myList.add(mers[k]);
 			}
 		}
 	}
 
-
+	myList.sort();
 
 
 	// depletion curve analysis
@@ -125,7 +129,7 @@ int main(int argc,char*argv[]){
 	//
 	//
 
-	CoverageDistribution coverageDistributionObject(&words,outputDirectory);
+	CoverageDistribution coverageDistributionObject(myList.getDistributionOfCoverage(),outputDirectory);
 	m_minimumCoverage=coverageDistributionObject.getMinimumCoverage();
 	m_coverage_mean=coverageDistributionObject.getMeanCoverage();
 
@@ -138,27 +142,29 @@ int main(int argc,char*argv[]){
 	cout<<"********** Building graph..."<<endl;
 
 	CustomMap<LightVertex> graphWithoutData(buckets);
+	vector<VERTEX_TYPE> solidMers=myList.elementsWithALeastCCoverage(m_minimumCoverage);
 	int edges=0;
-	for(CustomMap<int>::iterator i=words.begin();i!=words.end();i++){
-		if(i.second()>=m_minimumCoverage){
-			VERTEX_TYPE mer=i.first();
-			string merString=DeBruijnAssembler::idToWord(mer,wordSize+1);
-			string prefix=merString.substr(0,wordSize);
-			string suffix=merString.substr(1,wordSize);
-			VERTEX_TYPE prefixInteger=DeBruijnAssembler::wordId(prefix.c_str());
-			VERTEX_TYPE suffixInteger=DeBruijnAssembler::wordId(suffix.c_str());
-			if(!graphWithoutData.find(prefixInteger)){
-				LightVertex vertex;
-				graphWithoutData.add(prefixInteger,vertex);
-			}
-			if(!graphWithoutData.find(suffixInteger)){
-				LightVertex vertex;
-				graphWithoutData.add(suffixInteger,vertex);
-			}
-			graphWithoutData.get(prefixInteger).addChild(suffixInteger,wordSize);
-			graphWithoutData.get(suffixInteger).addParent(prefixInteger,wordSize);
-			edges++;
+	//for(CustomMap<int>::iterator i=words.begin();i!=words.end();i++){
+		//if(i.second()>=m_minimumCoverage){
+	for(vector<VERTEX_TYPE>::iterator myIterator=solidMers.begin();myIterator!=solidMers.end();myIterator++){
+		VERTEX_TYPE mer=*myIterator;
+		string merString=DeBruijnAssembler::idToWord(mer,wordSize+1);
+		string prefix=merString.substr(0,wordSize);
+		string suffix=merString.substr(1,wordSize);
+		VERTEX_TYPE prefixInteger=DeBruijnAssembler::wordId(prefix.c_str());
+		VERTEX_TYPE suffixInteger=DeBruijnAssembler::wordId(suffix.c_str());
+		if(!graphWithoutData.find(prefixInteger)){
+			LightVertex vertex;
+			graphWithoutData.add(prefixInteger,vertex);
 		}
+		if(!graphWithoutData.find(suffixInteger)){
+			LightVertex vertex;
+			graphWithoutData.add(suffixInteger,vertex);
+		}
+		graphWithoutData.get(prefixInteger).addChild(suffixInteger,wordSize);
+		graphWithoutData.get(suffixInteger).addParent(prefixInteger,wordSize);
+		edges++;
+		//}
 	}
 	cout<<"Total: "<<edges<<" edges."<<endl;
 	// find connected components, but how?

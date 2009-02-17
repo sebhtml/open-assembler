@@ -18,6 +18,8 @@
 */
 
 #include "VertexData.h"
+#include"GraphData.h"
+#include<iostream>
 #include"DeBruijnAssembler.h"
 #include<stdint.h>
 #include<string>
@@ -127,7 +129,7 @@ vector<VERTEX_TYPE> VertexData::getChildren(VERTEX_TYPE prefix){
 	return output;
 }
 
-vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix,CustomMap<VertexData>*m_data){
+vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix,GraphData*m_data){
 	string a=DeBruijnAssembler::idToWord(prefix,DeBruijnAssembler::m_WordSize);
 	vector<VERTEX_TYPE> output;
 	//cout<<a<<endl;
@@ -159,7 +161,7 @@ vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix,CustomMap<VertexDa
 	vector<VERTEX_TYPE> removedFree;
 	for(vector<VERTEX_TYPE>::iterator i=output.begin();i!=output.end();i++){
 		if(m_data!=NULL&&
-			m_data->get(*i).IsEliminated())
+			m_data->get(*i)->IsEliminated())
 			continue;
 		removedFree.push_back(*i);
 	}

@@ -22,14 +22,16 @@
 #ifndef _CoverageDistribution
 #define _CoverageDistribution
 
-#include"CustomMap.hpp"
+#include<map>
+#include<string>
+using namespace std;
 
 
 class CoverageDistribution{
 	int m_minimumCoverage;
 	int m_coverage_mean;
 public:
-	CoverageDistribution(CustomMap<int>*words,string m_assemblyDirectory);
+	CoverageDistribution(map<int,int>distributionOfCoverage,string m_assemblyDirectory);
 	int getMinimumCoverage();
 	int getMeanCoverage();
 };

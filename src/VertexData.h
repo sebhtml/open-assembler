@@ -22,12 +22,12 @@
 
 #include<map>
 #include<vector>
-#include "CustomMap.hpp"
 #include"Read.h"
 #include"AnnotationElement.h"
 #include<stdint.h>
 using namespace std;
 
+class GraphData;
 
 class VertexData{
 	// bit    nucleotide
@@ -53,7 +53,7 @@ class VertexData{
 	
 public:
 	vector<VERTEX_TYPE> getChildren(VERTEX_TYPE prefix);
-	vector<VERTEX_TYPE> getParents(VERTEX_TYPE prefix,CustomMap<VertexData>*m_data);
+	vector<VERTEX_TYPE> getParents(VERTEX_TYPE prefix,GraphData*m_data);
 	vector<AnnotationElement>*getAnnotations(VERTEX_TYPE suffix);
 	void addParent(VERTEX_TYPE parent);
 	void addAnnotation(VERTEX_TYPE suffix,uint32_t read,POSITION_TYPE position,uint8_t strand);
