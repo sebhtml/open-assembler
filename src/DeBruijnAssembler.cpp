@@ -1194,7 +1194,7 @@ int DeBruijnAssembler::visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int ma
 		nodes->insert(aNode);
 		vector<VERTEX_TYPE> elements;
 		if(parents==true)
-			elements=m_data.get(aNode)->getParents(aNode,&m_data);
+			elements=m_data.get(aNode)->getParents(aNode,NULL);
 		else
 			elements=m_data.get(aNode)->getChildren(aNode);
 

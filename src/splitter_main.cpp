@@ -94,8 +94,11 @@ int main(int argc,char*argv[]){
 	system(command.c_str());
 	SortedList myList;
 	
+	cout<<endl;
 	cout<<"********** Loading mers from files..."<<endl;
+	cout<<endl;
 	for(int i=0;i<inputFiles.size();i++){
+		cout<<"File: "<<i+1<<" / "<<inputFiles.size()<<endl;
 		vector<Read*> reads;
 		Loader loader(&cout);
 		loader.load(inputFiles[i],&reads);
@@ -210,8 +213,9 @@ int main(int argc,char*argv[]){
 	command="bash "+createFiles;
 	system(command.c_str());
 
-
+	cout<<endl;
 	cout<<"********** Spitting sequences..."<<endl;
+	cout<<endl;
 	for(int i=0;i<inputFiles.size();i++){
 		vector<Read*> reads;
 		Loader loader(&cout);
@@ -219,13 +223,17 @@ int main(int argc,char*argv[]){
 		for(int j=0;j<reads.size();j++){
 			string sequence=reads.at(j)->getSeq();
 			string word=sequence.substr(0,wordSize);
-			if(!reads.at(j)->isValidDNA(word.c_str()))
+			if(!reads.at(j)->isValidDNA(word.c_str())){
+				cout<<"Invalid start"<<endl;
 				continue;
+			}
+			bool gotIt=false;
 			VERTEX_TYPE mer=DeBruijnAssembler::wordId(sequence.substr(0,wordSize).c_str());
 			VERTEX_TYPE revMer=DeBruijnAssembler::wordId(DeBruijnAssembler::reverseComplement(DeBruijnAssembler::idToWord(mer,wordSize)).c_str());
 			string baseName=inputFiles[i].substr(inputFiles[i].find_last_of("/")+1);
 			if(graphWithoutData.find(mer)&&colorSizes[graphWithoutData.get(mer)->getColor()]>=Threshold){
 				ostringstream file;
+				gotIt=true;
 				file<<outputDirectory<<"/"<<graphWithoutData.get(mer)->getColor()<<"/"<<baseName<<".fasta";				
 				FILE*fp=fopen(file.str().c_str(),"a+");
 				fprintf(fp,">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
@@ -235,12 +243,16 @@ int main(int argc,char*argv[]){
 				ostringstream file;
 				file<<outputDirectory<<"/"<<graphWithoutData.get(revMer)->getColor()<<"/"<<baseName<<".fasta";
 				FILE*fp=fopen(file.str().c_str(),"a+");
+				gotIt=true;
 				fprintf(fp,">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
 				fclose(fp);
 			}
+			if(gotIt==false){
+				cout<<"Read is nowhere, "<<reads.at(j)->getId()<<endl;
+			}
 		}
 	}
-
+	cout<<endl;
 	cout<<"Done."<<endl;
 	return 0;
 }
