@@ -29,7 +29,7 @@
 using namespace std;
 
 class SortedList{
-	list<VERTEX_TYPE> m_list;
+	vector<VERTEX_TYPE> m_list;
 public:
 	void add(VERTEX_TYPE a);
 	vector<VERTEX_TYPE> elementsWithALeastCCoverage(int c);

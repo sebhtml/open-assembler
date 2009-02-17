@@ -22,6 +22,7 @@
 
 #include"SortedList.h"
 #include<iostream>
+#include<algorithm>
 using namespace std;
 
 
@@ -32,7 +33,7 @@ void SortedList::add(VERTEX_TYPE a){
 
 vector<VERTEX_TYPE> SortedList::elementsWithALeastCCoverage(int c){
 	vector<VERTEX_TYPE> output;
-	list<VERTEX_TYPE>::iterator i=m_list.begin();
+	vector<VERTEX_TYPE>::iterator i=m_list.begin();
 	int currentCount=1;
 	while(i!=m_list.end()){
 		VERTEX_TYPE currentValue=*i;
@@ -50,7 +51,7 @@ vector<VERTEX_TYPE> SortedList::elementsWithALeastCCoverage(int c){
 
 map<int,int> SortedList::getDistributionOfCoverage(){
 	map<int,int> m_coverageDistribution;
-	list<VERTEX_TYPE>::iterator i=m_list.begin();
+	vector<VERTEX_TYPE>::iterator i=m_list.begin();
 	int currentCount=1;
 	while(i!=m_list.end()){
 		VERTEX_TYPE currentValue=*i;
@@ -66,8 +67,8 @@ map<int,int> SortedList::getDistributionOfCoverage(){
 }
 
 void SortedList::sort(){
-	cout<<"Sorting, < N log N >"<<endl;
-	m_list.sort();
+	cout<<"Sorting "<<m_list.size()<<" elements"<<endl;
+	std::sort(m_list.begin(),m_list.end());
 }
 
 void SortedList::clear(){
