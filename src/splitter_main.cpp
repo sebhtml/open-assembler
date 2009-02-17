@@ -188,9 +188,13 @@ int main(int argc,char*argv[]){
 	for(int i=0;i<graphNodes->size();i++){
 		colorSizes[graphNodeData->at(i).getColor()]++;
 	}
+	string partSizes=outputDirectory+"/ConnectedParts.txt";
+	ofstream aStreamForParts(partSizes.c_str());
 	for(map<int,int>::iterator i=colorSizes.begin();i!=colorSizes.end();i++){
-		//cout<<i->first<<" "<<i->second<<endl;
+		aStreamForParts<<i->first<<" "<<i->second<<endl;
 	}
+	aStreamForParts.close();
+
 	string createFiles=outputDirectory+"/CreateDirectories.sh";
 	ofstream streamCreate(createFiles.c_str());
 	int Threshold=100;
@@ -235,7 +239,7 @@ int main(int argc,char*argv[]){
 		}
 	}
 
-
+	cout<<"Done."<<endl;
 	return 0;
 }
 
