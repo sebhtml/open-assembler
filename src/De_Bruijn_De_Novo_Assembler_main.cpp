@@ -54,12 +54,6 @@ int main(int argc,char*argv[]){
 	int minimumContigSize=500;
 	cout<<" -minimumContigSize   default: "<<minimumContigSize<<endl;
 	cout<<"                      description: the minimum length of contigs generated with the graph."<<endl;
-	/*
-	uint64_t buckets=134217728;
-	cout<<" -buckets             default: "<<buckets<<endl;
-	cout<<"                      description: number of buckets, default: 2**27, should be a power of 2."<<endl;
-
-*/
 	bool DEBUGMODE=false;
 	//cout<<" [ -debug ]"<<endl;
 	string pairedInfo="none";
@@ -83,12 +77,6 @@ int main(int argc,char*argv[]){
 			m_minimumCoverageParameter=argv[i];
 		}else if(option=="-debug"){
 			DEBUGMODE=true;
-/*
-		}else if(option=="-buckets"){
-			i++;
-			istringstream localBuffer(argv[i]);
-			localBuffer>>buckets;
-*/
 
 		}else if(option=="-minimumContigSize"){
 			i++;
@@ -107,10 +95,10 @@ int main(int argc,char*argv[]){
 
 	cout<<"  -assemblyDirectory="<<assemblyDirectory<<endl;
 	cout<<"  -minimumCoverage="<<m_minimumCoverageParameter<<endl;
-	//cout<<"  -buckets="<<buckets<<endl;
+
 	cout<<"  -wordSize="<<wordSize<<endl;
+	cout<<"  -minimumContigSize="<<minimumContigSize<<endl;
 	cout<<" <FILES>"<<endl;
-	//cout<<"dna_DeBruijnAssembler -assemblyDirectory "<<assemblyDirectory<<" -minimumCoverage "<<m_minimumCoverageParameter<<" -buckets "<<buckets<<" -pairedInfo "<<pairedInfo<<  " -wordSize "<<wordSize ;
 	for(int i=0;i<(int)inputFiles.size();i++)
 		cout<<" "<<inputFiles[i]<<endl;
 	cout<<endl;
@@ -188,8 +176,12 @@ int main(int argc,char*argv[]){
 			fileStreamBank<<" "<<inputFiles[i];
 		}
 	}
-			
+	fileStreamBank<<" > reads.afg"<<endl;
+	fileStreamBank.close();
 
+	cout<<endl;
+	cout<<"********** Merging contigs..."<<endl;
+	cout<<endl;
 	Merger merger;
 	vector<Read*> finalContigs;
 	Loader loader(&cout);
@@ -199,12 +191,17 @@ int main(int argc,char*argv[]){
 	vector<Read*> mergedContigs=merger.mergeContigs(finalContigs);
 	string mergedContigsFile=assemblyDirectory+"/LargeMergedContigs.fasta";
 	ofstream streamForMergedContigs(mergedContigsFile.c_str());
+	cout<<endl;
 	for(vector<Read*>::iterator i=mergedContigs.begin();i!=mergedContigs.end();i++){
 		string dnaSequence=(*i)->getSeq();
 		string name=(*i)->getId();
 		int lengthOfContig=dnaSequence.length();
+		if(lengthOfContig<minimumContigSize)
+			continue;
+
 		int j=0;
 		streamForMergedContigs<<">"<<name<<" "<<lengthOfContig<<" nucleotides"<<endl;
+		cout<<">"<<name<<" "<<lengthOfContig<<" nucleotides"<<endl;
 		while(j<lengthOfContig){
 			streamForMergedContigs<<dnaSequence.substr(j,columns)<<endl;
 			j+=columns;
@@ -213,7 +210,8 @@ int main(int argc,char*argv[]){
 
 	string readmeFile=assemblyDirectory+"/README.txt";
 	ofstream readmeStream(readmeFile.c_str());
-	readmeStream<<""<<endl;
+	readmeStream<<"contigs-amos.afg - AMOS MESSAGE of the assembly"<<endl;
+//contigs-coverage.txt  contigs.fasta  contigs-repeats.txt  CoverageDistribution.txt  CreateBank.sh  LargeMergedContigs.fasta  pwd.txt  README.txt  RunHawkeye.sh
 	readmeStream.close();
 	return 0;
 }
