@@ -251,6 +251,7 @@ int main(int argc,char*argv[]){
 	cout<<"********** Spitting sequences..."<<endl;
 	cout<<endl;
 	for(int i=0;i<inputFiles.size();i++){
+		cout<<"File: "<<i+1<<" / "<<inputFiles.size()<<endl;
 		vector<Read*> reads;
 		Loader loader(&cout);
 		loader.load(inputFiles[i],&reads);
