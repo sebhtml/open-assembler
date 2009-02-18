@@ -27,32 +27,52 @@
 
 using namespace std;
 
+vector<AnnotationElement> VertexData::m_empty_vector;
+
 VertexData::VertexData(){
 	m_isEliminated=false;
 	m_assembled=false;
 	m_parents=0;
+	m_children=0;
 	m_color=-1;
+	m_annotations=NULL;
 }
 
 
 void VertexData::addAnnotation(VERTEX_TYPE suffix,uint32_t read,POSITION_TYPE position,uint8_t strand){
+	if(m_annotations==NULL){
+		m_annotations=new map<char,vector<AnnotationElement> >;
+	}
 	string a=DeBruijnAssembler::idToWord(suffix,DeBruijnAssembler::m_WordSize);
 	char symbol=a[a.length()-1];
 	AnnotationElement element;
 	element.readId=read;
 	element.readPosition=position;
 	element.readStrand=strand;
-
-	if(symbol=='A'){
-		A_elements.push_back(element);
-	}else if(symbol=='T'){
-		T_elements.push_back(element);
-	}else if(symbol=='C'){
-		C_elements.push_back(element);
-	}else if(symbol=='G'){
-		G_elements.push_back(element);
-	}
+	(*m_annotations)[symbol].push_back(element);
+	//cout<<(*m_annotations)[symbol].size()<<" annotations"<<endl;
 }
+
+void VertexData::addChild(VERTEX_TYPE child){
+	string a=DeBruijnAssembler::idToWord(child,DeBruijnAssembler::m_WordSize);
+	char symbol=a[DeBruijnAssembler::m_WordSize-1];
+	int position=0;
+	if(symbol=='A'){
+		position=DeBruijnAssembler::m_NUCLEOTIDE_A;
+	}else if(symbol=='T'){
+		position=DeBruijnAssembler::m_NUCLEOTIDE_T;
+	}else if(symbol=='C'){
+		position=DeBruijnAssembler::m_NUCLEOTIDE_C;
+	}else if(symbol=='G'){
+		position=DeBruijnAssembler::m_NUCLEOTIDE_G;
+	}
+	uint8_t toAdd=1;
+	toAdd=toAdd<<position;
+	m_children=m_children|toAdd;
+	//cout<<"Children "<<(int)m_children<<endl;
+}
+
+
 
 void VertexData::addParent(VERTEX_TYPE parent){
 	string a=DeBruijnAssembler::idToWord(parent,DeBruijnAssembler::m_WordSize);
@@ -70,63 +90,57 @@ void VertexData::addParent(VERTEX_TYPE parent){
 	uint8_t toAdd=1;
 	toAdd=toAdd<<position;
 	m_parents=m_parents|toAdd;
-	//cout<<(int)m_parents<<endl;
+	//cout<<"Parents "<<(int)m_parents<<endl;
 }
 
+/*
+ * TODO: here, pass the list of reads to build the annotations here...
+ *
+ */
 vector<AnnotationElement>*VertexData::getAnnotations(VERTEX_TYPE suffix){
 	string a=DeBruijnAssembler::idToWord(suffix,DeBruijnAssembler::m_WordSize);
 	char symbol=a[DeBruijnAssembler::m_WordSize-1];
-	if(symbol=='A'){
-		return &A_elements;
-	}else if(symbol=='T'){
-		return &T_elements;
-	}else if(symbol=='C'){
-		return &C_elements;
-	}else if(symbol=='G'){
-		return &G_elements;
+	if(m_annotations==NULL){
+		return &m_empty_vector;
 	}
-	cout<<"Error "<<a<<" is not a child"<<endl;
-	exit(0);
-	return NULL;
+	return &((*m_annotations)[symbol]);
 }
 
-bool VertexData::hasChild(VERTEX_TYPE suffix){
-	string a=DeBruijnAssembler::idToWord(suffix,DeBruijnAssembler::m_WordSize);
-	char symbol=a[DeBruijnAssembler::m_WordSize-1];
-	if(symbol=='A'){
-		return A_elements.size()>0;
-	}else if(symbol=='T'){
-		return T_elements.size()>0;
-	}else if(symbol=='C'){
-		return C_elements.size()>0;
-	}else if(symbol=='G'){
-		return G_elements.size()>0;
-	}
-	return false;
-}
+
+
+
 
 vector<VERTEX_TYPE> VertexData::getChildren(VERTEX_TYPE prefix){
 	string a=DeBruijnAssembler::idToWord(prefix,DeBruijnAssembler::m_WordSize);
+	//cout<<"Prefix "<<a<<endl;
 	vector<VERTEX_TYPE> output;
-
-	if(A_elements.size()>0){
-		string sequence=a.substr(1)+"A";
-		output.push_back(DeBruijnAssembler::wordId(sequence.c_str()));
+	//cout<<a<<endl;
+	//cout<<(int)m_parents<<endl;
+	//cout<<"parents " <<m_parents<<endl;
+	for(int i=0;i<4;i++){
+		uint8_t toCheck=m_children;
+		//00001000
+		//10000000
+		toCheck=(toCheck<<(7-i));
+		toCheck=toCheck>>7;
+		if(toCheck==1){
+			char symbol='A';
+			if(i==0){
+				symbol='A';
+			}else if(i==1){
+				symbol='T';
+			}else if(i==2){
+				symbol='C';
+			}else if(i==3){
+				symbol='G';
+			}
+			string sequence=a.substr(1,DeBruijnAssembler::m_WordSize-1)+symbol;
+			//cout<<sequence<<endl;
+			VERTEX_TYPE dataNode=DeBruijnAssembler::wordId(sequence.c_str());
+			output.push_back(dataNode);
+			//cout<<sequence<<endl;
+		}
 	}
-	if(T_elements.size()>0){
-		string sequence=a.substr(1)+"T";
-		output.push_back(DeBruijnAssembler::wordId(sequence.c_str()));
-	}
-	if(C_elements.size()>0){
-		string sequence=a.substr(1)+"C";
-		output.push_back(DeBruijnAssembler::wordId(sequence.c_str()));
-	}
-	if(G_elements.size()>0){
-		string sequence=a.substr(1)+"G";
-		output.push_back(DeBruijnAssembler::wordId(sequence.c_str()));
-	}
-
-
 	return output;
 }
 
@@ -159,19 +173,23 @@ vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix,GraphData*m_data){
 			output.push_back(dataNode);
 		}
 	}
-	vector<VERTEX_TYPE> removedFree;
+	vector<VERTEX_TYPE> eliminated;
 	for(vector<VERTEX_TYPE>::iterator i=output.begin();i!=output.end();i++){
-		if(m_data!=NULL&&
-			m_data->get(*i)->IsEliminated())
+		if(m_data!=NULL&&m_data->get(*i)->IsEliminated())
 			continue;
-		removedFree.push_back(*i);
+		eliminated.push_back(*i);
 	}
-	return removedFree;
+	return eliminated;
 }
 
 
 
+
 VertexData::~VertexData(){
+	if(m_annotations!=NULL){
+		delete m_annotations;
+		m_annotations=NULL;
+	}
 }
 
 void VertexData::eliminateNow(){
@@ -197,4 +215,8 @@ uint32_t VertexData::getColor(){
 
 void VertexData::setColor(uint32_t c){
 	m_color=c;
+}
+
+bool VertexData::NotTrivial(VERTEX_TYPE a){
+	return getParents(a,NULL).size()>1||getChildren(a).size()>1;
 }

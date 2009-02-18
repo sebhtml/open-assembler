@@ -180,7 +180,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	//words.clear();
 
 
-	m_cout<<"********** Building graph"<<endl;
+	m_cout<<"********** Creating vertices..."<<endl;
 	cout<<endl;
 	SortedList graphNodesList;
 	for(vector<VERTEX_TYPE>::iterator i=solidMers.begin();i!=solidMers.end();i++){
@@ -197,7 +197,22 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	for(vector<VERTEX_TYPE>::iterator i=nodes.begin();i!=nodes.end();i++){
 		m_data.add(*i);
 	}
+	cout<<nodes.size()<<" vertices"<<endl;
 	cout<<endl;
+
+	m_cout<<"********** Creating edges..."<<endl;
+	cout<<endl;
+	for(vector<VERTEX_TYPE>::iterator i=solidMers.begin();i!=solidMers.end();i++){
+		VERTEX_TYPE node=*i;
+		string wordString=idToWord(node,m_wordSize+1);
+		VERTEX_TYPE prefix=wordId(wordString.substr(0,m_wordSize).c_str());
+		VERTEX_TYPE suffix=wordId(wordString.substr(1,m_wordSize).c_str());
+		m_data.get(prefix)->addChild(suffix);
+		m_data.get(suffix)->addParent(prefix);
+	}
+	cout<<solidMers.size()<<" edges"<<endl;
+	cout<<endl;
+
 
 	m_cout<<"********** Indexing solid mers in reads..."<<endl; // <-------
 	cout<<endl;
@@ -321,9 +336,11 @@ void DeBruijnAssembler::writeGraph(){
 		f<<children.size()<<endl;
 		for(vector<VERTEX_TYPE>::iterator k=children.begin();k!=children.end();k++){
 			vector<AnnotationElement>*annotations=prefixData->getAnnotations(*k);
-			f<<*k<<" "<<annotations->size()<<endl;
-			for(vector<AnnotationElement>::iterator u=annotations->begin();u!=annotations->end();u++){
-				f<<(*u).readId<<" "<<(*u).readStrand<<" "<<(*u).readPosition<<endl;
+			if(annotations!=NULL){
+				f<<*k<<" "<<annotations->size()<<endl;
+				for(vector<AnnotationElement>::iterator u=annotations->begin();u!=annotations->end();u++){
+					f<<(*u).readId<<" "<<(*u).readStrand<<" "<<(*u).readPosition<<endl;
+				}
 			}
 		}
 	}
@@ -472,7 +489,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	for(vector<VERTEX_TYPE>::iterator i=theNodes->begin();i!=theNodes->end();i++){
 		if(m_data.get(*i)->getColor()==-1){
 			color++;
-			cout<<color<<" : "<<DFS_watch(*i,color)<<endl;
+			//cout<<color<<" : "<<DFS_watch(*i,color)<<endl;
 		}
 	}
 
@@ -649,6 +666,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 	//debug_print=true;
 	//(*m_cout)<<"Depth: "<<path->size()<<endl;
 	int lowCoverageLength=0;
+	
 	vector<VERTEX_TYPE> prefixNextVertices=nextVertices(path,currentReadPositions,newSources,&usedReads);
 	while(prefixNextVertices.size()==1){
 		if(m_data.get(prefix)->IsEliminated()==true){
@@ -665,7 +683,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		int added=0;
 
 		vector<AnnotationElement>*annotations=m_data.get(path->at(path->size()-2))->getAnnotations(path->at(path->size()-1));
-		if(debug_print){
+		if(debug_print&&annotations!=NULL){
 			(*m_cout)<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<" ";
 			(*m_cout)<<annotations->size();
 			for(int j=0;j<annotations->size();j++){
@@ -723,8 +741,8 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			(*m_cout)<<endl;
 		}
 
-		prefixNextVertices=nextVertices(path,currentReadPositions,newSources,&usedReads);
 
+		prefixNextVertices=nextVertices(path,currentReadPositions,newSources,&usedReads);
 		if(added==0){
 			(*m_cout)<<"Stop!, reason: No read threaded."<<endl;
 			break;
@@ -817,7 +835,8 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
  */
 vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources,map<int,int>*usedReads){
 	bool debugPrint=m_DEBUG;
-	vector<VERTEX_TYPE> children=m_data.get(path->at(path->size()-1))->getChildren(path->at(path->size()-1));
+	VERTEX_TYPE prefix=path->at(path->size()-1);
+	vector<VERTEX_TYPE> children=m_data.get(prefix)->getChildren(prefix);
 	// start when nothing is done yet
 	//(*m_cout)<<currentReadPositions->size()<<" "<<path->size()<<endl;
 	if(currentReadPositions->size()==0){//||currentReadPositions->size()<path->size())
@@ -829,17 +848,12 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 		}
 		return children;
 	}
-
-	if(children.size()==1 // if only 1 next and (a,b) is trivial...  a has one child , b has one parent
-		){
-		VERTEX_TYPE a=path->at(path->size()-1);
-		VERTEX_TYPE b=children[0];
-		if(m_data.get(a)->getChildren(a).size()==1&&
-			m_data.get(b)->getParents(b,&m_data).size()==1){
-			//cout<<"\"Trivial edge\""<<endl;
-			vector<VERTEX_TYPE> output;
-			output.push_back(b);
-			return output;
+	
+	if(children.size()==1){
+		VERTEX_TYPE first=children[0];
+		int colorToHave=m_data.get(prefix)->getColor();
+		if(m_data.get(first)->getColor()==colorToHave){
+			return children;
 		}
 	}
 
@@ -870,18 +884,21 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 
 		//(*m_cout)<<"Child "<<idToWord(children[i],m_wordSize)<<endl;
 		vector<AnnotationElement>*thisEdgeData=(m_data.get(path->at(path->size()-1))->getAnnotations(*i));
-		coverageOfEdges[*i]=thisEdgeData->size();
-		for(int j=0;j<(int)thisEdgeData->size();j++){
-			uint32_t readId=thisEdgeData->at(j).readId;
+		coverageOfEdges[*i]=0;
+		if(thisEdgeData!=NULL){
+			coverageOfEdges[*i]=thisEdgeData->size();
+			for(int j=0;j<(int)thisEdgeData->size();j++){
+				uint32_t readId=thisEdgeData->at(j).readId;
 
-			if(is_d_Threading(&(thisEdgeData->at(j)),currentReadPositions,path,usedReads,true)){
-				if(thisEdgeData->at(j).readPosition>=scoresMax[*i]){
-					scoresMax[*i]=thisEdgeData->at(j).readPosition+m_carry_forward_offset;
+				if(is_d_Threading(&(thisEdgeData->at(j)),currentReadPositions,path,usedReads,true)){
+					if(thisEdgeData->at(j).readPosition>=scoresMax[*i]){
+						scoresMax[*i]=thisEdgeData->at(j).readPosition+m_carry_forward_offset;
+					}
+
+					scoresSum[*i]+=thisEdgeData->at(j).readPosition+m_carry_forward_offset;
+					numbers[*i]++;
+					valuesForEdge[*i].push_back(thisEdgeData->at(j).readPosition+m_carry_forward_offset);
 				}
-
-				scoresSum[*i]+=thisEdgeData->at(j).readPosition+m_carry_forward_offset;
-				numbers[*i]++;
-				valuesForEdge[*i].push_back(thisEdgeData->at(j).readPosition+m_carry_forward_offset);
 			}
 		}
 	}
@@ -983,7 +1000,6 @@ firstOne[m_wordSize-2-trailingHomoPolymerSize]==
 		}
 	}
 
-	VERTEX_TYPE prefix=path->at(path->size()-1);
 
 	if(foundBest==false){
 		for(int i=0;i<children.size();i++){
@@ -991,7 +1007,7 @@ firstOne[m_wordSize-2-trailingHomoPolymerSize]==
 				VERTEX_TYPE dataVertex=children[i];
 				int nParents=m_data.get(dataVertex)->getParents(dataVertex,NULL).size();
 				if(nParents>1||
-				m_data.get(prefix)->getAnnotations(dataVertex)->size()>=m_REPEAT_DETECTION)
+				(m_data.get(prefix)->getAnnotations(dataVertex)!=NULL&&m_data.get(prefix)->getAnnotations(dataVertex)->size()>=m_REPEAT_DETECTION))
 					continue;
 				newSources->push_back(dataVertex);
 				(*m_cout)<<"Adding alternative source: "<<idToWord(children[i],m_wordSize)<<", "<<nParents<<" parents"<<endl;
@@ -1003,7 +1019,7 @@ firstOne[m_wordSize-2-trailingHomoPolymerSize]==
 				VERTEX_TYPE dataVertex=children[i];
 				int nParents=m_data.get(dataVertex)->getParents(dataVertex,NULL).size();
 				if(nParents>1||
-				m_data.get(prefix)->getAnnotations(dataVertex)->size()>=m_REPEAT_DETECTION)
+				(m_data.get(prefix)->getAnnotations(dataVertex)!=NULL&&m_data.get(prefix)->getAnnotations(dataVertex)->size()>=m_REPEAT_DETECTION))
 					continue;
 				newSources->push_back(children[i]);
 				(*m_cout)<<"Adding alternative source: "<<idToWord(children[i],m_wordSize)<<", "<<nParents<<" parents"<<endl;
@@ -1071,8 +1087,10 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 		myWord[m_wordSize+1]='\0';
 		if(read->isValidDNA(myWord)
 		&&BinarySearch(solidMers,wordId(myWord))!=-1){
+			bool thisIsTheFirst=false;
 			if(foundGoodHit==false){
 				foundGoodHit=true;
+				thisIsTheFirst=true;
 				//cout<<"Starting in: "<<readPosition<<endl;
 				if(strand=='F'){
 					sequenceData->at(readId)->setStartForward(readPosition);
@@ -1084,8 +1102,11 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 			myWord[m_wordSize]='\0';
 			VERTEX_TYPE prefix=wordId(myWord);
 
-			m_data.get(prefix)->addAnnotation(suffix,readId,readPosition,strand);
-			m_data.get(suffix)->addParent(prefix);
+			// the position is the first, or
+			// it is on a non-trivial node...
+			if(true||thisIsTheFirst||m_data.get(prefix)->NotTrivial(prefix)||m_data.get(suffix)->NotTrivial(prefix)){
+				m_data.get(prefix)->addAnnotation(suffix,readId,readPosition,strand);
+			}
 		}
 	}
 	free(myWord);
@@ -1258,15 +1279,32 @@ void DeBruijnAssembler::debug(){
 bool DeBruijnAssembler::is_d_Threading(AnnotationElement*annotation,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,map<int,int>*usedReads,bool beforeAdding){
 
 	int readId=annotation->readId;
-	if(usedReads->count(readId)==0)
+	if(usedReads->count(readId)==0){
+		cout<<"Read never used"<<endl;
 		return false;
+	}
 	int lastPosition=(*usedReads)[readId];
 	char readStrand=annotation->readStrand;
-	if((*currentReadPositions)[lastPosition][readId].count(readStrand)==0)
+	if((*currentReadPositions)[lastPosition][readId].count(readStrand)==0){
+		
+		cout<<"Read never used"<<endl;
 		return false;
-
-	int distanceInRead=annotation->readPosition-(*currentReadPositions)[lastPosition][readId][readStrand];
+	}
+	int lastPositionInRead=(*currentReadPositions)[lastPosition][readId][readStrand];
+	int distanceInRead=annotation->readPosition-lastPositionInRead;
 	int distanceInPath=path->size()-2-lastPosition;
+/*
+	string sequence=m_sequenceData->at(readId)->getSeq();
+	if(readStrand=='R')
+		sequence=reverseComplement(sequence);
+
+	VERTEX_TYPE aNodeInRead=wordId(sequence.substr(lastPositionInRead+distanceInRead,m_wordSize).c_str());
+	VERTEX_TYPE lastNodeInPath=path->at(path->size()-1);
+	cout<<idToWord(aNodeInRead,m_wordSize)<<" "<<idToWord(lastNodeInPath,m_wordSize)<<endl;
+	if(aNodeInRead==lastNodeInPath)
+		return true;
+*/
+
 	if(beforeAdding)
 		distanceInPath++;
 	//(*m_cout)<<"R "<<distanceInRead<<" C "<<distanceInPath<<endl;

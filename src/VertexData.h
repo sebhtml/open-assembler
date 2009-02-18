@@ -30,6 +30,7 @@ using namespace std;
 class GraphData;
 
 class VertexData{
+	static vector<AnnotationElement> m_empty_vector;
 	// bit    nucleotide
 	// 0      A
 	// 1      T
@@ -45,10 +46,8 @@ class VertexData{
 	uint8_t m_parents;
 	uint32_t m_color;
 
-	vector<AnnotationElement> A_elements;
-	vector<AnnotationElement> T_elements;
-	vector<AnnotationElement> C_elements;
-	vector<AnnotationElement> G_elements;
+	uint8_t m_children;
+	map<char,vector<AnnotationElement> >*m_annotations;
 	
 public:
 	vector<VERTEX_TYPE> getChildren(VERTEX_TYPE prefix);
@@ -56,6 +55,7 @@ public:
 	vector<AnnotationElement>*getAnnotations(VERTEX_TYPE suffix);
 	void addAnnotation(VERTEX_TYPE suffix,uint32_t read,POSITION_TYPE position,uint8_t strand);
 	void addParent(VERTEX_TYPE a);
+	void addChild(VERTEX_TYPE a);
 	bool hasChild(VERTEX_TYPE suffix);
 	VertexData();
 	~VertexData();
@@ -65,6 +65,7 @@ public:
 	void setColor(uint32_t c);
 	void assemble();
 	bool IsAssembled();
+	bool NotTrivial(VERTEX_TYPE a);
 };
 
 #endif
