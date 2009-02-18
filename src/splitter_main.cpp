@@ -41,13 +41,13 @@ void applyColor(VERTEX_TYPE v2,GraphDataLight*graph,int color,int wordSize){
 		graph->get(v)->setColor(color);
 		vector<VERTEX_TYPE>parents=graph->get(v)->getParents(v,wordSize);
 		for(vector<VERTEX_TYPE>::iterator i=parents.begin();i!=parents.end();i++){
-			if(graph->get(*i)->getColor()==-1){
+			if(graph->get(*i)->getColor()!=color){
 				stackOfVertices.push(*i);
 			}
 		}
 		vector<VERTEX_TYPE>children=graph->get(v)->getChildren(v,wordSize);
 		for(vector<VERTEX_TYPE>::iterator i=children.begin();i!=children.end();i++){
-			if(graph->get(*i)->getColor()==-1){
+			if(graph->get(*i)->getColor()!=color){
 				stackOfVertices.push(*i);
 			}
 		}
@@ -188,11 +188,12 @@ int main(int argc,char*argv[]){
 		color++;
 	}
 	color--;
-	cout<<color<<" colors"<<endl;
+	//cout<<color<<" colors"<<endl;
 	map<int,int> colorSizes;
 	for(int i=0;i<graphNodes->size();i++){
 		colorSizes[graphNodeData->at(i).getColor()]++;
 	}
+	cout<<colorSizes.size()<<" colors"<<endl;
 	string partSizes=outputDirectory+"/ConnectedParts.txt";
 	ofstream aStreamForParts(partSizes.c_str());
 	for(map<int,int>::iterator i=colorSizes.begin();i!=colorSizes.end();i++){
@@ -220,37 +221,47 @@ int main(int argc,char*argv[]){
 		vector<Read*> reads;
 		Loader loader(&cout);
 		loader.load(inputFiles[i],&reads);
+		string baseName=inputFiles[i].substr(inputFiles[i].find_last_of("/")+1);
 		for(int j=0;j<reads.size();j++){
+			if(j%1000==0){
+				cout<<"Read: "<<j+1<<" / "<<reads.size()<<endl;
+			}
 			string sequence=reads.at(j)->getSeq();
-			string word=sequence.substr(0,wordSize);
-			if(!reads.at(j)->isValidDNA(word.c_str())){
-				cout<<"Invalid start"<<endl;
-				continue;
-			}
+			set<int> colorsForRead;
 			bool gotIt=false;
-			VERTEX_TYPE mer=DeBruijnAssembler::wordId(sequence.substr(0,wordSize).c_str());
-			VERTEX_TYPE revMer=DeBruijnAssembler::wordId(DeBruijnAssembler::reverseComplement(DeBruijnAssembler::idToWord(mer,wordSize)).c_str());
-			string baseName=inputFiles[i].substr(inputFiles[i].find_last_of("/")+1);
-			if(graphWithoutData.find(mer)&&colorSizes[graphWithoutData.get(mer)->getColor()]>=Threshold){
-				ostringstream file;
-				gotIt=true;
-				file<<outputDirectory<<"/"<<graphWithoutData.get(mer)->getColor()<<"/"<<baseName<<".fasta";				
-				FILE*fp=fopen(file.str().c_str(),"a+");
-				fprintf(fp,">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
-				fclose(fp);
-			}
-			if(graphWithoutData.find(revMer)&&colorSizes[graphWithoutData.get(revMer)->getColor()]>=Threshold){
-				ostringstream file;
-				file<<outputDirectory<<"/"<<graphWithoutData.get(revMer)->getColor()<<"/"<<baseName<<".fasta";
-				FILE*fp=fopen(file.str().c_str(),"a+");
-				gotIt=true;
-				fprintf(fp,">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
-				fclose(fp);
+			for(int k=0;k<sequence.length();k++){
+				string word=sequence.substr(k,wordSize);
+				if(word.length()!=wordSize)
+					continue;
+				if(!reads.at(j)->isValidDNA(word.c_str())){
+					//cout<<"Invalid start"<<endl;
+					continue;
+				}
+				VERTEX_TYPE mer=DeBruijnAssembler::wordId(word.c_str());
+				VERTEX_TYPE revMer=DeBruijnAssembler::wordId(DeBruijnAssembler::reverseComplement(word.c_str()).c_str());
+				if(graphWithoutData.find(mer)&&colorSizes[graphWithoutData.get(mer)->getColor()]>=Threshold){
+					colorsForRead.insert(graphWithoutData.get(mer)->getColor());
+					gotIt=true;
+				}
+				if(graphWithoutData.find(revMer)&&colorSizes[graphWithoutData.get(revMer)->getColor()]>=Threshold){
+					colorsForRead.insert(graphWithoutData.get(revMer)->getColor());
+					gotIt=true;
+				}
 			}
 			if(gotIt==false){
 				cout<<"Read is nowhere, "<<reads.at(j)->getId()<<endl;
 			}
+
+			for(set<int>::iterator colorIterator=colorsForRead.begin();colorIterator!=colorsForRead.end();colorIterator++){
+				ostringstream file;
+				file<<outputDirectory<<"/"<<*colorIterator<<"/"<<baseName<<".fasta";				
+				FILE*fp=fopen(file.str().c_str(),"a+");
+				fprintf(fp,">%s\n%s\n",reads.at(j)->getId(),reads.at(j)->getSeq());
+				fclose(fp);
+			}
 		}
+
+		cout<<"Read: "<<reads.size()<<" / "<<reads.size()<<endl;
 	}
 	cout<<endl;
 	cout<<"Done."<<endl;
