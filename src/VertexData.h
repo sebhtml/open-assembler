@@ -43,8 +43,6 @@ class VertexData{
 	bool m_isEliminated;
 	bool m_assembled;
 	uint8_t m_parents;
-	vector<int> m_distances;
-	vector<VERTEX_TYPE> m_kmer_apart;
 
 	vector<AnnotationElement> A_elements;
 	vector<AnnotationElement> T_elements;
@@ -55,10 +53,9 @@ public:
 	vector<VERTEX_TYPE> getChildren(VERTEX_TYPE prefix);
 	vector<VERTEX_TYPE> getParents(VERTEX_TYPE prefix,GraphData*m_data);
 	vector<AnnotationElement>*getAnnotations(VERTEX_TYPE suffix);
-	void addParent(VERTEX_TYPE parent);
 	void addAnnotation(VERTEX_TYPE suffix,uint32_t read,POSITION_TYPE position,uint8_t strand);
+	void addParent(VERTEX_TYPE a);
 	bool hasChild(VERTEX_TYPE suffix);
-	void addPaired(VERTEX_TYPE kmer_apart,int distance);
 	VertexData();
 	~VertexData();
 	bool IsEliminated();

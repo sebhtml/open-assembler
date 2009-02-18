@@ -20,17 +20,13 @@
 #include"BinarySearch.h"
 
 int BinarySearch(vector<VERTEX_TYPE>*a,VERTEX_TYPE b){
-	//cout<<"BinarySearch"<<endl;
 	int start=0;
 	int end=a->size()-1;
 	while(start<=end){
 		int mid=(start+end)/2;
-		//cout<<start<<" "<<middle<<" "<<end<<endl;
 		if(b<a->at(mid)){
-			//cout<<"lower"<<endl;
 			end=mid-1;
 		}else if(a->at(mid)<b){	
-			//cout<<"greater"<<endl;
 			start=mid+1;
 		}else{
 			return mid;

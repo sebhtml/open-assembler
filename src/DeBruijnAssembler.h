@@ -50,13 +50,9 @@ class DeBruijnAssembler{
 	int m_minimumCoverage;
 	int m_REPEAT_DETECTION;
 	int m_wordSize;
-	double m_threshold;
-	int m_Coverage_From_DepletionCurve;
 	bool m_pairedAvailable;
-	uint64_t m_buckets;
 	string m_pairedInfoFile;
 	bool m_DEBUG;
-	uint64_t m_solidMers;
 	//CustomMap<VertexData>*m_data;
 	GraphData m_data;
 

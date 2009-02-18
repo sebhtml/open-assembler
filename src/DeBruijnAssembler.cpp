@@ -63,7 +63,6 @@ DeBruijnAssembler::DeBruijnAssembler(ostream*m_cout){
 
 void DeBruijnAssembler::setWordSize(int k){
 	m_wordSize=k;
-	m_threshold=0.015;
 	m_pairedAvailable=false;
 	DeBruijnAssembler::m_WordSize=k;
 	m_minimumCoverage=5;
@@ -172,8 +171,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	vector<VERTEX_TYPE> solidMers=myList.elementsWithALeastCCoverage(m_minimumCoverage);
 	myList.clear();
 	cout<<"c-confident mers: "<<solidMers.size()<<", c="<<m_minimumCoverage<<endl;
-	m_solidMers=solidMers.size();
-	if(m_solidMers==0){
+	if(solidMers.size()==0){
 		m_cout<<"Error: mers are depleted..."<<endl;
 		exit(0);
 	}
@@ -230,7 +228,7 @@ void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
 	bool debug=m_DEBUG;
 	//debug=false;
 	bool useCache=false;
-	//useCache=true;
+	useCache=true;
 	bool writeGraphFile=useCache;
 	if(debug){
 		useCache=true;
@@ -242,18 +240,95 @@ void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
 	f.close();
 
 	if(useCache){
-		m_cout<<"Using cache information from "<<m_graphFile<<endl;
-		//load_graphFrom_file();
+		cout<<endl;
+		load_graphFrom_file();
 	}else{
 		build_From_Scratch(sequenceData);
 		if(writeGraphFile){
-			//writeGraph();
+			writeGraph();
 		}
 	}
 
 }
 
 
+void DeBruijnAssembler::load_graphFrom_file(){
+	cout<<"********** Reading graph file."<<endl;
+	cout<<endl;
+	ifstream f(m_graphFile.c_str());
+	string version;
+	string buffer;
+	f>>version>>buffer>>m_minimumCoverage>>buffer>>m_coverage_mean>>buffer>>m_REPEAT_DETECTION>>buffer;
+	int n;
+	cout<<"Version: "<<version<<endl;
+	cout<<"MinimumCoverage: "<<m_minimumCoverage<<endl;
+	cout<<"PeakCoverage: "<<m_coverage_mean<<endl;
+	cout<<"RepeatDetectionCoverage: "<<m_REPEAT_DETECTION<<endl;
+	f>>n;
+	cout<<"Vertices: "<<n<<endl;
+	for(int i=0;i<n;i++){
+		VERTEX_TYPE a;
+		f>>a;
+		m_data.add(a);
+	}
+	f>>buffer>>buffer;
+	for(int i=0;i<n;i++){
+		VERTEX_TYPE a;
+		int childrenCount;
+		f>>a>>childrenCount;
+		VertexData*aDataContainer=(m_data.get(a));
+		for(int j=0;j<childrenCount;j++){
+			VERTEX_TYPE b;
+			int nAnnotations;
+			f>>b>>nAnnotations;
+			m_data.get(b)->addParent(a);
+			for(int k=0;k<nAnnotations;k++){
+				uint32_t readId;
+				uint8_t readStrand;
+				uint16_t readPosition;
+				f>>readId>>readStrand>>readPosition;
+				aDataContainer->addAnnotation(b,readId,readPosition,readStrand);
+			}
+		}
+	}
+	f.close();
+}
+
+void DeBruijnAssembler::writeGraph(){
+	cout<<"********** Writing graph file."<<endl;
+
+	ofstream f(m_graphFile.c_str());
+	f<<"GraphFormatVersion1"<<endl;
+	f<<"MinimumCoverage "<<m_minimumCoverage<<endl;
+	f<<"PeakCoverage "<<m_coverage_mean<<endl;
+	f<<"RepeatDetectionCoverage "<<m_REPEAT_DETECTION<<endl;
+	
+	vector<VERTEX_TYPE>*nodes=m_data.getNodes();
+	f<<"Vertices: "<<nodes->size()<<endl;
+	for(vector<VERTEX_TYPE>::iterator i=nodes->begin();i!=nodes->end();i++){
+		f<<*i<<endl;
+	}
+
+	f<<"Data: "<<nodes->size()<<endl;
+	vector<VertexData>*theData=m_data.getNodeData();
+	
+	for(int i=0;i<nodes->size();i++){
+		VERTEX_TYPE prefix=nodes->at(i);
+		f<<prefix<<endl;
+		VertexData*prefixData=&(theData->at(i));
+		vector<VERTEX_TYPE>children=prefixData->getChildren(prefix);
+		f<<children.size()<<endl;
+		for(vector<VERTEX_TYPE>::iterator k=children.begin();k!=children.end();k++){
+			vector<AnnotationElement>*annotations=prefixData->getAnnotations(*k);
+			f<<*k<<" "<<annotations->size()<<endl;
+			for(vector<AnnotationElement>::iterator u=annotations->begin();u!=annotations->end();u++){
+				f<<(*u).readId<<" "<<(*u).readStrand<<" "<<(*u).readPosition<<endl;
+			}
+		}
+	}
+
+	f.close();
+}
 
 string DeBruijnAssembler::pathToDNA(vector<VERTEX_TYPE>*path){
 	ostringstream contigSequence;

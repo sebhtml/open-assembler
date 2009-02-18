@@ -169,10 +169,6 @@ vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix,GraphData*m_data){
 }
 
 
-void VertexData::addPaired(VERTEX_TYPE kmer_apart,int distance){
-	m_distances.push_back(distance);
-	m_kmer_apart.push_back(kmer_apart);
-}
 
 VertexData::~VertexData(){
 }
