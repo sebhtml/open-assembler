@@ -26,6 +26,7 @@
 #include"Read.h"
 #include"Loader.h"
 #include<map>
+#include<stack>
 #include<string>
 #include<stdlib.h>
 #include<queue>
@@ -33,22 +34,42 @@
 using namespace std;
 
 void applyColor(VERTEX_TYPE v2,GraphDataLight*graph,int color,int wordSize){
-	queue<VERTEX_TYPE> stackOfVertices;
+	stack<VERTEX_TYPE> stackOfVertices;
 	stackOfVertices.push(v2);
+	graph->get(v2)->setColor(color);
 	while(stackOfVertices.size()>0){
-		VERTEX_TYPE v=stackOfVertices.front();
+		VERTEX_TYPE v=stackOfVertices.top();
 		stackOfVertices.pop();
-		graph->get(v)->setColor(color);
-		vector<VERTEX_TYPE>parents=graph->get(v)->getParents(v,wordSize);
-		for(vector<VERTEX_TYPE>::iterator i=parents.begin();i!=parents.end();i++){
-			if(graph->get(*i)->getColor()!=color){
-				stackOfVertices.push(*i);
-			}
-		}
+
 		vector<VERTEX_TYPE>children=graph->get(v)->getChildren(v,wordSize);
 		for(vector<VERTEX_TYPE>::iterator i=children.begin();i!=children.end();i++){
-			if(graph->get(*i)->getColor()!=color){
+			if(graph->get(*i)->getColor()==-1){
+				graph->get(*i)->setColor(color);
 				stackOfVertices.push(*i);
+/*
+			}else if(graph->get(*i)->getColor()!=color){
+				cout<<"Another  color "<<graph->get(*i)->getColor()<<" current "<<color<<endl;
+				cout<<graph->get(v)->getParents(v,wordSize).size()<<" parents"<<endl;
+				cout<<graph->get(v)->getChildren(v,wordSize).size()<<" children"<<endl;
+				cout<<graph->get(*i)->getParents(*i,wordSize).size()<<" parents"<<endl;
+				cout<<graph->get(*i)->getChildren(*i,wordSize).size()<<" children"<<endl;
+*/
+			}
+		}
+
+		vector<VERTEX_TYPE>parents=graph->get(v)->getParents(v,wordSize);
+		for(vector<VERTEX_TYPE>::iterator i=parents.begin();i!=parents.end();i++){
+			if(graph->get(*i)->getColor()==-1){
+				graph->get(*i)->setColor(color);
+				stackOfVertices.push(*i);
+/*
+			}else if(graph->get(*i)->getColor()!=color){
+				cout<<"Another  color "<<graph->get(*i)->getColor()<<" current "<<color<<endl;
+				cout<<graph->get(v)->getParents(v,wordSize).size()<<" parents"<<endl;
+				cout<<graph->get(v)->getChildren(v,wordSize).size()<<" children"<<endl;
+				cout<<graph->get(*i)->getParents(*i,wordSize).size()<<" parents"<<endl;
+				cout<<graph->get(*i)->getChildren(*i,wordSize).size()<<" children"<<endl;
+*/
 			}
 		}
 	}
