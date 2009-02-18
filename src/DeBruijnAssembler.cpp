@@ -1104,6 +1104,7 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 
 			// the position is the first, or
 			// it is on a non-trivial node...
+			// TODO: remove the true
 			if(true||thisIsTheFirst||m_data.get(prefix)->NotTrivial(prefix)||m_data.get(suffix)->NotTrivial(prefix)){
 				m_data.get(prefix)->addAnnotation(suffix,readId,readPosition,strand);
 			}
