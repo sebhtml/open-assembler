@@ -507,7 +507,7 @@ void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 bool DeBruijnAssembler::DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VERTEX_TYPE b){
 	set<VERTEX_TYPE> stuffFromA;
 	set<VERTEX_TYPE> stuffFromB;
-	int maxDepth=50;
+	int maxDepth=m_wordSize+1;
 	visitVertices(a,&stuffFromA,maxDepth,false);
 	visitVertices(b,&stuffFromB,maxDepth,false);
 	for(set<VERTEX_TYPE>::iterator i=stuffFromA.begin();i!=stuffFromA.end();i++){
@@ -861,6 +861,7 @@ firstOne[m_wordSize-2-trailingHomoPolymerSize]==
 			}
 		}
 	}
+
 	VERTEX_TYPE prefix=path->at(path->size()-1);
 
 	if(foundBest==false){
