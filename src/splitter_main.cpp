@@ -98,11 +98,15 @@ int main(int argc,char*argv[]){
 	cout<<"********** Loading mers from files..."<<endl;
 	cout<<endl;
 	for(int i=0;i<inputFiles.size();i++){
+		cout<<endl;
 		cout<<"File: "<<i+1<<" / "<<inputFiles.size()<<endl;
 		vector<Read*> reads;
 		Loader loader(&cout);
 		loader.load(inputFiles[i],&reads);
 		for(int j=0;j<reads.size();j++){
+			if(j%10000==0){
+				cout<<"Read: "<<j+1<<" / "<<reads.size()<<endl;
+			}
 			vector<VERTEX_TYPE> mers=reads.at(j)->getHighQualityMers(wordSize);
 			for(int k=0;k<mers.size();k++){
 		/*
@@ -113,7 +117,10 @@ int main(int argc,char*argv[]){
 				myList.add(mers[k]);
 			}
 		}
+
+		cout<<"Read: "<<reads.size()<<" / "<<reads.size()<<endl;
 	}
+	cout<<endl;
 	myList.sort();
 
 
@@ -182,11 +189,16 @@ int main(int argc,char*argv[]){
 	vector<VERTEX_TYPE>*graphNodes=graphWithoutData.getNodes();
 	vector<LightVertex>*graphNodeData=graphWithoutData.getNodeData();
 	for(int i=0;i<graphNodes->size();i++){
+		if(i%1000==0){
+			cout<<"Vertex: "<<i+1<<" / "<<graphNodes->size()<<endl;
+		}
 		if(graphNodeData->at(i).getColor()!=-1)
 			continue;
 		applyColor(graphNodes->at(i),&graphWithoutData,color,wordSize);
 		color++;
 	}
+
+	cout<<"Vertex: "<<graphNodes->size()<<" / "<<graphNodes->size()<<endl;
 	color--;
 	//cout<<color<<" colors"<<endl;
 	map<int,int> colorSizes;
