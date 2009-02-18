@@ -92,6 +92,7 @@ class DeBruijnAssembler{
 
 	void writeContig_fasta(vector<VERTEX_TYPE>*path,ofstream*file,int i);
 	void writeContig_Amos(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);
+	int DFS_watch(VERTEX_TYPE a,int color);
 
 	void writeContig_Coverage(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);
 

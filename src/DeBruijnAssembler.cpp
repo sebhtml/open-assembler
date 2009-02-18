@@ -21,6 +21,7 @@
 #include<cmath>
 #include<cstdlib>
 #include<map>
+#include<stack>
 #include<queue>
 #include"BinarySearch.h"
 #include"SortedList.h"
@@ -426,10 +427,55 @@ void DeBruijnAssembler::setAssemblyDirectory(string assemblyDirectory){
 }
 
 
+int DeBruijnAssembler::DFS_watch(VERTEX_TYPE a,int color){
+	stack<VERTEX_TYPE> theQueue;
+	theQueue.push(a);
+	m_data.get(a)->setColor(color);
+	int numberOfVertices=1;
+	while(theQueue.size()>0){
+		//cout<<theQueue.size()<<endl;
+		VERTEX_TYPE b=theQueue.top();
+		theQueue.pop();
+		vector<VERTEX_TYPE> parents=m_data.get(b)->getParents(b,NULL);
+		if(parents.size()==1){
+			VERTEX_TYPE parent=parents[0];
+			VertexData*vData=m_data.get(parent);
+			if(vData->getColor()==-1&&vData->getParents(parent,NULL).size()<=1&&vData->getChildren(parent).size()<=1){
+				vData->setColor(color);
+				numberOfVertices++;
+				theQueue.push(parent);
+			}
+		}
 
+
+		vector<VERTEX_TYPE> children=m_data.get(b)->getChildren(b);
+		if(children.size()==1){
+			VERTEX_TYPE child=children[0];
+			VertexData*vData=m_data.get(child);
+			if(vData->getColor()==-1&&vData->getParents(child,NULL).size()<=1&&vData->getChildren(child).size()<=1){
+				vData->setColor(color);
+				numberOfVertices++;
+				theQueue.push(child);
+			}
+		}
+	}
+	return numberOfVertices;
+}
 
 
 void DeBruijnAssembler::Walk_In_GRAPH(){
+	cout<<endl;
+	(*m_cout)<<"********* Simplifying the graph"<<endl;
+	cout<<endl;
+	vector<VERTEX_TYPE>*theNodes=m_data.getNodes();
+	int color=0;
+	for(vector<VERTEX_TYPE>::iterator i=theNodes->begin();i!=theNodes->end();i++){
+		if(m_data.get(*i)->getColor()==-1){
+			color++;
+			cout<<color<<" : "<<DFS_watch(*i,color)<<endl;
+		}
+	}
+
 	(*m_cout)<<endl;
 	(*m_cout)<<"********** Removing spurious edges"<<endl;
 	bool removing=true;

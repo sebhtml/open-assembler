@@ -43,6 +43,7 @@ class VertexData{
 	bool m_isEliminated;
 	bool m_assembled;
 	uint8_t m_parents;
+	uint32_t m_color;
 
 	vector<AnnotationElement> A_elements;
 	vector<AnnotationElement> T_elements;
@@ -60,6 +61,8 @@ public:
 	~VertexData();
 	bool IsEliminated();
 	void eliminateNow();
+	uint32_t getColor();
+	void setColor(uint32_t c);
 	void assemble();
 	bool IsAssembled();
 };

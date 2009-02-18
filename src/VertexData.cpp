@@ -31,6 +31,7 @@ VertexData::VertexData(){
 	m_isEliminated=false;
 	m_assembled=false;
 	m_parents=0;
+	m_color=-1;
 }
 
 
@@ -187,4 +188,13 @@ void VertexData::assemble(){
 
 bool VertexData::IsAssembled(){
 	return m_assembled;
+}
+
+
+uint32_t VertexData::getColor(){
+	return m_color;
+}
+
+void VertexData::setColor(uint32_t c){
+	m_color=c;
 }
