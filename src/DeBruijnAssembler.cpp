@@ -283,12 +283,19 @@ void DeBruijnAssembler::load_graphFrom_file(){
 	f>>n;
 	cout<<"Vertices: "<<n<<endl;
 	for(int i=0;i<n;i++){
+		if(i%100000==0){
+			cout<<"Loading vertices: "<<i<<" / "<<n<<endl;
+		}
 		VERTEX_TYPE a;
 		f>>a;
 		m_data.add(a);
 	}
+	cout<<"Loading vertices: "<<n<<" / "<<n<<endl;
 	f>>buffer>>buffer;
 	for(int i=0;i<n;i++){
+		if(i%100000==0){
+			cout<<"Loading edges: "<<i<<" / "<<n<<endl;
+		}
 		VERTEX_TYPE a;
 		int childrenCount;
 		f>>a>>childrenCount;
@@ -298,6 +305,7 @@ void DeBruijnAssembler::load_graphFrom_file(){
 			int nAnnotations;
 			f>>b>>nAnnotations;
 			m_data.get(b)->addParent(a);
+			m_data.get(a)->addChild(b);
 			for(int k=0;k<nAnnotations;k++){
 				uint32_t readId;
 				uint8_t readStrand;
@@ -307,6 +315,8 @@ void DeBruijnAssembler::load_graphFrom_file(){
 			}
 		}
 	}
+
+	cout<<"Loading edges: "<<n<<" / "<<n<<endl;
 	f.close();
 }
 
@@ -321,14 +331,24 @@ void DeBruijnAssembler::writeGraph(){
 	
 	vector<VERTEX_TYPE>*nodes=m_data.getNodes();
 	f<<"Vertices: "<<nodes->size()<<endl;
+	int k=0;
 	for(vector<VERTEX_TYPE>::iterator i=nodes->begin();i!=nodes->end();i++){
+		if(k%100000==0){
+			cout<<"Vertices: "<<k<<" / "<<nodes->size()<<endl;
+		}
 		f<<*i<<endl;
+		k++;
 	}
 
+	cout<<"Vertices: "<<nodes->size()<<" / "<<nodes->size()<<endl;
 	f<<"Data: "<<nodes->size()<<endl;
 	vector<VertexData>*theData=m_data.getNodeData();
-	
+	k=0;
 	for(int i=0;i<nodes->size();i++){
+		if(k%100000==0){
+			cout<<"Edges: "<<k<<" / "<<nodes->size()<<endl;
+		}
+		k++;
 		VERTEX_TYPE prefix=nodes->at(i);
 		f<<prefix<<endl;
 		VertexData*prefixData=&(theData->at(i));
@@ -344,7 +364,9 @@ void DeBruijnAssembler::writeGraph(){
 			}
 		}
 	}
+	cout<<"Edges: "<<nodes->size()<<" / "<<nodes->size()<<endl;
 
+	f<<"Data: "<<nodes->size()<<endl;
 	f.close();
 }
 
