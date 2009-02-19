@@ -283,7 +283,7 @@ void DeBruijnAssembler::load_graphFrom_file(){
 	f>>n;
 	cout<<"Vertices: "<<n<<endl;
 	for(int i=0;i<n;i++){
-		if(i%100000==0){
+		if(i%10000000==0){
 			cout<<"Loading vertices: "<<i<<" / "<<n<<endl;
 		}
 		VERTEX_TYPE a;
