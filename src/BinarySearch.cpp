@@ -19,14 +19,14 @@
 
 #include"BinarySearch.h"
 
-int BinarySearch(vector<VERTEX_TYPE>*a,VERTEX_TYPE b){
+int BinarySearch(uint64_t*a,uint64_t b,int c){
 	int start=0;
-	int end=a->size()-1;
+	int end=c-1;
 	while(start<=end){
 		int mid=(start+end)/2;
-		if(b<a->at(mid)){
+		if(b<a[(mid)]){
 			end=mid-1;
-		}else if(a->at(mid)<b){	
+		}else if(a[mid]<b){	
 			start=mid+1;
 		}else{
 			return mid;

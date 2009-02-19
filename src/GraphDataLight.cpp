@@ -29,7 +29,7 @@ bool GraphDataLight::find(VERTEX_TYPE a){
 }
 
 LightVertex*GraphDataLight::get(VERTEX_TYPE a){
-	int index=BinarySearch(&m_nodes,a);
+	/*int index=BinarySearch(&m_nodes,a);*/
 	if(index==-1){
 		cout<<"Error, not found (should not happen...)"<<endl;
 		exit(0);

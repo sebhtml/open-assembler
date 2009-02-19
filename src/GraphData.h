@@ -28,14 +28,19 @@ using namespace std;
 
 
 class GraphData{
+	int m_size;
 	vector<VERTEX_TYPE> m_nodes;
-	vector<VertexData> m_node_data;
+	VertexData*m_node_data;
+	VERTEX_TYPE*m_node_ptr;
 public:
+	GraphData();
+	~GraphData();
 	VertexData*get(VERTEX_TYPE a);
-	vector<VERTEX_TYPE>*getNodes();
-	vector<VertexData>*getNodeData();
+	VERTEX_TYPE*getNodes();
+	VertexData*getNodeData();
 	int size();
 	void add(VERTEX_TYPE a);
+	void makeMemory();
 };
 
 #endif

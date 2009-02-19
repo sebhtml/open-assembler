@@ -199,6 +199,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	}
 	cout<<nodes.size()<<" vertices"<<endl;
 	cout<<endl;
+	m_data.makeMemory();
 
 	m_cout<<"********** Creating edges..."<<endl;
 	cout<<endl;
@@ -216,11 +217,15 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 
 	m_cout<<"********** Indexing solid mers in reads..."<<endl; // <-------
 	cout<<endl;
+	VERTEX_TYPE*solidMersPTR=new VERTEX_TYPE[solidMers.size()];
+	for(int i=0;i<solidMers.size();i++)
+		solidMersPTR[i]=solidMers[i];
+
 	for(int readId=0;readId<(int)sequenceData->size();readId++){
 		if(readId%10000==0)
 			m_cout<<"Reads: "<<readId<<" / "<<sequenceData->size()<<endl;
-		indexReadStrand(readId,'F',sequenceData,&solidMers);
-		indexReadStrand(readId,'R',sequenceData,&solidMers);
+		indexReadStrand(readId,'F',sequenceData,solidMersPTR,solidMers.size());
+		indexReadStrand(readId,'R',sequenceData,solidMersPTR,solidMers.size());
 	
 	}
 	m_cout<<"Reads: "<<sequenceData->size()<<" / "<<sequenceData->size()<<endl;
@@ -291,6 +296,7 @@ void DeBruijnAssembler::load_graphFrom_file(){
 		m_data.add(a);
 	}
 	cout<<"Loading vertices: "<<n<<" / "<<n<<endl;
+	m_data.makeMemory();
 	f>>buffer>>buffer;
 	for(int i=0;i<n;i++){
 		if(i%100000==0){
@@ -329,29 +335,30 @@ void DeBruijnAssembler::writeGraph(){
 	f<<"PeakCoverage "<<m_coverage_mean<<"\n";
 	f<<"RepeatDetectionCoverage "<<m_REPEAT_DETECTION<<"\n";
 	
-	vector<VERTEX_TYPE>*nodes=m_data.getNodes();
-	f<<"Vertices: "<<nodes->size()<<"\n";
+	VERTEX_TYPE*nodes=m_data.getNodes();
+	f<<"Vertices: "<<m_data.size()<<"\n";
 	int k=0;
-	for(vector<VERTEX_TYPE>::iterator i=nodes->begin();i!=nodes->end();i++){
+	//for(vector<VERTEX_TYPE>::iterator i=nodes->begin();i!=nodes->end();i++){
+	for(int i=0;i<m_data.size();i++){
 		if(k%100000==0){
-			cout<<"Vertices: "<<k<<" / "<<nodes->size()<<"\n";
+			cout<<"Vertices: "<<k<<" / "<<m_data.size()<<"\n";
 		}
-		f<<*i<<"\n";
+		f<<nodes[i]<<"\n";
 		k++;
 	}
 
-	cout<<"Vertices: "<<nodes->size()<<" / "<<nodes->size()<<"\n";
-	f<<"Data: "<<nodes->size()<<"\n";
-	vector<VertexData>*theData=m_data.getNodeData();
+	cout<<"Vertices: "<<m_data.size()<<" / "<<m_data.size()<<"\n";
+	f<<"Data: "<<m_data.size()<<"\n";
+	VertexData*theData=m_data.getNodeData();
 	k=0;
-	for(int i=0;i<nodes->size();i++){
+	for(int i=0;i<m_data.size();i++){
 		if(k%100000==0){
-			cout<<"Edges: "<<k<<" / "<<nodes->size()<<endl;
+			cout<<"Edges: "<<k<<" / "<<m_data.size()<<endl;
 		}
 		k++;
-		VERTEX_TYPE prefix=nodes->at(i);
+		VERTEX_TYPE prefix=nodes[(i)];
 		f<<prefix<<"\n";
-		VertexData*prefixData=&(theData->at(i));
+		VertexData*prefixData=&(theData[(i)]);
 		vector<VERTEX_TYPE>children=prefixData->getChildren(prefix);
 		f<<children.size()<<"\n";
 		for(vector<VERTEX_TYPE>::iterator k=children.begin();k!=children.end();k++){
@@ -364,9 +371,9 @@ void DeBruijnAssembler::writeGraph(){
 			}
 		}
 	}
-	cout<<"Edges: "<<nodes->size()<<" / "<<nodes->size()<<endl;
+	cout<<"Edges: "<<m_data.size()<<" / "<<m_data.size()<<endl;
 
-	cout<<"Data: "<<nodes->size()<<endl;
+	cout<<"Data: "<<m_data.size()<<endl;
 	f.close();
 }
 
@@ -506,12 +513,12 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	cout<<endl;
 	(*m_cout)<<"********* Simplifying the graph"<<endl;
 	cout<<endl;
-	vector<VERTEX_TYPE>*theNodes=m_data.getNodes();
+	VERTEX_TYPE*theNodes=m_data.getNodes();
 	int color=0;
-	for(vector<VERTEX_TYPE>::iterator i=theNodes->begin();i!=theNodes->end();i++){
-		if(m_data.get(*i)->getColor()==-1){
+	for(int i=0;i<m_data.size();i++){
+		if(m_data.get(theNodes[i])->getColor()==-1){
 			color++;
-			int count=DFS_watch(*i,color);
+			int count=DFS_watch(theNodes[i],color);
 			if(count>=100){
 				cout<<color<<" : "<<count<<endl;
 			}
@@ -524,12 +531,12 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	int spuriousRemoval=0;
 	int id=0;
 	cout<<endl;
-	vector<VERTEX_TYPE>*nodes=m_data.getNodes();
-	vector<VertexData>*nodeData=m_data.getNodeData();
-	for(int myDataIterator=0;myDataIterator<nodes->size();myDataIterator++){
+	VERTEX_TYPE*nodes=m_data.getNodes();
+	VertexData*nodeData=m_data.getNodeData();
+	for(int myDataIterator=0;myDataIterator<m_data.size();myDataIterator++){
 	//for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
-		VERTEX_TYPE prefix=nodes->at(myDataIterator);
-		VertexData*nodeDataInstance=&(nodeData->at(myDataIterator));
+		VERTEX_TYPE prefix=nodes[(myDataIterator)];
+		VertexData*nodeDataInstance=&(nodeData[myDataIterator]);
 		if(nodeDataInstance->IsEliminated())
 			continue;
 		if(id%100000==0){
@@ -563,12 +570,12 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	cout<<endl;
 	vector<VERTEX_TYPE> withoutParents;
 	//for(MAP_TYPE<VERTEX_TYPE,MAP_TYPE<VERTEX_TYPE,vector<int> > >::iterator i=m_graph.begin();i!=m_graph.end();i++){
-	for(int myDataIterator=0;myDataIterator<nodes->size();myDataIterator++){
-		VERTEX_TYPE prefix=nodes->at(myDataIterator);
+	for(int myDataIterator=0;myDataIterator<m_data.size();myDataIterator++){
+		VERTEX_TYPE prefix=nodes[(myDataIterator)];
 		
-		if(nodeData->at(myDataIterator).IsEliminated())
+		if(nodeData[(myDataIterator)].IsEliminated())
 			continue;
-		vector<VERTEX_TYPE> theParents=nodeData->at(myDataIterator).getParents(prefix,&m_data);
+		vector<VERTEX_TYPE> theParents=nodeData[(myDataIterator)].getParents(prefix,&m_data);
 		if(theParents.size()==0){
 			withoutParents.push_back(prefix);
 		}
@@ -1097,7 +1104,7 @@ void DeBruijnAssembler::setMinimumCoverage(string coverage){
 	m_minimumCoverageParameter=coverage;
 }
 
-void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData,vector<VERTEX_TYPE>*solidMers){
+void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData,VERTEX_TYPE*solidMers,int m_size){
 	Read*read=sequenceData->at(readId);
 	string sequence=read->getSeq();
 
@@ -1112,7 +1119,7 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 		}
 		myWord[m_wordSize+1]='\0';
 		if(read->isValidDNA(myWord)
-		&&BinarySearch(solidMers,wordId(myWord))!=-1){
+		&&BinarySearch(solidMers,wordId(myWord),m_size)!=-1){
 			bool thisIsTheFirst=false;
 			if(foundGoodHit==false){
 				foundGoodHit=true;

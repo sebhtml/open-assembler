@@ -24,28 +24,43 @@
 using namespace std;
 
 VertexData*GraphData::get(VERTEX_TYPE a){
-	int index=BinarySearch(&m_nodes,a);
+	int index=BinarySearch(m_node_ptr,a,m_size);
 	if(index==-1){
 		cout<<"Error, not found (should not happen...)"<<endl;
 		exit(0);
 	}
-	return &(m_node_data.at(index));
+	return &(m_node_data[index]);
 }
 
-vector<VERTEX_TYPE>*GraphData::getNodes(){
-	return &m_nodes;
+VERTEX_TYPE*GraphData::getNodes(){
+	return m_node_ptr;
 }
 
-vector<VertexData>*GraphData::getNodeData(){
-	return &m_node_data;
+VertexData*GraphData::getNodeData(){
+	return m_node_data;
 }
 
 int GraphData::size(){
-	return m_nodes.size();
+	return m_size;
 }
 
 void GraphData::add(VERTEX_TYPE a){
-	VertexData b;
 	m_nodes.push_back(a);
-	m_node_data.push_back(b);
+}
+
+void GraphData::makeMemory(){
+	m_size=m_nodes.size();
+	m_node_ptr=new VERTEX_TYPE[m_size];
+	m_node_data=new VertexData[m_size];
+	for(int i=0;i<m_size;i++){
+		m_node_ptr[i]=m_nodes[i];
+	}
+	m_nodes.clear();
+}
+
+GraphData::GraphData(){
+}
+GraphData::~GraphData(){
+	delete m_node_ptr;
+	delete m_node_data;
 }

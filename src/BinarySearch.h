@@ -17,8 +17,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include<vector>
-#include"Read.h"
-using namespace std;
+#include<stdint.h>
 
-int BinarySearch(vector<VERTEX_TYPE>*a,VERTEX_TYPE b);
+int BinarySearch(uint64_t*a,uint64_t b,int c);
