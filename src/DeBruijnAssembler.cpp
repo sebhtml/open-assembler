@@ -1040,7 +1040,8 @@ firstOne[m_wordSize-2-trailingHomoPolymerSize]==
 		}
 	}else{
 		for(int i=0;i<children.size();i++){
-			if(children[i]!=best&&newSources!=NULL&&!DETECT_BUBBLE(path,children[i],best)){
+			if(children[i]!=best&&newSources!=NULL&&coverageOfEdges[children[i]]<m_REPEAT_DETECTION&&
+				!DETECT_BUBBLE(path,children[i],best)){
 				VERTEX_TYPE dataVertex=children[i];
 				int nParents=m_data.get(dataVertex)->getParents(dataVertex,NULL).size();
 				if(nParents>1||
