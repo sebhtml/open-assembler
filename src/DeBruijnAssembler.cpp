@@ -1281,14 +1281,11 @@ bool DeBruijnAssembler::is_d_Threading(AnnotationElement*annotation,vector<map<i
 
 	int readId=annotation->readId;
 	if(usedReads->count(readId)==0){
-		cout<<"Read never used"<<endl;
 		return false;
 	}
 	int lastPosition=(*usedReads)[readId];
 	char readStrand=annotation->readStrand;
 	if((*currentReadPositions)[lastPosition][readId].count(readStrand)==0){
-		
-		cout<<"Read never used"<<endl;
 		return false;
 	}
 	int lastPositionInRead=(*currentReadPositions)[lastPosition][readId][readStrand];
