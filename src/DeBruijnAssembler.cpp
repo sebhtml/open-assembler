@@ -525,14 +525,31 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		}
 	}
 
+	cout<<endl;
+	(*m_cout)<<"********* Inspecting the graph"<<endl;
+	map<int,map<int,int> > stats_parents_children;
+	for(int i=0;i<m_data.size();i++){
+		VERTEX_TYPE vertex=theNodes[i];
+		VertexData*dataNode=m_data.get(vertex);
+		stats_parents_children[dataNode->getParents(vertex,NULL).size()][dataNode->getChildren(vertex).size()]++;
+	}
+
+	for(map<int,map<int,int> >::iterator i=stats_parents_children.begin();i!=stats_parents_children.end();i++){
+		for(map<int,int>::iterator j=i->second.begin();j!=i->second.end();j++){
+			cout<<i->first<<" parents, "<<j->first<<" children: "<<j->second<<" vertices"<<endl;
+		}
+	}
+
+
+	VERTEX_TYPE*nodes=m_data.getNodes();
+	VertexData*nodeData=m_data.getNodeData();
+/*
 	(*m_cout)<<endl;
 	(*m_cout)<<"********** Removing spurious edges"<<endl;
 	bool removing=true;
 	int spuriousRemoval=0;
 	int id=0;
 	cout<<endl;
-	VERTEX_TYPE*nodes=m_data.getNodes();
-	VertexData*nodeData=m_data.getNodeData();
 	for(int myDataIterator=0;myDataIterator<m_data.size();myDataIterator++){
 	//for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
 		VERTEX_TYPE prefix=nodes[(myDataIterator)];
@@ -566,6 +583,8 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	cout<<id+1<<" / "<<m_data.size()<<endl;
 	(*m_cout)<<"Removed "<<spuriousRemoval<<" edges"<<endl;
 	cout<<endl;
+*/
+
 	(*m_cout)<<"********** Collecting sources..."<<endl;
 	cout<<endl;
 	vector<VERTEX_TYPE> withoutParents;

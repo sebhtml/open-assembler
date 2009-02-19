@@ -54,18 +54,15 @@ void VertexData::addAnnotation(VERTEX_TYPE suffix,uint32_t read,POSITION_TYPE po
 }
 
 void VertexData::addChild(VERTEX_TYPE child){
-	string a=DeBruijnAssembler::idToWord(child,DeBruijnAssembler::m_WordSize);
-	char symbol=a[DeBruijnAssembler::m_WordSize-1];
-	int position=0;
-	if(symbol=='A'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_A;
-	}else if(symbol=='T'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_T;
-	}else if(symbol=='C'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_C;
-	}else if(symbol=='G'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_G;
-	}
+	//string a=DeBruijnAssembler::idToWord(child,DeBruijnAssembler::m_WordSize);
+	//char symbol=a[DeBruijnAssembler::m_WordSize-1];
+	//cout<<symbol<<endl;
+	//cout<<hex<<child<<endl;
+	child=child<<(62-DeBruijnAssembler::m_WordSize-DeBruijnAssembler::m_WordSize);
+	child=child>>62;
+	//cout<<hex<<child<<endl;
+	//cout<<dec;
+	int position=child;
 	uint8_t toAdd=1;
 	toAdd=toAdd<<position;
 	m_children=m_children|toAdd;
@@ -75,18 +72,16 @@ void VertexData::addChild(VERTEX_TYPE child){
 
 
 void VertexData::addParent(VERTEX_TYPE parent){
-	string a=DeBruijnAssembler::idToWord(parent,DeBruijnAssembler::m_WordSize);
-	char symbol=a[0];
-	int position=0;
-	if(symbol=='A'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_A;
-	}else if(symbol=='T'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_T;
-	}else if(symbol=='C'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_C;
-	}else if(symbol=='G'){
-		position=DeBruijnAssembler::m_NUCLEOTIDE_G;
-	}
+	//string a=DeBruijnAssembler::idToWord(parent,DeBruijnAssembler::m_WordSize);
+	//char symbol=a[0];
+	//cout<<"Parent "<<parent<<endl;
+	//cout<<hex<<parent<<endl;
+	parent=parent<<60;
+	//cout<<hex<<parent<<endl;
+	parent=parent>>62;
+	//cout<<hex<<parent<<endl;
+	int position=parent;
+	//cout<<symbol<<" "<<position<<endl;
 	uint8_t toAdd=1;
 	toAdd=toAdd<<position;
 	m_parents=m_parents|toAdd;
