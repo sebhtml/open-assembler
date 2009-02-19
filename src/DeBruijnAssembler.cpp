@@ -511,7 +511,10 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	for(vector<VERTEX_TYPE>::iterator i=theNodes->begin();i!=theNodes->end();i++){
 		if(m_data.get(*i)->getColor()==-1){
 			color++;
-			//cout<<color<<" : "<<DFS_watch(*i,color)<<endl;
+			int count=DFS_watch(*i,color);
+			if(count>=100){
+				cout<<color<<" : "<<count<<endl;
+			}
 		}
 	}
 
