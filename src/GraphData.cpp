@@ -59,8 +59,16 @@ void GraphData::makeMemory(){
 }
 
 GraphData::GraphData(){
+	m_node_ptr=NULL;
+	m_node_data=NULL;
 }
 GraphData::~GraphData(){
-	delete m_node_ptr;
-	delete m_node_data;
+	if(m_node_ptr!=NULL){
+		delete [] m_node_ptr;
+		m_node_ptr=NULL;
+	}
+	if(m_node_data!=NULL){
+		delete [] m_node_data;
+		m_node_data=NULL;
+	}
 }
