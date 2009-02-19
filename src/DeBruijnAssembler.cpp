@@ -324,24 +324,24 @@ void DeBruijnAssembler::writeGraph(){
 	cout<<"********** Writing graph file."<<endl;
 
 	ofstream f(m_graphFile.c_str());
-	f<<"GraphFormatVersion1"<<endl;
-	f<<"MinimumCoverage "<<m_minimumCoverage<<endl;
-	f<<"PeakCoverage "<<m_coverage_mean<<endl;
-	f<<"RepeatDetectionCoverage "<<m_REPEAT_DETECTION<<endl;
+	f<<"GraphFormatVersion1"<<"\n";
+	f<<"MinimumCoverage "<<m_minimumCoverage<<"\n";
+	f<<"PeakCoverage "<<m_coverage_mean<<"\n";
+	f<<"RepeatDetectionCoverage "<<m_REPEAT_DETECTION<<"\n";
 	
 	vector<VERTEX_TYPE>*nodes=m_data.getNodes();
-	f<<"Vertices: "<<nodes->size()<<endl;
+	f<<"Vertices: "<<nodes->size()<<"\n";
 	int k=0;
 	for(vector<VERTEX_TYPE>::iterator i=nodes->begin();i!=nodes->end();i++){
 		if(k%100000==0){
-			cout<<"Vertices: "<<k<<" / "<<nodes->size()<<endl;
+			cout<<"Vertices: "<<k<<" / "<<nodes->size()<<"\n";
 		}
-		f<<*i<<endl;
+		f<<*i<<"\n";
 		k++;
 	}
 
-	cout<<"Vertices: "<<nodes->size()<<" / "<<nodes->size()<<endl;
-	f<<"Data: "<<nodes->size()<<endl;
+	cout<<"Vertices: "<<nodes->size()<<" / "<<nodes->size()<<"\n";
+	f<<"Data: "<<nodes->size()<<"\n";
 	vector<VertexData>*theData=m_data.getNodeData();
 	k=0;
 	for(int i=0;i<nodes->size();i++){
@@ -350,23 +350,23 @@ void DeBruijnAssembler::writeGraph(){
 		}
 		k++;
 		VERTEX_TYPE prefix=nodes->at(i);
-		f<<prefix<<endl;
+		f<<prefix<<"\n";
 		VertexData*prefixData=&(theData->at(i));
 		vector<VERTEX_TYPE>children=prefixData->getChildren(prefix);
-		f<<children.size()<<endl;
+		f<<children.size()<<"\n";
 		for(vector<VERTEX_TYPE>::iterator k=children.begin();k!=children.end();k++){
 			vector<AnnotationElement>*annotations=prefixData->getAnnotations(*k);
 			if(annotations!=NULL){
-				f<<*k<<" "<<annotations->size()<<endl;
+				f<<*k<<" "<<annotations->size()<<"\n";
 				for(vector<AnnotationElement>::iterator u=annotations->begin();u!=annotations->end();u++){
-					f<<(*u).readId<<" "<<(*u).readStrand<<" "<<(*u).readPosition<<endl;
+					f<<(*u).readId<<" "<<(*u).readStrand<<" "<<(*u).readPosition<<"\n";
 				}
 			}
 		}
 	}
 	cout<<"Edges: "<<nodes->size()<<" / "<<nodes->size()<<endl;
 
-	f<<"Data: "<<nodes->size()<<endl;
+	cout<<"Data: "<<nodes->size()<<endl;
 	f.close();
 }
 
