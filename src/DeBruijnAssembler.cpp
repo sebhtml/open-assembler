@@ -512,9 +512,9 @@ int DeBruijnAssembler::DFS_watch(VERTEX_TYPE a,int color){
 
 void DeBruijnAssembler::Walk_In_GRAPH(){
 	cout<<endl;
+	VERTEX_TYPE*theNodes=m_data.getNodes();
 	(*m_cout)<<"********* Simplifying the graph"<<endl;
 	cout<<endl;
-	VERTEX_TYPE*theNodes=m_data.getNodes();
 	int color=0;
 	for(int i=0;i<m_data.size();i++){
 		if(i%10000==0){
@@ -534,10 +534,15 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	(*m_cout)<<"********* Inspecting the graph"<<endl;
 	map<int,map<int,int> > stats_parents_children;
 	for(int i=0;i<m_data.size();i++){
+		if(i%10000==0){
+			cout<<i<<" / "<<m_data.size()<<endl;
+		}
 		VERTEX_TYPE vertex=theNodes[i];
 		VertexData*dataNode=m_data.get(vertex);
 		stats_parents_children[dataNode->getParents(vertex,NULL).size()][dataNode->getChildren(vertex).size()]++;
 	}
+
+	cout<<m_data.size()<<" / "<<m_data.size()<<endl;
 
 	for(map<int,map<int,int> >::iterator i=stats_parents_children.begin();i!=stats_parents_children.end();i++){
 		for(map<int,int>::iterator j=i->second.begin();j!=i->second.end();j++){
