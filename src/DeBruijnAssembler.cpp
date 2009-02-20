@@ -802,7 +802,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 
 		prefixNextVertices=nextVertices(path,currentReadPositions,newSources,&usedReads);
 		if(added==0){
-			(*m_cout)<<"Stop!, reason: No read threaded."<<endl;
+			(*m_cout)<<"Stop!, reason: No read threaded, "<<annotations->size()<<endl;
 			break;
 		}
 		if(added>1)
