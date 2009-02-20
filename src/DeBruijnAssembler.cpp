@@ -760,7 +760,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			(*m_cout)<<path->size()<<" progress."<<endl;
 		//(*m_cout)<<"Threading.. reads "<<endl;
 		//(*m_cout)<<"Coverage mean: "<<coverageMean<<" "<<annotations->size()<<endl; 
-		if(annotations->size()>=m_REPEAT_DETECTION){
+		if(annotations->size()>=m_REPEAT_DETECTION&&m_DEBUG){
 			(*m_cout)<<"Coverage: "<<annotations->size()<<", refusing to start threading reads!"<<endl;
 		}
 		if(annotations->size()>=m_REPEAT_DETECTION){
@@ -838,7 +838,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 	}
 	*/
 	if(!debug_print){
-		//return;
+		return;
 	}
 	//return;
 	if(children.size()>0&&path->size()>=1){
