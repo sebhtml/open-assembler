@@ -297,6 +297,7 @@ void DeBruijnAssembler::load_graphFrom_file(){
 	}
 	cout<<"Loading vertices: "<<n<<" / "<<n<<endl;
 	m_data.makeMemory();
+	VertexData*dataPointer=m_data.getNodeData();
 	f>>buffer>>buffer;
 	for(int i=0;i<n;i++){
 		if(i%100000==0){
@@ -305,7 +306,7 @@ void DeBruijnAssembler::load_graphFrom_file(){
 		VERTEX_TYPE a;
 		int childrenCount;
 		f>>a>>childrenCount;
-		VertexData*aDataContainer=(m_data.get(a));
+		VertexData*aDataContainer=&(dataPointer[i]);
 		for(int j=0;j<childrenCount;j++){
 			VERTEX_TYPE b;
 			int nAnnotations;
@@ -516,14 +517,18 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	VERTEX_TYPE*theNodes=m_data.getNodes();
 	int color=0;
 	for(int i=0;i<m_data.size();i++){
+		if(i%10000==0){
+			cout<<i<<" / "<<m_data.size()<<endl;
+		}
 		if(m_data.get(theNodes[i])->getColor()==-1){
 			color++;
 			int count=DFS_watch(theNodes[i],color);
 			if(count>=100){
-				cout<<color<<" : "<<count<<endl;
+				//cout<<color<<" : "<<count<<endl;
 			}
 		}
 	}
+	cout<<m_data.size()<<" / "<<m_data.size()<<endl;
 
 	cout<<endl;
 	(*m_cout)<<"********* Inspecting the graph"<<endl;
@@ -694,6 +699,7 @@ void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 
 
 bool DeBruijnAssembler::DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VERTEX_TYPE b){
+	return false;
 	set<VERTEX_TYPE> stuffFromA;
 	set<VERTEX_TYPE> stuffFromB;
 	int maxDepth=m_wordSize+1;
