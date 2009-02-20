@@ -286,9 +286,8 @@ void DeBruijnAssembler::load_graphFrom_file(){
 	cout<<"PeakCoverage: "<<m_coverage_mean<<endl;
 	cout<<"RepeatDetectionCoverage: "<<m_REPEAT_DETECTION<<endl;
 	f>>n;
-	cout<<"Vertices: "<<n<<endl;
 	for(int i=0;i<n;i++){
-		if(i%10000000==0){
+		if(i%1000000==0){
 			cout<<"Loading vertices: "<<i<<" / "<<n<<endl;
 		}
 		VERTEX_TYPE a;
@@ -518,7 +517,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	int color=0;
 	for(int i=0;i<m_data.size();i++){
 		if(i%10000==0){
-			cout<<i<<" / "<<m_data.size()<<endl;
+			cout<<"Simplifying: "<<i<<" / "<<m_data.size()<<endl;
 		}
 		if(m_data.get(theNodes[i])->getColor()==-1){
 			color++;
@@ -528,15 +527,16 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			}
 		}
 	}
-	cout<<m_data.size()<<" / "<<m_data.size()<<endl;
+	cout<<"Simplifying: "<<m_data.size()<<" / "<<m_data.size()<<endl;
 
 	cout<<endl;
 	vector<VERTEX_TYPE> withoutParents;
 	(*m_cout)<<"********* Inspecting the graph"<<endl;
+	cout<<endl;
 	map<int,map<int,int> > stats_parents_children;
 	for(int i=0;i<m_data.size();i++){
-		if(i%10000==0){
-			cout<<i<<" / "<<m_data.size()<<endl;
+		if(i%1000000==0){
+			cout<<"Inspecting: "<<i<<" / "<<m_data.size()<<endl;
 		}
 		VERTEX_TYPE vertex=theNodes[i];
 		VertexData*dataNode=m_data.get(vertex);
@@ -548,7 +548,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		withoutParents.push_back(vertex);
 	}
 
-	cout<<m_data.size()<<" / "<<m_data.size()<<endl;
+	cout<<"Inspecting: "<<m_data.size()<<" / "<<m_data.size()<<endl;
 
 	cout<<endl;
 	for(map<int,map<int,int> >::iterator i=stats_parents_children.begin();i!=stats_parents_children.end();i++){
@@ -560,7 +560,6 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 
 	VERTEX_TYPE*nodes=m_data.getNodes();
 	VertexData*nodeData=m_data.getNodeData();
-/*
 	(*m_cout)<<endl;
 	(*m_cout)<<"********** Removing spurious edges"<<endl;
 	bool removing=true;
@@ -600,7 +599,6 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	cout<<id+1<<" / "<<m_data.size()<<endl;
 	(*m_cout)<<"Removed "<<spuriousRemoval<<" edges"<<endl;
 	cout<<endl;
-*/
 
 /*
 	(*m_cout)<<"********** Collecting sources..."<<endl;
@@ -622,9 +620,6 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	(*m_cout)<<endl;
 	ostream&m_cout=*(this->m_cout);	
 	vector<VERTEX_TYPE> sources=withoutParents;
-	set<VERTEX_TYPE> sourcesVisited;
-	vector<int> The_Discovery_Of_Sources;
-	vector<int>VisitsOfSources;
 	string assemblyAmos=m_assemblyDirectory+"/"+AMOS_FILE_NAME;
 	string contigsFile=m_assemblyDirectory+"/"+FASTA_FILE_NAME;
 	string coverageFile=m_assemblyDirectory+"/"+COVERAGE_FILE_NAME;
@@ -640,19 +635,12 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 
 	while(sources.size()>0){
 		m_cout<<endl;
-		m_cout<<"Round: "<<round<<", "<<sources.size()<<" sources."<<endl;
-		round++;
-		The_Discovery_Of_Sources.push_back(sources.size());
 		vector<VERTEX_TYPE> newSources;
 		for(int i=0;i<(int)sources.size();i++){
-			map<VERTEX_TYPE,int> visits;
 			VERTEX_TYPE prefix=sources[i];
-			if(sourcesVisited.count(prefix)>0)
-				continue;
 			if(m_data.get(prefix)->IsAssembled())
 				continue;
 			m_cout<<endl;
-			sourcesVisited.insert(prefix);
 			m_cout<<"Source "<<i+1<<" / "<<sources.size()<<endl;//" REPEAT MODE"<<endl;
 			m_cout<<"From: "<<idToWord(prefix,m_wordSize)<<endl;
 		//m_cout<<m_contig_paths.size()<<" contigs"<<endl;
@@ -663,7 +651,6 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			vector<VERTEX_TYPE> localNewSources;
 			contig_From_SINGLE(&currentReadPositions,&path,&localNewSources,&repeatAnnotations);
 			m_cout<<path.size()<<" vertices"<<endl;
-			set<VERTEX_TYPE> indexOfVerticesForTheContig;
 /*
 			int validSources=0;
 			for(vector<VERTEX_TYPE>::iterator k=localNewSources.begin();k!=localNewSources.end();k++){
@@ -686,7 +673,6 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			contigId++;
 		}
 		sources=newSources;
-		VisitsOfSources.push_back(sourcesVisited.size());
 	}
 	amosFile.close();
 	repeatAnnotation.close();
