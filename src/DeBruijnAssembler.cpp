@@ -545,6 +545,8 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		stats_parents_children[parents][children]++;
 		if(parents==1&&children==1)
 			continue;
+		if(children==0)
+			continue;
 		withoutParents.push_back(vertex);
 	}
 
@@ -848,19 +850,20 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 */
 		if(path->size()>0){
 			//(*m_cout)<<pathToDNA(path)<<endl;
-			int position=0;
-			for(vector<map<int,map<char,int> > >::iterator k=currentReadPositions->begin();k!=currentReadPositions->end();k++){
-				break;
-				//position=k->first;
-				if(position<path->size()-500)
+			cout<<"Contig annotations"<<endl;
+			for(int position=0;position<currentReadPositions->size();position++) {
+			
+				if(position<path->size()-500){
 					continue;
-				for(map<int,map<char,int> >::iterator i=(*k).begin();i!=(*k).end();i++){
+				}
+				cout<<"Position "<<position<<endl;
+				for(map<int,map<char,int> >::iterator i=(*currentReadPositions)[position].begin();i!=(*currentReadPositions)[position].end();i++){
 					for(map<char,int>::iterator j=i->second.begin();j!=i->second.end();j++){
-						(*m_cout)<<position<<" "<<m_sequenceData->at(i->first)->getId()<<" "<<j->first<<" "<<j->second<<endl;
+						(*m_cout)<<m_sequenceData->at(i->first)->getId()<<" "<<j->first<<" "<<j->second<<endl;
 					}
 				}
-				position++;
 			}
+			//cout<<
 			for(int i=100;i>=2;i--){
 				break;
 				(*m_cout)<<idToWord(path->at(path->size()-i),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-i+1),m_wordSize)<<" ";
