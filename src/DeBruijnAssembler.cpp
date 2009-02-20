@@ -531,6 +531,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	cout<<m_data.size()<<" / "<<m_data.size()<<endl;
 
 	cout<<endl;
+	vector<VERTEX_TYPE> withoutParents;
 	(*m_cout)<<"********* Inspecting the graph"<<endl;
 	map<int,map<int,int> > stats_parents_children;
 	for(int i=0;i<m_data.size();i++){
@@ -539,17 +540,23 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		}
 		VERTEX_TYPE vertex=theNodes[i];
 		VertexData*dataNode=m_data.get(vertex);
-		stats_parents_children[dataNode->getParents(vertex,NULL).size()][dataNode->getChildren(vertex).size()]++;
+		int parents=dataNode->getParents(vertex,NULL).size();
+		int children=dataNode->getChildren(vertex).size();
+		stats_parents_children[parents][children]++;
+		if(parents==1&&children==1)
+			continue;
+		withoutParents.push_back(vertex);
 	}
 
 	cout<<m_data.size()<<" / "<<m_data.size()<<endl;
 
+	cout<<endl;
 	for(map<int,map<int,int> >::iterator i=stats_parents_children.begin();i!=stats_parents_children.end();i++){
 		for(map<int,int>::iterator j=i->second.begin();j!=i->second.end();j++){
 			cout<<i->first<<" parents, "<<j->first<<" children: "<<j->second<<" vertices"<<endl;
 		}
 	}
-
+	cout<<endl;
 
 	VERTEX_TYPE*nodes=m_data.getNodes();
 	VertexData*nodeData=m_data.getNodeData();
@@ -595,9 +602,9 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	cout<<endl;
 */
 
+/*
 	(*m_cout)<<"********** Collecting sources..."<<endl;
 	cout<<endl;
-	vector<VERTEX_TYPE> withoutParents;
 	//for(MAP_TYPE<VERTEX_TYPE,MAP_TYPE<VERTEX_TYPE,vector<int> > >::iterator i=m_graph.begin();i!=m_graph.end();i++){
 	for(int myDataIterator=0;myDataIterator<m_data.size();myDataIterator++){
 		VERTEX_TYPE prefix=nodes[(myDataIterator)];
@@ -609,6 +616,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			withoutParents.push_back(prefix);
 		}
 	}
+*/
 	(*m_cout)<<"Done..., "<<withoutParents.size()<<" sources."<<endl;
 	
 	(*m_cout)<<endl;
@@ -641,39 +649,41 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			VERTEX_TYPE prefix=sources[i];
 			if(sourcesVisited.count(prefix)>0)
 				continue;
+			if(m_data.get(prefix)->IsAssembled())
+				continue;
 			m_cout<<endl;
 			sourcesVisited.insert(prefix);
-			{
-				m_cout<<"Source "<<i+1<<" / "<<sources.size()<<endl;//" REPEAT MODE"<<endl;
-				m_cout<<"From: "<<idToWord(prefix,m_wordSize)<<endl;
-			//m_cout<<m_contig_paths.size()<<" contigs"<<endl;
-				vector<VERTEX_TYPE>path;
-				path.push_back(prefix);
-				vector<map<int,map<char,int> > > currentReadPositions;
-				vector<int> repeatAnnotations;
-				vector<VERTEX_TYPE> localNewSources;
-				contig_From_SINGLE(&currentReadPositions,&path,&localNewSources,&repeatAnnotations);
-				m_cout<<path.size()<<" vertices"<<endl;
-				set<VERTEX_TYPE> indexOfVerticesForTheContig;
-				int validSources=0;
-				for(vector<VERTEX_TYPE>::iterator k=localNewSources.begin();k!=localNewSources.end();k++){
-					if(m_data.get(*k)->IsAssembled())
-						continue;
-					// assemble vertices cannot be sources..
-					validSources++;
-					newSources.push_back(*k);
-				}
-				cout<<localNewSources.size()<<" new sources, "<<validSources<<" valid."<<endl;
-				if(path.size()<=2)
+			m_cout<<"Source "<<i+1<<" / "<<sources.size()<<endl;//" REPEAT MODE"<<endl;
+			m_cout<<"From: "<<idToWord(prefix,m_wordSize)<<endl;
+		//m_cout<<m_contig_paths.size()<<" contigs"<<endl;
+			vector<VERTEX_TYPE>path;
+			path.push_back(prefix);
+			vector<map<int,map<char,int> > > currentReadPositions;
+			vector<int> repeatAnnotations;
+			vector<VERTEX_TYPE> localNewSources;
+			contig_From_SINGLE(&currentReadPositions,&path,&localNewSources,&repeatAnnotations);
+			m_cout<<path.size()<<" vertices"<<endl;
+			set<VERTEX_TYPE> indexOfVerticesForTheContig;
+/*
+			int validSources=0;
+			for(vector<VERTEX_TYPE>::iterator k=localNewSources.begin();k!=localNewSources.end();k++){
+				if(m_data.get(*k)->IsAssembled())
 					continue;
-				writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
-				writeContig_fasta(&path,&contigsFileStream,contigId);
-				writeContig_Coverage(&currentReadPositions,&path,&coverageStream,contigId);
-				writeContig_RepeatAnnotation(&repeatAnnotations,contigId,&repeatAnnotation,&path);
-				//m_contig_paths.push_back(path);
-				cout<<"Contig"<<contigId<<endl;
-				contigId++;
+				// assemble vertices cannot be sources..
+				validSources++;
+				newSources.push_back(*k);
 			}
+			cout<<localNewSources.size()<<" new sources, "<<validSources<<" valid."<<endl;a
+*/
+			if(path.size()<=2)
+				continue;
+			writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
+			writeContig_fasta(&path,&contigsFileStream,contigId);
+			writeContig_Coverage(&currentReadPositions,&path,&coverageStream,contigId);
+			writeContig_RepeatAnnotation(&repeatAnnotations,contigId,&repeatAnnotation,&path);
+			//m_contig_paths.push_back(path);
+			cout<<"Contig"<<contigId<<endl;
+			contigId++;
 		}
 		sources=newSources;
 		VisitsOfSources.push_back(sourcesVisited.size());
@@ -1062,7 +1072,7 @@ firstOne[m_wordSize-2-trailingHomoPolymerSize]==
 		}
 	}
 
-
+/*
 	if(foundBest==false){
 		for(int i=0;i<children.size();i++){
 			if(newSources!=NULL){
@@ -1090,7 +1100,7 @@ firstOne[m_wordSize-2-trailingHomoPolymerSize]==
 		}
 
 	}
-
+*/
 	if(foundBest==true){
 		vector<VERTEX_TYPE> output;
 		output.push_back(best);
