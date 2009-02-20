@@ -860,7 +860,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 				}
 				position++;
 			}
-			for(int i=399;i>=2;i--){
+			for(int i=100;i>=2;i--){
 				break;
 				(*m_cout)<<idToWord(path->at(path->size()-i),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-i+1),m_wordSize)<<" ";
 				vector<AnnotationElement>*annotations=m_data.get(path->at(path->size()-i))->getAnnotations(path->at(path->size()-i+1));
@@ -1035,6 +1035,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 	if(children.size()==2&&
 		foundBest==false){
 		// attempt to detect homopolymer...
+		cout<<"Searching for homopolymer"<<endl;
 		string firstOne=DeBruijnAssembler::idToWord(children[0],m_wordSize);
 		string secondOne=DeBruijnAssembler::idToWord(children[1],m_wordSize);
 		int trailingHomoPolymerSize=0;
