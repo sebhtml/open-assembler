@@ -834,8 +834,9 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		newSources->push_back(children[j]);
 	}
 	*/
-	if(!debug_print)
-		return;
+	if(!debug_print){
+		//return;
+	}
 	//return;
 	if(children.size()>0&&path->size()>=1){
 	/*
