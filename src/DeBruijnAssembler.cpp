@@ -567,6 +567,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	int id=0;
 	cout<<endl;
 	for(int myDataIterator=0;myDataIterator<m_data.size();myDataIterator++){
+		break;
 	//for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
 		VERTEX_TYPE prefix=nodes[(myDataIterator)];
 		VertexData*nodeDataInstance=&(nodeData[myDataIterator]);
