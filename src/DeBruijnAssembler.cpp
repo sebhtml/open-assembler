@@ -161,9 +161,9 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		m_minimumCoverage=atoi(m_minimumCoverageParameter.c_str());
 		cout<<"Setting minimumCoverage <- "<<m_minimumCoverage<<endl;
 	}
-	m_REPEAT_DETECTION=3*m_coverage_mean;
+	m_REPEAT_DETECTION=5*m_coverage_mean;
 	if(m_minimumCoverage>m_coverage_mean)
-		m_REPEAT_DETECTION=4*m_minimumCoverage;
+		m_REPEAT_DETECTION=5*m_minimumCoverage;
 	(cout)<<"REPEAT_DETECTION_COVERAGE =  "<<m_REPEAT_DETECTION<<endl;
 
 	uint64_t total_bases=0;
@@ -760,7 +760,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			(*m_cout)<<path->size()<<" progress."<<endl;
 		//(*m_cout)<<"Threading.. reads "<<endl;
 		//(*m_cout)<<"Coverage mean: "<<coverageMean<<" "<<annotations->size()<<endl; 
-		if(annotations->size()>=m_REPEAT_DETECTION&&m_DEBUG){
+		if(annotations->size()>=m_REPEAT_DETECTION){
 			(*m_cout)<<"Coverage: "<<annotations->size()<<", refusing to start threading reads!"<<endl;
 		}
 		if(annotations->size()>=m_REPEAT_DETECTION){
@@ -856,7 +856,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 				if(position<path->size()-500){
 					continue;
 				}
-				cout<<"Position "<<position<<endl;
+				cout<<"Position "<<position<<idToWord(path->at(position),m_wordSize)<<" -> "<<idToWord(path->at(position),m_wordSize)<<endl;
 				for(map<int,map<char,int> >::iterator i=(*currentReadPositions)[position].begin();i!=(*currentReadPositions)[position].end();i++){
 					for(map<char,int>::iterator j=i->second.begin();j!=i->second.end();j++){
 						(*m_cout)<<m_sequenceData->at(i->first)->getId()<<" "<<j->first<<" "<<j->second<<endl;
