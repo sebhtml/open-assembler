@@ -669,7 +669,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			}
 			cout<<localNewSources.size()<<" new sources, "<<validSources<<" valid."<<endl;a
 */
-			if(path.size()<=2||true)
+			if(path.size()<=2)
 				continue;
 			writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
 			writeContig_fasta(&path,&contigsFileStream,contigId);
