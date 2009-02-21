@@ -299,7 +299,7 @@ void DeBruijnAssembler::load_graphFrom_file(){
 	VertexData*dataPointer=m_data.getNodeData();
 	f>>buffer>>buffer;
 	for(int i=0;i<n;i++){
-		if(i%100000==0){
+		if(i%1000000==0){
 			cout<<"Loading edges: "<<i<<" / "<<n<<endl;
 		}
 		VERTEX_TYPE a;
@@ -521,7 +521,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	cout<<endl;
 	int color=0;
 	for(int i=0;i<m_data.size();i++){
-		if(i%10000==0){
+		if(i%100000==0){
 			cout<<"Simplifying: "<<i<<" / "<<m_data.size()<<endl;
 		}
 		if(m_data.get(theNodes[i])->getColor()==-1){
@@ -735,6 +735,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 	prefixNextVertices.push_back(source);
 	bool isSpurious=false;
 	VERTEX_TYPE otherSource;
+	set<VERTEX_TYPE> notSpurious;
 	int otherPosition;
 	while(prefixNextVertices.size()==1){
 		prefix=prefixNextVertices[0];
@@ -748,18 +749,22 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			isSpurious=true;
 			otherSource=thePositions->begin()->first;
 			otherPosition=thePositions->begin()->second[0];
-		}else if(isSpurious==true&&path->size()<200){
+			if(otherPosition==0){
+				notSpurious.insert(otherSource);
+				isSpurious=false;
+			}
+		}else if(isSpurious==true&&path->size()<=1000&&notSpurious.count(otherSource)==0){
 			map<VERTEX_TYPE,vector<int> >*thePositions=prefixVertexData->getPositions();
-			cout<<"Might be spurious"<<endl;
+			//cout<<"Might be spurious"<<endl;
 			
-			if((*thePositions)[otherSource][0]-1000==otherPosition){
+			if((*thePositions).count(otherSource)>0&&(*thePositions)[otherSource][0]-800==otherPosition){
 				cout<<"Halting, spurious vertex detected."<<endl;
 				break;
 			}
 		}
 		prefixVertexData->addPositionInContig(source,path->size());
-		cout<<DeBruijnAssembler::idToWord(prefix,DeBruijnAssembler::m_wordSize)<<endl;
-		prefixVertexData->printPositions();
+		//cout<<DeBruijnAssembler::idToWord(prefix,DeBruijnAssembler::m_wordSize)<<endl;
+		//prefixVertexData->printPositions();
 		path->push_back(prefix);
 		map<int,map<char,int> > a;
 		(*currentReadPositions).push_back(a);
@@ -802,7 +807,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 				){ // add at most a given amount of "new reads" to avoid depletion
 					(*currentReadPositions)[path->size()-1][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition; // = 0
 					//(*m_cout)<<path->size()<<" "<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
-					(*m_cout)<<"Adding read "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
+					//(*m_cout)<<"Adding read "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
 					cumulativeCoverage++;
 					added++;
 					usedReads[(annotations->at(h).readId)]=path->size()-1;
@@ -812,7 +817,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 				if(m_carry_forward_offset==0){
 					usedReads[annotations->at(h).readId]=path->size()-1;
 					(*currentReadPositions)[path->size()-1][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
-					cout<<"Threading "<<endl;
+					//cout<<"Threading "<<endl;
 				}
 			}
 		}
