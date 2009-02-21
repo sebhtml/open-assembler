@@ -745,6 +745,10 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		}
 		VertexData*prefixVertexData=m_data.get(prefix);
 
+		if(m_data.get(prefix)->IsAssembled()&&path->size()<50){
+			cout<<"Skipping spurious source"<<endl;
+			return;
+		}
 /*
 		if(isSpurious==false&&prefixVertexData->IsAssembled()){
 			map<VERTEX_TYPE,vector<int> >*thePositions=prefixVertexData->getPositions();
@@ -765,7 +769,6 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			}
 		}
 */
-
 		prefixVertexData->addPositionInContig(source,path->size());
 		//cout<<DeBruijnAssembler::idToWord(prefix,DeBruijnAssembler::m_wordSize)<<endl;
 		//prefixVertexData->printPositions();
