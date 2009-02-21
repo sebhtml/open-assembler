@@ -31,26 +31,18 @@ vector<AnnotationElement> VertexData::m_empty_vector;
 
 VertexData::VertexData(){
 	m_isEliminated=false;
-	m_assembled=false;
 	m_parents=0;
 	m_children=0;
 	m_color=-1;
-	m_annotations=NULL;
 }
 
 
-void VertexData::addAnnotation(VERTEX_TYPE suffix,uint32_t read,POSITION_TYPE position,uint8_t strand){
-	if(m_annotations==NULL){
-		m_annotations=new map<char,vector<AnnotationElement> >;
-	}
-	string a=DeBruijnAssembler::idToWord(suffix,DeBruijnAssembler::m_WordSize);
-	char symbol=a[a.length()-1];
+void VertexData::addAnnotation(uint32_t read,POSITION_TYPE position,uint8_t strand){
 	AnnotationElement element;
 	element.readId=read;
 	element.readPosition=position;
 	element.readStrand=strand;
-	(*m_annotations)[symbol].push_back(element);
-	//cout<<(*m_annotations)[symbol].size()<<" annotations"<<endl;
+	m_annotations.push_back(element);
 }
 
 void VertexData::addChild(VERTEX_TYPE child){
@@ -92,13 +84,8 @@ void VertexData::addParent(VERTEX_TYPE parent){
  * TODO: here, pass the list of reads to build the annotations here...
  *
  */
-vector<AnnotationElement>*VertexData::getAnnotations(VERTEX_TYPE suffix){
-	string a=DeBruijnAssembler::idToWord(suffix,DeBruijnAssembler::m_WordSize);
-	char symbol=a[DeBruijnAssembler::m_WordSize-1];
-	if(m_annotations==NULL){
-		return &m_empty_vector;
-	}
-	return &((*m_annotations)[symbol]);
+vector<AnnotationElement>*VertexData::getAnnotations(){
+	return &m_annotations;
 }
 
 
@@ -181,10 +168,6 @@ vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix,GraphData*m_data){
 
 
 VertexData::~VertexData(){
-	if(m_annotations!=NULL){
-		delete m_annotations;
-		m_annotations=NULL;
-	}
 }
 
 void VertexData::eliminateNow(){
@@ -195,12 +178,9 @@ bool VertexData::IsEliminated(){
 	return m_isEliminated;
 }
 
-void VertexData::assemble(){
-	m_assembled=true;
-}
 
 bool VertexData::IsAssembled(){
-	return m_assembled;
+	return m_positionInContig.size()>0;
 }
 
 
@@ -214,4 +194,21 @@ void VertexData::setColor(uint32_t c){
 
 bool VertexData::NotTrivial(VERTEX_TYPE a){
 	return getParents(a,NULL).size()>1||getChildren(a).size()>1;
+}
+
+
+void VertexData::addPositionInContig(VERTEX_TYPE a,int b){
+	m_positionInContig[a].push_back(b);
+}
+
+map<VERTEX_TYPE,vector<int> >*VertexData::getPositions(){
+	return &m_positionInContig;
+}
+
+void VertexData::printPositions(){
+	for(map<VERTEX_TYPE,vector<int> >::iterator i=m_positionInContig.begin();i!=m_positionInContig.end();i++){
+		for(vector<int>::iterator j=i->second.begin();j!=i->second.end();j++){
+			cout<<i->first<<" "<<*j<<endl;
+		}
+	}
 }

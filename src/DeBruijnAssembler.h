@@ -72,7 +72,7 @@ class DeBruijnAssembler{
 	void build_From_Scratch(SequenceDataFull*sequenceData);
 	void writeGraph();
 
-	void contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,vector<int>*repeatAnnotations);
+	void contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,vector<int>*repeatAnnotations,VERTEX_TYPE source);
 	vector<VERTEX_TYPE> getWalk(VERTEX_TYPE prefix,vector<VERTEX_TYPE>*path,int length,vector<map<int,map<char,int > > >*currentReadPositions);
 
 	char getLastSymbol(VERTEX_TYPE i);

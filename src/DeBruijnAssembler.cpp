@@ -303,22 +303,26 @@ void DeBruijnAssembler::load_graphFrom_file(){
 			cout<<"Loading edges: "<<i<<" / "<<n<<endl;
 		}
 		VERTEX_TYPE a;
+		f>>a;
+		int nAnnotations;
+		f>>nAnnotations;
+		VertexData*dataPointerVertex=&(dataPointer[i]);
+		for(int k=0;k<nAnnotations;k++){
+			uint32_t readId;
+			uint8_t readStrand;
+			uint16_t readPosition;
+			f>>readId>>readStrand>>readPosition;
+			dataPointerVertex->addAnnotation(readId,readPosition,readStrand);
+		}
+
 		int childrenCount;
-		f>>a>>childrenCount;
-		VertexData*aDataContainer=&(dataPointer[i]);
+		f>>childrenCount;
 		for(int j=0;j<childrenCount;j++){
 			VERTEX_TYPE b;
-			int nAnnotations;
-			f>>b>>nAnnotations;
-			m_data.get(b)->addParent(a);
-			m_data.get(a)->addChild(b);
-			for(int k=0;k<nAnnotations;k++){
-				uint32_t readId;
-				uint8_t readStrand;
-				uint16_t readPosition;
-				f>>readId>>readStrand>>readPosition;
-				aDataContainer->addAnnotation(b,readId,readPosition,readStrand);
-			}
+			f>>b;
+			VertexData*childContainer=m_data.get(b);
+			childContainer->addParent(a);
+			dataPointerVertex->addChild(b);
 		}
 	}
 
@@ -360,20 +364,21 @@ void DeBruijnAssembler::writeGraph(){
 		f<<prefix<<"\n";
 		VertexData*prefixData=&(theData[(i)]);
 		vector<VERTEX_TYPE>children=prefixData->getChildren(prefix);
+		vector<AnnotationElement>*annotations=prefixData->getAnnotations();
+		if(annotations!=NULL){
+			f<<annotations->size()<<"\n";
+			for(vector<AnnotationElement>::iterator u=annotations->begin();u!=annotations->end();u++){
+				f<<(*u).readId<<" "<<(*u).readStrand<<" "<<(*u).readPosition<<"\n";
+			}
+		}
+
 		f<<children.size()<<"\n";
 		for(vector<VERTEX_TYPE>::iterator k=children.begin();k!=children.end();k++){
-			vector<AnnotationElement>*annotations=prefixData->getAnnotations(*k);
-			if(annotations!=NULL){
-				f<<*k<<" "<<annotations->size()<<"\n";
-				for(vector<AnnotationElement>::iterator u=annotations->begin();u!=annotations->end();u++){
-					f<<(*u).readId<<" "<<(*u).readStrand<<" "<<(*u).readPosition<<"\n";
-				}
-			}
+			f<<*k<<"\n";
 		}
 	}
 	cout<<"Edges: "<<m_data.size()<<" / "<<m_data.size()<<endl;
 
-	cout<<"Data: "<<m_data.size()<<endl;
 	f.close();
 }
 
@@ -648,11 +653,10 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			m_cout<<"From: "<<idToWord(prefix,m_wordSize)<<endl;
 		//m_cout<<m_contig_paths.size()<<" contigs"<<endl;
 			vector<VERTEX_TYPE>path;
-			path.push_back(prefix);
 			vector<map<int,map<char,int> > > currentReadPositions;
 			vector<int> repeatAnnotations;
 			vector<VERTEX_TYPE> localNewSources;
-			contig_From_SINGLE(&currentReadPositions,&path,&localNewSources,&repeatAnnotations);
+			contig_From_SINGLE(&currentReadPositions,&path,&localNewSources,&repeatAnnotations,prefix);
 			m_cout<<path.size()<<" vertices"<<endl;
 /*
 			int validSources=0;
@@ -665,7 +669,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			}
 			cout<<localNewSources.size()<<" new sources, "<<validSources<<" valid."<<endl;a
 */
-			if(path.size()<=2)
+			if(path.size()<=2||true)
 				continue;
 			writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
 			writeContig_fasta(&path,&contigsFileStream,contigId);
@@ -720,22 +724,42 @@ bool DeBruijnAssembler::DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VER
 
 
 
-void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,vector<int>*repeatAnnotations){
-	VERTEX_TYPE prefix=path->at(path->size()-1);
+void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,vector<int>*repeatAnnotations,VERTEX_TYPE source){
 	map<int,int> usedReads;
 	bool debug_print=m_DEBUG;
 	//debug_print=true;
 	//(*m_cout)<<"Depth: "<<path->size()<<endl;
 	int lowCoverageLength=0;
-	
-	vector<VERTEX_TYPE> prefixNextVertices=nextVertices(path,currentReadPositions,newSources,&usedReads);
+	VERTEX_TYPE prefix;
+	vector<VERTEX_TYPE> prefixNextVertices;
+	prefixNextVertices.push_back(source);
+	bool isSpurious=false;
+	VERTEX_TYPE otherSource;
+	int otherPosition;
 	while(prefixNextVertices.size()==1){
+		prefix=prefixNextVertices[0];
 		if(m_data.get(prefix)->IsEliminated()==true){
 			cout<<"Skipping spurious edge"<<endl;
 			return;
 		}
-		m_data.get(prefix)->assemble();
-		prefix=prefixNextVertices[0];
+		VertexData*prefixVertexData=m_data.get(prefix);
+		if(isSpurious==false&&prefixVertexData->IsAssembled()){
+			map<VERTEX_TYPE,vector<int> >*thePositions=prefixVertexData->getPositions();
+			isSpurious=true;
+			otherSource=thePositions->begin()->first;
+			otherPosition=thePositions->begin()->second[0];
+		}else if(isSpurious==true&&path->size()<200){
+			map<VERTEX_TYPE,vector<int> >*thePositions=prefixVertexData->getPositions();
+			cout<<"Might be spurious"<<endl;
+			
+			if((*thePositions)[otherSource][0]-1000==otherPosition){
+				cout<<"Halting, spurious vertex detected."<<endl;
+				break;
+			}
+		}
+		prefixVertexData->addPositionInContig(source,path->size());
+		cout<<DeBruijnAssembler::idToWord(prefix,DeBruijnAssembler::m_wordSize)<<endl;
+		prefixVertexData->printPositions();
 		path->push_back(prefix);
 		map<int,map<char,int> > a;
 		(*currentReadPositions).push_back(a);
@@ -743,9 +767,9 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		int cumulativeCoverage=0;
 		int added=0;
 
-		vector<AnnotationElement>*annotations=m_data.get(path->at(path->size()-2))->getAnnotations(path->at(path->size()-1));
+		vector<AnnotationElement>*annotations=m_data.get(prefix)->getAnnotations();
 		if(debug_print&&annotations!=NULL){
-			(*m_cout)<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<" ";
+			(*m_cout)<<idToWord(path->at(path->size()-1),m_wordSize)<<" ";
 			(*m_cout)<<annotations->size();
 			for(int j=0;j<annotations->size();j++){
 				(*m_cout)<<" "<<m_sequenceData->at(annotations->at(j).readId)->getId()<<" "<<annotations->at(j).readPosition<<" "<<annotations->at(j).readStrand;
@@ -776,25 +800,26 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			(annotations->at(h).readStrand=='R'&&annotations->at(h).readPosition==m_sequenceData->at(annotations->at(h).readId)->getStartReverse())||
 			path->size()<200)
 				){ // add at most a given amount of "new reads" to avoid depletion
-					(*currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition; // = 0
+					(*currentReadPositions)[path->size()-1][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition; // = 0
 					//(*m_cout)<<path->size()<<" "<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
-					//(*m_cout)<<"Adding read "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
+					(*m_cout)<<"Adding read "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
 					cumulativeCoverage++;
 					added++;
-					usedReads[(annotations->at(h).readId)]=path->size()-2;
+					usedReads[(annotations->at(h).readId)]=path->size()-1;
 				}
 			}else if(is_d_Threading(&(annotations->at(h)),currentReadPositions,path,&usedReads,false)){
 				added++;
 				if(m_carry_forward_offset==0){
-					usedReads[annotations->at(h).readId]=path->size()-2;
-					(*currentReadPositions)[path->size()-2][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
+					usedReads[annotations->at(h).readId]=path->size()-1;
+					(*currentReadPositions)[path->size()-1][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
+					cout<<"Threading "<<endl;
 				}
 			}
 		}
 
 		if(debug_print){
-			(*m_cout)<<(*currentReadPositions)[path->size()-2].size();
-			for(map<int,map<char,int> >::iterator i=(*currentReadPositions)[path->size()-2].begin();i!=(*currentReadPositions)[path->size()-2].end();i++){
+			(*m_cout)<<(*currentReadPositions)[path->size()-1].size();
+			for(map<int,map<char,int> >::iterator i=(*currentReadPositions)[path->size()-1].begin();i!=(*currentReadPositions)[path->size()-1].end();i++){
 				for(map<char,int>::iterator j=i->second.begin();j!=i->second.end();j++){
 					(*m_cout)<<" "<<m_sequenceData->at(i->first)->getId()<<" "<<j->first<<" "<<j->second;
 				}
@@ -820,8 +845,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		//(*m_cout)<<"adding "<<(*currentReadPositions).at(currentReadPositions->size()-1).size()<<endl;
 	}
 
-	VertexData*dataStructure= (m_data.get(prefix));
-	vector<VERTEX_TYPE>children=dataStructure->getChildren(prefix);
+	vector<VERTEX_TYPE>children=m_data.get(prefix)->getChildren(prefix);
 
 	if(children.size()==0){
 		cout<<"Stop!, reason: this is a sink, no data available beyond this very nucleotide."<<endl;
@@ -867,7 +891,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			for(int i=100;i>=2;i--){
 				break;
 				(*m_cout)<<idToWord(path->at(path->size()-i),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-i+1),m_wordSize)<<" ";
-				vector<AnnotationElement>*annotations=m_data.get(path->at(path->size()-i))->getAnnotations(path->at(path->size()-i+1));
+				vector<AnnotationElement>*annotations=m_data.get(path->at(path->size()-i+1))->getAnnotations();
 				(*m_cout)<<annotations->size();
 				for(int j=0;j<annotations->size();j++){
 					(*m_cout)<<" "<<annotations->at(j).readId<<" "<<annotations->at(j).readPosition<<" "<<annotations->at(j).readStrand;
@@ -879,7 +903,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 				//int score=recThreading(path->at(path->size()-1),children[i],&allowedReads);
 				//(*m_cout)<<"Score: "<<score<<endl;
 				(*m_cout)<<idToWord(path->at(path->size()-1),m_wordSize)<<" -> "<<idToWord(children[i],m_wordSize)<<" ";
-				vector<AnnotationElement>*annotations=m_data.get(path->at(path->size()-1))->getAnnotations(children[i]);
+				vector<AnnotationElement>*annotations=m_data.get(children[i])->getAnnotations();
 				(*m_cout)<<annotations->size();
 				for(int j=0;j<annotations->size();j++){
 					(*m_cout)<<" "<<m_sequenceData->at(annotations->at(j).readId)->getId()<<" "<<annotations->at(j).readPosition<<" "<<annotations->at(j).readStrand;
@@ -946,7 +970,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 	for(vector<VERTEX_TYPE>::iterator i=children.begin();i!=children.end();i++){
 
 		//(*m_cout)<<"Child "<<idToWord(children[i],m_wordSize)<<endl;
-		vector<AnnotationElement>*thisEdgeData=(m_data.get(path->at(path->size()-1))->getAnnotations(*i));
+		vector<AnnotationElement>*thisEdgeData=(m_data.get(*i)->getAnnotations());
 		coverageOfEdges[*i]=0;
 		if(thisEdgeData!=NULL){
 			coverageOfEdges[*i]=thisEdgeData->size();
@@ -1171,7 +1195,8 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 			// it is on a non-trivial node...
 			// TODO: remove the true
 			if(true||thisIsTheFirst||m_data.get(prefix)->NotTrivial(prefix)||m_data.get(suffix)->NotTrivial(prefix)){
-				m_data.get(prefix)->addAnnotation(suffix,readId,readPosition,strand);
+				m_data.get(prefix)->addAnnotation(readId,readPosition,strand);
+				m_data.get(suffix)->addAnnotation(readId,readPosition+1,strand);
 			}
 		}
 	}
@@ -1355,7 +1380,7 @@ bool DeBruijnAssembler::is_d_Threading(AnnotationElement*annotation,vector<map<i
 	}
 	int lastPositionInRead=(*currentReadPositions)[lastPosition][readId][readStrand];
 	int distanceInRead=annotation->readPosition-lastPositionInRead;
-	int distanceInPath=path->size()-2-lastPosition;
+	int distanceInPath=path->size()-1-lastPosition;
 /*
 	string sequence=m_sequenceData->at(readId)->getSeq();
 	if(readStrand=='R')

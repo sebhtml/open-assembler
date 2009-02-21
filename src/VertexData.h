@@ -29,6 +29,7 @@ using namespace std;
 
 class GraphData;
 
+
 class VertexData{
 	static vector<AnnotationElement> m_empty_vector;
 	// bit    nucleotide
@@ -42,18 +43,19 @@ class VertexData{
 	// 7	Unused
 	
 	bool m_isEliminated;
-	bool m_assembled;
+	map<VERTEX_TYPE,vector<int> > m_positionInContig;
 	uint8_t m_parents;
 	uint32_t m_color;
-
 	uint8_t m_children;
-	map<char,vector<AnnotationElement> >*m_annotations;
+	vector<AnnotationElement>m_annotations;
 	
 public:
+
+	map<VERTEX_TYPE,vector<int> >*getPositions();
 	vector<VERTEX_TYPE> getChildren(VERTEX_TYPE prefix);
 	vector<VERTEX_TYPE> getParents(VERTEX_TYPE prefix,GraphData*m_data);
-	vector<AnnotationElement>*getAnnotations(VERTEX_TYPE suffix);
-	void addAnnotation(VERTEX_TYPE suffix,uint32_t read,POSITION_TYPE position,uint8_t strand);
+	vector<AnnotationElement>*getAnnotations();
+	void addAnnotation(uint32_t read,POSITION_TYPE position,uint8_t strand);
 	void addParent(VERTEX_TYPE a);
 	void addChild(VERTEX_TYPE a);
 	bool hasChild(VERTEX_TYPE suffix);
@@ -63,9 +65,10 @@ public:
 	void eliminateNow();
 	uint32_t getColor();
 	void setColor(uint32_t c);
-	void assemble();
 	bool IsAssembled();
+	void printPositions();
 	bool NotTrivial(VERTEX_TYPE a);
+	void addPositionInContig(VERTEX_TYPE a,int b);
 };
 
 #endif
