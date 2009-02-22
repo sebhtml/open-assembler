@@ -808,7 +808,10 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		}
 		for(int h=0;h<(int)annotations->size();h++){
 			bool addedInContig=false;
-			(*m_cout)<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readPosition<<" "<<annotations->at(h).readStrand;
+			//(*m_cout)<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readPosition<<" "<<annotations->at(h).readStrand;
+			if(usedReads.count(annotations->at(h).readId)>0){
+				//cout<<" LastSeen="<<(*currentReadPositions)[usedReads[annotations->at(h).readId]][annotations->at(h).readId][annotations->at(h).readStrand]<<" "<<usedReads[annotations->at(h).readId];
+			}
 			if(firstReadOccurance.count(annotations->at(h).readId)==0){
 				firstReadOccurance[annotations->at(h).readId]=annotations->at(h).readPosition;
 			}
@@ -825,7 +828,8 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 					if(annotations->size()<m_REPEAT_DETECTION){
 						(*currentReadPositions)[path->size()-1][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition; // = 0
 						//(*m_cout)<<path->size()<<" "<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
-						//(*m_cout)<<"Adding read "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
+						//(*m_cout)<<"Adding read "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;	
+						//cout<<" Added ";
 						added++;
 						usedReads[(annotations->at(h).readId)]=path->size()-1;
 						addedInContig=true;
@@ -836,15 +840,17 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			}else if(is_d_Threading(&(annotations->at(h)),currentReadPositions,path,&usedReads,false)){
 				added++;
 				if(m_carry_forward_offset==0||true){
+					//cout<<" Threaded ";
 					usedReads[annotations->at(h).readId]=path->size()-1;
 					addedInContig=true;
 					(*currentReadPositions)[path->size()-1][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
 					//cout<<"Threading "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<endl;
 				}
 			}
-			if(addedInContig)
-				cout<<" [IN CONTIG]";
-			cout<<endl;
+			if(addedInContig){
+				//cout<<" [IN CONTIG]";
+			}
+			//cout<<endl;
 		}
 
 		if(debug_print){
@@ -860,7 +866,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 
 		prefixNextVertices=nextVertices(path,currentReadPositions,newSources,&usedReads);
 		if(added==0){
-			(*m_cout)<<"Stop!, reason: No read threaded, "<<annotations->size()<<endl;
+			(*m_cout)<<"Stop!, reason: No read threaded, "<<endl;
 			break;
 		}
 		if(added>1)
@@ -1419,11 +1425,18 @@ bool DeBruijnAssembler::is_d_Threading(AnnotationElement*annotation,vector<map<i
 		return true;
 */
 
-	if(beforeAdding)
+	if(beforeAdding) //&&lastPositionInRead==annotation->readPosition-1)
 		distanceInPath++;
+	/*
+	if(lastPositionInRead!=annotation->readPosition-1)
+		distanceInRead--;
+	*/
 	//(*m_cout)<<"R "<<distanceInRead<<" C "<<distanceInPath<<endl;
 	m_carry_forward_offset=0;
 	//return distanceInPath==distanceInRead;
+	//cout<<"DistanceInPath "<<distanceInPath<<" DistanceInRead "<<distanceInRead;
+	if(distanceInPath==0)
+		return false;
 	if(distanceInPath==distanceInRead){
 		return true;
 	}
