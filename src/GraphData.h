@@ -40,6 +40,7 @@ public:
 	VertexData*getNodeData();
 	int size();
 	void add(VERTEX_TYPE a);
+	bool hasNode(VERTEX_TYPE a);
 	void makeMemory();
 };
 

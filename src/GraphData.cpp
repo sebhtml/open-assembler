@@ -32,6 +32,10 @@ VertexData*GraphData::get(VERTEX_TYPE a){
 	return &(m_node_data[index]);
 }
 
+bool GraphData::hasNode(VERTEX_TYPE a){
+	return BinarySearch(m_node_ptr,a,m_size)!=-1;
+}
+
 VERTEX_TYPE*GraphData::getNodes(){
 	return m_node_ptr;
 }
