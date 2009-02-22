@@ -820,8 +820,8 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 				if(reads_that_can_start_After_repeat.count(annotations->at(h).readId)>0||
  			((annotations->at(h).readStrand=='F'&&annotations->at(h).readPosition==m_sequenceData->at(annotations->at(h).readId)->getStartForward())||
 			(annotations->at(h).readStrand=='R'&&annotations->at(h).readPosition==m_sequenceData->at(annotations->at(h).readId)->getStartReverse())||
-			path->size()<100||
-		annotations->at(h).readPosition<5 // ||
+			path->size()<50
+		//annotations->at(h).readPosition<5 // ||
 		//(firstReadOccurance.count(annotations->at(h).readId)>0&&annotations->at(h).readPosition-firstReadOccurance[annotations->at(h).readId]>50)
 			
 				)){ // add at most a given amount of "new reads" to avoid depletion
