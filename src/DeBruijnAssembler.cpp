@@ -161,9 +161,9 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		m_minimumCoverage=atoi(m_minimumCoverageParameter.c_str());
 		cout<<"Setting minimumCoverage <- "<<m_minimumCoverage<<endl;
 	}
-	m_REPEAT_DETECTION=10*m_coverage_mean;
+	m_REPEAT_DETECTION=5*m_coverage_mean;
 	if(m_minimumCoverage>m_coverage_mean)
-		m_REPEAT_DETECTION=10*m_minimumCoverage;
+		m_REPEAT_DETECTION=5*m_minimumCoverage;
 	(cout)<<"REPEAT_DETECTION_COVERAGE =  "<<m_REPEAT_DETECTION<<endl;
 
 	uint64_t total_bases=0;
@@ -774,6 +774,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		prefixVertexData->addPositionInContig(source,path->size());
 		//cout<<DeBruijnAssembler::idToWord(prefix,DeBruijnAssembler::m_wordSize)<<endl;
 		//prefixVertexData->printPositions();
+		cout<<"Position:" <<path->size()<<" "<<idToWord(prefix,m_wordSize)<<endl;
 		path->push_back(prefix);
 		map<int,map<char,int> > a;
 		(*currentReadPositions).push_back(a);
@@ -806,6 +807,8 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			repeatAnnotations->push_back(0);
 		}
 		for(int h=0;h<(int)annotations->size();h++){
+			bool addedInContig=false;
+			(*m_cout)<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readPosition<<" "<<annotations->at(h).readStrand;
 			if(firstReadOccurance.count(annotations->at(h).readId)==0){
 				firstReadOccurance[annotations->at(h).readId]=annotations->at(h).readPosition;
 			}
@@ -815,8 +818,8 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
  			((annotations->at(h).readStrand=='F'&&annotations->at(h).readPosition==m_sequenceData->at(annotations->at(h).readId)->getStartForward())||
 			(annotations->at(h).readStrand=='R'&&annotations->at(h).readPosition==m_sequenceData->at(annotations->at(h).readId)->getStartReverse())||
 			path->size()<100||
-		annotations->at(h).readPosition<5||
-		(firstReadOccurance.count(annotations->at(h).readId)>0&&annotations->at(h).readPosition-firstReadOccurance[annotations->at(h).readId]>50)
+		annotations->at(h).readPosition<5 // ||
+		//(firstReadOccurance.count(annotations->at(h).readId)>0&&annotations->at(h).readPosition-firstReadOccurance[annotations->at(h).readId]>50)
 			
 				)){ // add at most a given amount of "new reads" to avoid depletion
 					if(annotations->size()<m_REPEAT_DETECTION){
@@ -825,6 +828,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 						//(*m_cout)<<"Adding read "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;
 						added++;
 						usedReads[(annotations->at(h).readId)]=path->size()-1;
+						addedInContig=true;
 					}else{
 						reads_that_can_start_After_repeat.insert(annotations->at(h).readId);
 					}
@@ -833,10 +837,14 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 				added++;
 				if(m_carry_forward_offset==0||true){
 					usedReads[annotations->at(h).readId]=path->size()-1;
+					addedInContig=true;
 					(*currentReadPositions)[path->size()-1][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
 					//cout<<"Threading "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<endl;
 				}
 			}
+			if(addedInContig)
+				cout<<" [IN CONTIG]";
+			cout<<endl;
 		}
 
 		if(debug_print){
@@ -1419,7 +1427,7 @@ bool DeBruijnAssembler::is_d_Threading(AnnotationElement*annotation,vector<map<i
 	if(distanceInPath==distanceInRead){
 		return true;
 	}
-	for(int i=-3;i<=3;i++){
+	for(int i=0;i<=0;i++){
 		m_carry_forward_offset=i;
 		if(distanceInRead+i==distanceInPath)
 			return true;
