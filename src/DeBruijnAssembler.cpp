@@ -774,7 +774,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		prefixVertexData->addPositionInContig(source,path->size());
 		//cout<<DeBruijnAssembler::idToWord(prefix,DeBruijnAssembler::m_wordSize)<<endl;
 		//prefixVertexData->printPositions();
-		cout<<"Position:" <<path->size()<<" "<<idToWord(prefix,m_wordSize)<<endl;
+		//cout<<"Position:" <<path->size()<<" "<<idToWord(prefix,m_wordSize)<<endl;
 		path->push_back(prefix);
 		map<int,map<char,int> > a;
 		(*currentReadPositions).push_back(a);
