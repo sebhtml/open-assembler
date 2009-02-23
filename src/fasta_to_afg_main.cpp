@@ -40,7 +40,7 @@ int main(int argc,char*argv[]){
 	string contigsFile=argv[1];
 	string outputFile=argv[2];
 	vector<Read*> contigs;
-	Loader loader(&cout);
+	Loader loader;
 	loader.load(contigsFile,&contigs);
 	ofstream f(outputFile.c_str());
 /*

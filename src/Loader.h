@@ -27,12 +27,11 @@
 using namespace std;
 
 class Loader{
-	ostream*m_cout;
 	int m_total;
 	int m_bases;
 	void add(vector<Read*>*reads,string*id,ostringstream*sequence,ostringstream*quality);
 public:
-	Loader(ostream*logger);
+	Loader();
 	void load(string file,vector<Read*>*reads);
 	int getBases();
 };

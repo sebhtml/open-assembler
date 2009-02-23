@@ -18,6 +18,8 @@
 */
 #include<cstring>
 #include<fstream>
+#include<string>
+#include<vector>
 #include"SffLoader.h"
 #include<iostream>
 #include<stdint.h>
@@ -62,7 +64,7 @@ void invert64(uint64_t*c){
 // or 
 // http://blog.malde.org/index.php/2008/11/14/454-sequencing-and-parsing-the-sff-binary-format/
 void SffLoader::load(string file,vector<Read*>*reads){
-	(*m_cout)<<"[SffLoader::load]"<<endl;
+	(cout)<<"[SffLoader::load]"<<endl;
 	uint32_t magic_number;
 	uint32_t version;
 	uint64_t index_offset;
@@ -76,50 +78,50 @@ void SffLoader::load(string file,vector<Read*>*reads){
 	uint32_t MAGIC=0x2e736666;
 	uint32_t _VERSION=1;
 	if(MAGIC!=magic_number){
-		(*m_cout)<<"Error: incorrect magic number "<<endl;
+		(cout)<<"Error: incorrect magic number "<<endl;
 		printf("%x\n",magic_number);
 		printf("%x\n",MAGIC);
 		return;
 	}
 	if(_VERSION!=version){
-		(*m_cout)<<"Error: incorrect version"<<endl;
+		(cout)<<"Error: incorrect version"<<endl;
 		return;
 	}
 	fread((char*)&index_offset,1,sizeof(uint64_t),fp);
 	invert64(&index_offset);
-	(*m_cout)<<"Using clip values"<<endl;
-	(*m_cout)<<"Index offset: "<<index_offset<<endl;
+	(cout)<<"Using clip values"<<endl;
+	(cout)<<"Index offset: "<<index_offset<<endl;
 	fread((char*)&index_length,1,sizeof(uint32_t),fp);
 	fread((char*)&number_of_reads,1,sizeof(uint32_t),fp);
 	invert32(&index_length);
-	(*m_cout)<<"Index length: "<<index_length<<endl;
+	(cout)<<"Index length: "<<index_length<<endl;
 	invert32(&number_of_reads);
-	(*m_cout)<<"Reads: "<<number_of_reads<<endl;
+	(cout)<<"Reads: "<<number_of_reads<<endl;
 	uint16_t header_length;
 	fread((char*)&header_length,1,sizeof(uint16_t),fp);
 	invert16(&header_length);
-	(*m_cout)<<"Header: "<<header_length<<endl;
+	(cout)<<"Header: "<<header_length<<endl;
 	uint16_t key_length;
 	
 	fread((char*)&key_length,1,sizeof(uint16_t),fp);
 	invert16(&key_length);
-	(*m_cout)<<"Key Length: "<<(int)key_length<<endl;
+	(cout)<<"Key Length: "<<(int)key_length<<endl;
 	uint16_t number_of_flows_per_read;
 	fread((char*)&number_of_flows_per_read,1,sizeof(uint16_t),fp);
 	invert16(&number_of_flows_per_read);
 	uint8_t flowgram_format_code;
 	fread((char*)&flowgram_format_code,1,sizeof(uint8_t),fp);
-	//(*m_cout)<<"Code: "<<flowgram_format_code<<endl;
-	(*m_cout)<<"number_of_flows_per_read: "<<number_of_flows_per_read<<endl;
+	//(cout)<<"Code: "<<flowgram_format_code<<endl;
+	(cout)<<"number_of_flows_per_read: "<<number_of_flows_per_read<<endl;
 	char*flow_chars=new char[number_of_flows_per_read+1];
 	fread(flow_chars,1,number_of_flows_per_read,fp);
 	flow_chars[number_of_flows_per_read]='\0';
-	//(*m_cout)<<"flow_chars: "<<flow_chars<<""<<endl;
+	//(cout)<<"flow_chars: "<<flow_chars<<""<<endl;
 	char*key_sequence=new char[key_length+1];
 	fread(key_sequence,1,key_length,fp);
 	key_sequence[key_length]='\0';
 	
-	(*m_cout)<<"key: "<<key_sequence<<endl;
+	(cout)<<"key: "<<key_sequence<<endl;
 	
 	// padding
 	while(ftell(fp)%8!=0)
@@ -128,12 +130,12 @@ void SffLoader::load(string file,vector<Read*>*reads){
 
 	
 	for(int readId=0;readId<(int)number_of_reads;readId++){
-		//(*m_cout)<<endl;
-		//(*m_cout)<<"Read "<<readId<<endl;
+		//(cout)<<endl;
+		//(cout)<<"Read "<<readId<<endl;
 		uint16_t read_header_length;
 		fread((char*)&read_header_length,1,sizeof(uint16_t),fp);
 		invert16(&read_header_length);
-		//(*m_cout)<<"Header size "<<read_header_length<<endl;
+		//(cout)<<"Header size "<<read_header_length<<endl;
 		uint16_t name_length;
 		fread((char*)&name_length,1,sizeof(uint16_t),fp);
 		invert16(&name_length);
@@ -153,8 +155,8 @@ void SffLoader::load(string file,vector<Read*>*reads){
 		fread((char*)&clip_adaptor_right,1,sizeof(uint16_t),fp);
 		invert16(&clip_adaptor_right);
 		char*Name=new char[name_length+1];
-		//(*m_cout)<<"name_length "<<name_length<<endl;
-		//(*m_cout)<<"number_of_bases "<<number_of_bases<<endl;
+		//(cout)<<"name_length "<<name_length<<endl;
+		//(cout)<<"number_of_bases "<<number_of_bases<<endl;
 		fread(Name,1,name_length,fp);
 		Name[name_length]='\0';
 
@@ -180,8 +182,8 @@ void SffLoader::load(string file,vector<Read*>*reads){
 		while(ftell(fp)%8!=0)
 			fgetc(fp);
 
-		//(*m_cout)<<Name<<endl;
-		//(*m_cout)<<Bases<<endl;
+		//(cout)<<Name<<endl;
+		//(cout)<<Bases<<endl;
 		int first=max(1,max(clip_qual_left,clip_adaptor_left));
 		int last=min((clip_qual_right==0?number_of_bases:clip_qual_right),
 				(clip_adaptor_right==0?number_of_bases:clip_adaptor_right));
@@ -189,7 +191,7 @@ void SffLoader::load(string file,vector<Read*>*reads){
 		string sequence=Bases;
 		string key=key_sequence;
 		if(sequence.substr(0,key_length)!=key){
-			(*m_cout)<<"Not KEY, was "<<sequence.substr(0,key_length)<<" expected "<<key<<endl;
+			(cout)<<"Not KEY, was "<<sequence.substr(0,key_length)<<" expected "<<key<<endl;
 			continue;
 		}
 		Read*read=new Read(Name,sequence.substr(first-1,last-first+1).c_str());
@@ -204,8 +206,7 @@ void SffLoader::load(string file,vector<Read*>*reads){
 	fclose(fp);
 }
 
-SffLoader::SffLoader(ostream*logger){
-	m_cout=logger;
+SffLoader::SffLoader(){
 	m_bases=0;
 }
 

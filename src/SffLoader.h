@@ -19,6 +19,7 @@
 
 #ifndef _SffLoader
 #define _SffLoader
+
 #include<string>
 #include<vector>
 #include"Read.h"
@@ -26,10 +27,9 @@
 using namespace std;
 
 class SffLoader{
-	ostream*m_cout;
 	int m_bases;
 public:
-	SffLoader(ostream*logger);
+	SffLoader();
 	int getBases();
 	void load(string file,vector<Read*>*reads);
 };

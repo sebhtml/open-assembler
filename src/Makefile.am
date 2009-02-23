@@ -1,4 +1,4 @@
-bin_PROGRAMS = dna_DeBruijnAssembler dna_sffPairedToFasta  dna_Scaffolder dna_fastaToAMOS # dna_DeBruijnSplitter 
+bin_PROGRAMS = dna_DeBruijnAssembler dna_sffPairedToFasta  dna_Scaffolder dna_fastaToAMOS module_join # dna_DeBruijnSplitter  module_join
 
 dna_DeBruijnAssembler_SOURCES = De_Bruijn_De_Novo_Assembler_main.cpp  DeBruijnAssembler.h  Read.cpp \
 DeBruijnAssembler.cpp                               Read.h Loader.cpp Loader.h  SffLoader.h SffLoader.cpp \
@@ -22,4 +22,9 @@ SortedList.h SortedList.cpp VertexData.cpp VertexData.h  GraphData.h GraphData.c
 
 dna_fastaToAMOS_SOURCES = fasta_to_afg_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp  CoverageDistribution.h CoverageDistribution.cpp \
 SortedList.h SortedList.cpp  GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp
+
+module_join_SOURCES =  DeBruijnAssembler.h  Read.cpp module_join_main.cpp \
+DeBruijnAssembler.cpp                               Read.h Loader.cpp Loader.h  SffLoader.h SffLoader.cpp \
+VertexData.h VertexData.cpp  SequenceDataFull.h SequenceDataFull.cpp CoverageDistribution.h CoverageDistribution.cpp \
+SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp Merger.h Merger.cpp
 

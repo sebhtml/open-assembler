@@ -33,10 +33,10 @@ int main(int argc,char*argv[]){
 	string contigsFile=argv[2];
 	string readsFile=argv[1];
 	vector<Read*> contigs;
-	Loader loader(&cout);
+	Loader loader;
 	loader.load(contigsFile,&contigs);
 	vector<Read*> reads;
-	Loader loaderReads(&cout);
+	Loader loaderReads;
 	loaderReads.load(readsFile,&reads);
 	return 0;
 }

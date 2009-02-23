@@ -38,7 +38,7 @@ int main(int argc,char*argv[]){
 	vector<Read*> reads;
 	string file=argv[1];
 	cout<<"Loading file"<<endl;
-	Loader loader(&cout);
+	Loader loader;
 	loader.load(file,&reads);
 	int num2=reads.size();
 	string standardReads=file+"_normal.fasta";

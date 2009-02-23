@@ -186,7 +186,7 @@ int main(int argc,char*argv[]){
 	cout<<endl;
 	Merger merger;
 	vector<Read*> finalContigs;
-	Loader loader(&cout);
+	Loader loader;
 	string fastaFile=assemblyDirectory+"/"+FASTA_FILE_NAME;
 	int columns=60;
 	loader.load(fastaFile,&finalContigs);

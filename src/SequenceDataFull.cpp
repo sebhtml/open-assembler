@@ -29,7 +29,7 @@ SequenceDataFull::SequenceDataFull(vector<string>*files,ostream*logger){
 	for(int i=0;i<(int)m_inputFiles.size();i++){
 		(*m_cout)<<endl;
 		(*m_cout)<<"Files: "<<i+1<<" / "<<m_inputFiles.size()<<endl;
-		Loader loader(m_cout);
+		Loader loader;
 		m_file_first[m_inputFiles[i]]=m_reads;
 		loader.load(m_inputFiles[i],&m_reads_vector);
 		m_bases+=loader.getBases();

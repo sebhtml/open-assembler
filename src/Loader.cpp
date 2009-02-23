@@ -18,30 +18,34 @@
 */
 
 #include<sstream>
+#include<iostream>
+#include<string>
+#include<vector>
 #include"Loader.h"
 #include"SffLoader.h"
 #include<stdlib.h>
+#include"Read.h"
+using namespace std;
 
-Loader::Loader(ostream*logger){
-	m_cout=logger;
+Loader::Loader(){
 	m_bases=0;
 }
 
 void Loader::load(string file,vector<Read*>*reads){
-	(*m_cout)<<"Loading "<<file<<endl;
+	(cout)<<"Loading "<<file<<endl;
 	if(file.length()<4){
-		(*m_cout)<<"Error: "<<file<<endl;
+		(cout)<<"Error: "<<file<<endl;
 		exit(0);
 	}
 	if(file.substr(file.length()-4,4)==".sff"){
-		(*m_cout)<<"Format: SFF"<<endl;
-		SffLoader sffLoader(m_cout);
+		(cout)<<"Format: SFF"<<endl;
+		SffLoader sffLoader;
 		int num=reads->size();
 		sffLoader.load(file,reads);
 		int num2=reads->size()-num;
 		m_bases=sffLoader.getBases();
-		(*m_cout)<<num2<<" reads"<<endl;
-		(*m_cout)<<m_bases<<" bases"<<endl;
+		(cout)<<num2<<" reads"<<endl;
+		(cout)<<m_bases<<" bases"<<endl;
 		return;
 	}
 
@@ -54,12 +58,12 @@ void Loader::load(string file,vector<Read*>*reads){
 	f>>buffer;
 	if(buffer[0]=='>'){
 		type=fasta;
-		(*m_cout)<<"Format: fasta."<<endl;
+		(cout)<<"Format: fasta."<<endl;
 	}else if(buffer[0]=='@'){
 		type=fastq;
-		(*m_cout)<<"Format: fastq."<<endl;
+		(cout)<<"Format: fastq."<<endl;
 	}else{
-		(*m_cout)<<"Format: unknown."<<endl;
+		(cout)<<"Format: unknown."<<endl;
 	}
 	//TODO: put this in FastaLoader.cpp
 	f.seekg(0,ios_base::beg);
@@ -133,7 +137,7 @@ void Loader::load(string file,vector<Read*>*reads){
 		add(reads,&id,&sequence,&quality);
 	}
 	f.close();
-	(*m_cout)<<"Reads: "<<m_total<<endl;
+	(cout)<<"Reads: "<<m_total<<endl;
 }
 
 int Loader::getBases(){
@@ -144,16 +148,16 @@ void Loader::add(vector<Read*>*reads,string*id,ostringstream*sequence,ostringstr
 	if(id->length()==0)
 		return;
 	if(sequence->str().length()==0){
-		//(*m_cout)<<"0 22"<<endl;
-		(*m_cout)<<"Empty sequence? "<<*id<<endl;
+		//(cout)<<"0 22"<<endl;
+		(cout)<<"Empty sequence? "<<*id<<endl;
 		return;
 	}
 	if(sequence->str().length()!=quality->str().length()){
-		(*m_cout)<<*id<<endl;
-		(*m_cout)<<sequence->str()<<endl;
-		(*m_cout)<<quality->str()<<endl;
+		(cout)<<*id<<endl;
+		(cout)<<sequence->str()<<endl;
+		(cout)<<quality->str()<<endl;
 
-		(*m_cout)<<"ERROR length"<<endl;
+		(cout)<<"ERROR length"<<endl;
 		exit(0);
 	}
 	string sequenceStr=sequence->str();
