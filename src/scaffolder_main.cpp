@@ -141,8 +141,10 @@ int main(int argc,char*argv[]){
 	int activePairedReads=0;
 	int notOnTheSame=0;
 	int sumOfInserts=0;
+	int negativeInserts=0;
 	int numberOfInserts=0;
 	for(int readNumber=0;readNumber<leftReads.size();readNumber++){
+		cout<<endl;
 		cout<<"Read: "<<readNumber<<endl;
 		vector<int> validOnLeftForward;
 		vector<int> validOnLeftForwardPosition;
@@ -247,14 +249,18 @@ int main(int argc,char*argv[]){
 			}else{
 				int insertSize=rightPosition-leftPosition;
 				if(leftReverse&&rightReverse){
-					insertSize=leftReverse-rightPosition;
+					insertSize=leftPosition-rightPosition;
 				}
 				if((leftReverse==false&&rightReverse==true)||(leftReverse==true&&rightReverse==false)){
 					cout<<"Alert: a paired read matches on both strand of a contig.."<<endl;
 				}
-				sumOfInserts+=insertSize;
-				cout<<"Within the same, insertSize="<<insertSize<<endl;
-				numberOfInserts++;
+				if(insertSize>=0){
+					sumOfInserts+=insertSize;
+					cout<<"Within the same, insertSize="<<insertSize<<endl;
+					numberOfInserts++;
+				}else{
+					negativeInserts++;
+				}
 			}
 			theScaffolderGraphChildren[leftContig].insert(rightContig);
 			theScaffolderGraphParents[rightContig].insert(leftContig);
@@ -262,8 +268,8 @@ int main(int argc,char*argv[]){
 	}
 	cout<<"activePairedReads "<<activePairedReads<<endl;
 	cout<<"not on the same "<<notOnTheSame<<endl;
-	cout<<"Insert mean: "<<sumOfInserts/numberOfInserts<<endl;
-
+	cout<<"Insert mean: "<<sumOfInserts/numberOfInserts<<", n="<<numberOfInserts<<endl;
+	cout<<"negative insert sizes?: "<<negativeInserts<<endl;
 
 	map<int,int> scaffoldColors;
 	int currentColor=1;
@@ -315,6 +321,7 @@ int main(int argc,char*argv[]){
 		for(set<int>::iterator j=i->second.begin();j!=i->second.end();j++)
 			f<<"number"<<i->first<<" -> number"<<*j<<endl;
 	}
+	f<<"}"<<endl;
 	f.close();
 
 	return 0;
