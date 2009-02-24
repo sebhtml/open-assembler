@@ -130,18 +130,18 @@ int main(int argc,char*argv[]){
 	cout<<"Scaffolding now!"<<endl;
 	
 	int activePairedReads=0;
-	
+	int notOnTheSame=0;
 	for(int readNumber=0;readNumber<leftReads.size();readNumber++){
 		cout<<"Read: "<<readNumber<<endl;
-		int validOnLeftForward=0;
-		int validOnLeftReverse=0;
-		int validOnRightForward=0;
-		int validOnRightReverse=0;
+		vector<int> validOnLeftForward;
+		vector<int> validOnLeftReverse;
+		vector<int> validOnRightForward;
+		vector<int> validOnRightReverse;
 		if(leftForwardHits.count(readNumber)>0){
 			cout<<"leftForwardHits"<<endl;
 			for(map<int,vector<int> >::iterator i=leftForwardHits[readNumber].begin();i!=leftForwardHits[readNumber].end();i++){
 				if(i->second.size()>=MINIMUM_TILING_WINDOWS)
-					validOnLeftForward++;
+					validOnLeftForward.push_back(i->first);
 				cout<<"Contig "<<i->first<<endl;
 				cout<<"Positions: ";
 				for(int j=0;j<i->second.size();j++){
@@ -154,7 +154,7 @@ int main(int argc,char*argv[]){
 			cout<<"rightForwardHits"<<endl;
 			for(map<int,vector<int> >::iterator i=rightForwardHits[readNumber].begin();i!=rightForwardHits[readNumber].end();i++){
 				if(i->second.size()>=MINIMUM_TILING_WINDOWS)
-					validOnRightForward++;
+					validOnRightForward.push_back(i->first);
 				cout<<"Contig "<<i->first<<endl;
 				cout<<"Positions: ";
 				for(int j=0;j<i->second.size();j++){
@@ -167,7 +167,7 @@ int main(int argc,char*argv[]){
 			cout<<"leftReverseHits"<<endl;
 			for(map<int,vector<int> >::iterator i=leftReverseHits[readNumber].begin();i!=leftReverseHits[readNumber].end();i++){
 				if(i->second.size()>=MINIMUM_TILING_WINDOWS)
-					validOnLeftReverse++;
+					validOnLeftReverse.push_back(i->first);
 				cout<<"Contig "<<i->first<<endl;
 				cout<<"Positions: ";
 				for(int j=0;j<i->second.size();j++){
@@ -180,7 +180,7 @@ int main(int argc,char*argv[]){
 			cout<<"rightReverseHits"<<endl;
 			for(map<int,vector<int> >::iterator i=rightReverseHits[readNumber].begin();i!=rightReverseHits[readNumber].end();i++){
 				if(i->second.size()>=MINIMUM_TILING_WINDOWS)
-					validOnRightReverse++;
+					validOnRightReverse.push_back(i->first);
 				cout<<"Contig "<<i->first<<endl;
 				cout<<"Positions: ";
 				for(int j=0;j<i->second.size();j++){
@@ -189,15 +189,28 @@ int main(int argc,char*argv[]){
 				cout<<endl;
 			}
 		}
-		cout<<"validOnLeftForward "<<validOnLeftForward<<endl;
-		cout<<"validOnLeftReverse "<<validOnLeftReverse<<endl;
-		cout<<"validOnRightForward "<<validOnRightForward<<endl;
-		cout<<"validOnRightReverse "<<validOnRightReverse<<endl;
-		if(validOnLeftForward+validOnLeftReverse==1&&validOnRightForward+validOnRightReverse==1)
+		cout<<"validOnLeftForward "<<validOnLeftForward.size()<<endl;
+		cout<<"validOnLeftReverse "<<validOnLeftReverse.size()<<endl;
+		cout<<"validOnRightForward "<<validOnRightForward.size()<<endl;
+		cout<<"validOnRightReverse "<<validOnRightReverse.size()<<endl;
+		if(validOnLeftForward.size()+validOnLeftReverse.size()==1&&validOnRightForward.size()+validOnRightReverse.size()==1){
 			activePairedReads++;
+			int leftContig;
+			int rightContig;
+			if(validOnLeftForward.size()==1)
+				leftContig=validOnLeftForward[0];
+			else
+				leftContig=validOnLeftReverse[0];
+			if(validOnRightForward.size()==1)
+				rightContig=validOnRightForward[0];
+			else
+				rightContig=validOnRightReverse[0];
+			if(leftContig!=rightContig)
+				notOnTheSame++;
+		}
 	}
 	cout<<"activePairedReads "<<activePairedReads<<endl;
-
+	cout<<"not on the same "<<notOnTheSame<<endl;
 	return 0;
 }
 
