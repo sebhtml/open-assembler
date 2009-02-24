@@ -19,6 +19,7 @@
 
 #include"Loader.h"
 #include<iostream>
+#include<stack>
 #include"Read.h"
 #include<stdlib.h>
 #include"DeBruijnAssembler.h"
@@ -128,7 +129,15 @@ int main(int argc,char*argv[]){
 
 
 	cout<<"Scaffolding now!"<<endl;
-	
+	map<int,set<int> > theScaffolderGraphChildren;
+	map<int,set<int> > theScaffolderGraphParents;
+
+	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
+		set<int> anEntry;
+		theScaffolderGraphParents[contigNumber]=anEntry;
+		theScaffolderGraphChildren[contigNumber]=anEntry;
+	}
+
 	int activePairedReads=0;
 	int notOnTheSame=0;
 	for(int readNumber=0;readNumber<leftReads.size();readNumber++){
@@ -207,10 +216,38 @@ int main(int argc,char*argv[]){
 				rightContig=validOnRightReverse[0];
 			if(leftContig!=rightContig)
 				notOnTheSame++;
+			theScaffolderGraphChildren[leftContig].insert(rightContig);
+			theScaffolderGraphParents[rightContig].insert(leftContig);
 		}
 	}
 	cout<<"activePairedReads "<<activePairedReads<<endl;
 	cout<<"not on the same "<<notOnTheSame<<endl;
+	
+	map<int,int> scaffoldColors;
+	int currentColor=1;
+	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
+		if(scaffoldColors.count(contigNumber)==0){
+			stack<int> toDoList;
+			toDoList.push(contigNumber);
+			while(toDoList.size()>0){
+				int aContigNumber=toDoList.top();
+				toDoList.pop();
+				scaffoldColors[aContigNumber]=currentColor;
+				set<int> children=theScaffolderGraphChildren[aContigNumber];
+				set<int> parents=theScaffolderGraphParents[aContigNumber];
+				for(set<int>::iterator i=children.begin();i!=children.end();i++){
+					toDoList.push(*i);
+				}
+				for(set<int>::iterator i=parents.begin();i!=parents.end();i++){
+					toDoList.push(*i);
+				}
+			}
+			currentColor++;
+		}
+	}
+
+	cout<<"Scaffolds: "<<currentColor-1<<endl;
+
 	return 0;
 }
 
