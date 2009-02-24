@@ -131,7 +131,7 @@ int main(int argc,char*argv[]){
 	cout<<"Scaffolding now!"<<endl;
 	map<int,set<int> > theScaffolderGraphChildren;
 	map<int,set<int> > theScaffolderGraphParents;
-
+	
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
 		set<int> anEntry;
 		theScaffolderGraphParents[contigNumber]=anEntry;
@@ -140,17 +140,25 @@ int main(int argc,char*argv[]){
 
 	int activePairedReads=0;
 	int notOnTheSame=0;
+	int sumOfInserts=0;
+	int numberOfInserts=0;
 	for(int readNumber=0;readNumber<leftReads.size();readNumber++){
 		cout<<"Read: "<<readNumber<<endl;
 		vector<int> validOnLeftForward;
+		vector<int> validOnLeftForwardPosition;
 		vector<int> validOnLeftReverse;
+		vector<int> validOnLeftReversePosition;
 		vector<int> validOnRightForward;
+		vector<int> validOnRightForwardPosition;
 		vector<int> validOnRightReverse;
+		vector<int> validOnRightReversePosition;
 		if(leftForwardHits.count(readNumber)>0){
 			cout<<"leftForwardHits"<<endl;
 			for(map<int,vector<int> >::iterator i=leftForwardHits[readNumber].begin();i!=leftForwardHits[readNumber].end();i++){
-				if(i->second.size()>=MINIMUM_TILING_WINDOWS)
+				if(i->second.size()>=MINIMUM_TILING_WINDOWS){
 					validOnLeftForward.push_back(i->first);
+					validOnLeftForwardPosition.push_back(i->second[0]);
+				}
 				cout<<"Contig "<<i->first<<endl;
 				cout<<"Positions: ";
 				for(int j=0;j<i->second.size();j++){
@@ -162,8 +170,10 @@ int main(int argc,char*argv[]){
 		if(rightForwardHits.count(readNumber)>0){
 			cout<<"rightForwardHits"<<endl;
 			for(map<int,vector<int> >::iterator i=rightForwardHits[readNumber].begin();i!=rightForwardHits[readNumber].end();i++){
-				if(i->second.size()>=MINIMUM_TILING_WINDOWS)
+				if(i->second.size()>=MINIMUM_TILING_WINDOWS){
 					validOnRightForward.push_back(i->first);
+					validOnRightForwardPosition.push_back(i->second[0]);
+				}
 				cout<<"Contig "<<i->first<<endl;
 				cout<<"Positions: ";
 				for(int j=0;j<i->second.size();j++){
@@ -175,8 +185,10 @@ int main(int argc,char*argv[]){
 		if(leftReverseHits.count(readNumber)>0){
 			cout<<"leftReverseHits"<<endl;
 			for(map<int,vector<int> >::iterator i=leftReverseHits[readNumber].begin();i!=leftReverseHits[readNumber].end();i++){
-				if(i->second.size()>=MINIMUM_TILING_WINDOWS)
+				if(i->second.size()>=MINIMUM_TILING_WINDOWS){
 					validOnLeftReverse.push_back(i->first);
+					validOnLeftReversePosition.push_back(i->second[0]);
+				}
 				cout<<"Contig "<<i->first<<endl;
 				cout<<"Positions: ";
 				for(int j=0;j<i->second.size();j++){
@@ -188,8 +200,11 @@ int main(int argc,char*argv[]){
 		if(rightReverseHits.count(readNumber)>0){
 			cout<<"rightReverseHits"<<endl;
 			for(map<int,vector<int> >::iterator i=rightReverseHits[readNumber].begin();i!=rightReverseHits[readNumber].end();i++){
-				if(i->second.size()>=MINIMUM_TILING_WINDOWS)
+				if(i->second.size()>=MINIMUM_TILING_WINDOWS){
 					validOnRightReverse.push_back(i->first);
+					validOnRightReversePosition.push_back(i->second[0]);
+				}
+
 				cout<<"Contig "<<i->first<<endl;
 				cout<<"Positions: ";
 				for(int j=0;j<i->second.size();j++){
@@ -206,23 +221,50 @@ int main(int argc,char*argv[]){
 			activePairedReads++;
 			int leftContig;
 			int rightContig;
-			if(validOnLeftForward.size()==1)
+			int leftPosition;
+			int rightPosition;
+			bool leftReverse=false;
+			bool rightReverse=false;
+			if(validOnLeftForward.size()==1){
 				leftContig=validOnLeftForward[0];
-			else
+				leftPosition=validOnLeftForwardPosition[0];
+			}else{
 				leftContig=validOnLeftReverse[0];
-			if(validOnRightForward.size()==1)
+				leftPosition=validOnLeftReversePosition[0];
+				leftReverse=true;
+			}
+			if(validOnRightForward.size()==1){
 				rightContig=validOnRightForward[0];
-			else
+				rightPosition=validOnRightForwardPosition[0];
+			}else{
 				rightContig=validOnRightReverse[0];
-			if(leftContig!=rightContig)
+				rightPosition=validOnRightReversePosition[0];
+				rightReverse=true;
+			}
+
+			if(leftContig!=rightContig){
 				notOnTheSame++;
+			}else{
+				int insertSize=rightPosition-leftPosition;
+				if(leftReverse&&rightReverse){
+					insertSize=leftReverse-rightPosition;
+				}
+				if((leftReverse==false&&rightReverse==true)||(leftReverse==true&&rightReverse==false)){
+					cout<<"Alert: a paired read matches on both strand of a contig.."<<endl;
+				}
+				sumOfInserts+=insertSize;
+				cout<<"Within the same, insertSize="<<insertSize<<endl;
+				numberOfInserts++;
+			}
 			theScaffolderGraphChildren[leftContig].insert(rightContig);
 			theScaffolderGraphParents[rightContig].insert(leftContig);
 		}
 	}
 	cout<<"activePairedReads "<<activePairedReads<<endl;
 	cout<<"not on the same "<<notOnTheSame<<endl;
-	
+	cout<<"Insert mean: "<<sumOfInserts/numberOfInserts<<endl;
+
+
 	map<int,int> scaffoldColors;
 	int currentColor=1;
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
@@ -236,17 +278,44 @@ int main(int argc,char*argv[]){
 				set<int> children=theScaffolderGraphChildren[aContigNumber];
 				set<int> parents=theScaffolderGraphParents[aContigNumber];
 				for(set<int>::iterator i=children.begin();i!=children.end();i++){
-					toDoList.push(*i);
+					if(scaffoldColors.count(*i)==0)
+						toDoList.push(*i);
 				}
 				for(set<int>::iterator i=parents.begin();i!=parents.end();i++){
-					toDoList.push(*i);
+					if(scaffoldColors.count(*i)==0)
+						toDoList.push(*i);
 				}
 			}
 			currentColor++;
 		}
 	}
 
+	map<int,vector<int> > colorToContig;
+	for(map<int,int>::iterator i=scaffoldColors.begin();i!=scaffoldColors.end();i++){
+		colorToContig[i->second].push_back(i->first);
+	}
+
+	for(map<int,vector<int> >::iterator i=colorToContig.begin();i!=colorToContig.end();i++){
+		cout<<"Color="<<i->first<<endl;
+		cout<<"Contigs ("<<i->second.size()<<"): "<<endl;
+		for(vector<int>::iterator j=i->second.begin();j!=i->second.end();j++){
+			cout<<contigs[*j]->getId()<<endl;
+		}
+	}
+
+
 	cout<<"Scaffolds: "<<currentColor-1<<endl;
+
+
+	cout<<"Writing the graph"<<endl;
+	ofstream f("graph.graphviz");
+	f<<"digraph{"<<endl;
+	for(map<int,set<int> >::iterator i=theScaffolderGraphChildren.begin();i!=theScaffolderGraphChildren.end();i++){
+		f<<"number"<<i->first<<endl;
+		for(set<int>::iterator j=i->second.begin();j!=i->second.end();j++)
+			f<<"number"<<i->first<<" -> number"<<*j<<endl;
+	}
+	f.close();
 
 	return 0;
 }
