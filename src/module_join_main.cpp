@@ -16,6 +16,8 @@ int main(int argc,char*argv[]){
 		cout<<"module_join <wordSize> <contigs> <reads>"<<endl;
 		return 0;
 	}
+	int MINIMUM_MATCHES=30;
+	double MINIMUM_IDENTITY=0.85;
 	Loader readLoader;
 	Loader contigsLoader;
 	int wordSize=atoi(argv[1]);
@@ -93,6 +95,12 @@ int main(int argc,char*argv[]){
 				}
 			}
 			if(positionsHeads.size()>0&&positionsTails.size()>0){
+/*
+ 						--------------------> Read
+		----------------------------------->
+								----------------------------------->
+
+*/
 				cout<<"Matching ForwardTail-ForwardHead "<<positionsTails.size()<<" "<<positionsHeads.size()<<endl;
 				if(positionsHeads.size()==1&&positionsTails.size()==1){
 					VERTEX_TYPE head=DeBruijnAssembler::wordId(readSequence.substr(positionsHeads[0],wordSize).c_str());
@@ -176,7 +184,86 @@ int main(int argc,char*argv[]){
 				}
 			}
 			if(positionsHeads.size()>0&&positionsTailsReverse.size()>0){
-				cout<<"Matching ReverseTail-ForwardHead"<<endl;
+				cout<<"Matching ReverseTail-ForwardHead "<<positionsTailsReverse.size()<<" "<<positionsHeads.size()<<endl;
+
+				if(positionsHeads.size()==1&&positionsTailsReverse.size()==1){
+					VERTEX_TYPE head=DeBruijnAssembler::wordId(readSequence.substr(positionsHeads[0],wordSize).c_str());
+					VERTEX_TYPE tail=DeBruijnAssembler::wordId(readSequence.substr(positionsTailsReverse[0],wordSize).c_str());
+					vector<int> headContigs=contigHeads[head];
+					vector<int> tailContigsReverse=contigTailsReverse[tail];
+
+					cout<<tailContigsReverse.size()<<" Tails"<<endl;
+					cout<<headContigs.size()<<" Heads"<<endl;
+
+					if(headContigs.size()==1&&tailContigsReverse.size()==1&&contigStat.count(tailContigsReverse[0])==0&&
+						contigStat.count(headContigs[0])==0&&
+							tailContigsReverse[0]!=headContigs[0]){
+						Read*firstContig=contigs[tailContigsReverse[0]];
+						Read*lastContig=contigs[headContigs[0]];
+						cout<<"Read "<<reads[readNumber]->getId()<<" suggests that "<<firstContig->getId()<<" (rev) and "<<lastContig->getId()<<" should be linked"<<endl;
+						cout<<"read"<<endl;
+						cout<<readSequence<<endl;
+						cout<<"tail"<<endl;
+						string firstSequence=firstContig->getSeq();
+						cout<<DeBruijnAssembler::reverseComplement(firstSequence.substr(firstSequence.length()-400-1,400))<<endl;
+						cout<<"head"<<endl;
+						string lastSequence=lastContig->getSeq();
+						cout<<lastSequence.substr(0,400)<<endl;
+						
+						// 2 cases:
+					// 1) there is a gap (>=0)
+					// 2) there is an overlap
+						int tailPositionInRead=positionsTailsReverse[0];
+						int headPositionInRead=positionsHeads[0];
+						int difference=headPositionInRead-tailPositionInRead;
+						cout<<"Difference: "<<difference<<endl;
+						int leftHits=0;
+						int rightHits=0;
+						int i=0;
+						while(i+headPositionInRead<readSequence.length()){
+							if(lastSequence[i]==readSequence[headPositionInRead+i])
+								rightHits++;
+							i++;
+						}
+						double rightPercentage=rightHits/(i+0.0);
+						cout<<"rightHits "<<rightHits<<"/"<<rightPercentage<<endl;
+						i=0;
+						while(tailPositionInRead-i+wordSize>=0){
+							//cout<<firstSequence[firstSequence.length()-1-i]<<" "<<readSequence[tailPositionInRead-i+wordSize]<<endl;
+							if(firstSequence[firstSequence.length()-1-i]==readSequence[tailPositionInRead-i+wordSize])
+								leftHits++;
+							i++;
+						}
+						double leftPercentage=leftHits/(i+0.0);
+	
+						cout<<"leftHits "<<leftHits<<"/"<<leftPercentage<<endl;
+						if(rightHits>=MINIMUM_MATCHES&&leftHits>=MINIMUM_MATCHES&&leftPercentage>=MINIMUM_IDENTITY&&rightPercentage>=MINIMUM_IDENTITY){
+							int overlap=wordSize-difference;
+							if(overlap<0)
+								overlap=0;
+							ostringstream newContigSequence;
+							newContigSequence<<firstSequence;
+							for(int i=tailPositionInRead+wordSize+1;i<headPositionInRead;i++){
+								newContigSequence<<readSequence[i];
+							}
+							newContigSequence<<lastSequence.substr(overlap)<<endl;
+							cout<<"overlap "<<overlap<<endl;
+							cout<<"merge"<<endl;
+							//cout<<newContigSequence.str()<<endl;
+							contigStat.insert(tailContigsReverse[0]);
+							contigStat.insert(headContigs[0]);
+							ostringstream aName;
+							aName<<firstContig->getId()<<"_"<<lastContig->getId();
+							Read*read=new Read(aName.str().c_str(),newContigSequence.str().c_str());
+
+							stepForwardTailForwardHead_contigs.push_back(read);
+						}
+				
+					}else{
+						cout<<"Not 1-1"<<endl;
+					}
+				}
+
 			}
 			if(positionsHeadsReverse.size()>0&&positionsTails.size()>0){
 				cout<<"Matching ForwardTail-ReverseHead"<<endl;
@@ -185,6 +272,7 @@ int main(int argc,char*argv[]){
 				cout<<"Matching ReverseTail-ReverseHead"<<endl;
 			}
 		}
+
 		for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
 			if(contigStat.count(contigNumber)==0){
 				stepForwardTailForwardHead_contigs.push_back(contigs[contigNumber]);
