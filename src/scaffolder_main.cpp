@@ -263,8 +263,6 @@ int main(int argc,char*argv[]){
 			if(leftContig!=rightContig){
 				notOnTheSame++;
 
-				theScaffolderGraphChildren[leftContig].insert(rightContig);
-				theScaffolderGraphParents[rightContig].insert(leftContig);
 				Annotation anAnnotation;
 				anAnnotation.readNumber=readNumber;
 				anAnnotation.leftContigNumber=leftContig;
@@ -281,12 +279,26 @@ int main(int argc,char*argv[]){
 	
 				anAnnotation.rightPositionOnContig=rightPosition;
 
+				int insertSizeLowerBound=0;
+				if(anAnnotation.leftIsReverse==false){
+					insertSizeLowerBound+=(strlen(contigs[leftContig]->getSeq()))-anAnnotation.leftPositionOnContig;
+				}else{
+					insertSizeLowerBound+=anAnnotation.leftPositionOnContig;
+				}	
+				if(anAnnotation.rightIsReverse==true){
+					insertSizeLowerBound+=(strlen(contigs[rightContig]->getSeq()))-anAnnotation.rightPositionOnContig;
+				}else{
+					insertSizeLowerBound+=anAnnotation.rightPositionOnContig;
+				}
+
+
 				annotations[leftContig][rightContig].push_back(anAnnotation);
 				cout<<"LINK"<<endl;
 				cout<<"Left"<<endl;
 				cout<<leftReads[anAnnotation.readNumber]->getId()<<" "<<" Contig: "<<contigs[anAnnotation.leftContigNumber]->getId()<<" Length: "<<strlen(contigs[anAnnotation.leftContigNumber]->getSeq())<<" Position: "<<anAnnotation.leftPositionOnContig<<" Strand: "<<anAnnotation.leftIsReverse<<endl;
 				cout<<"Right"<<endl;
 				cout<<rightReads[anAnnotation.readNumber]->getId()<< " "<<" Contig: "<<contigs[anAnnotation.rightContigNumber]->getId()<<" Length: "<<strlen(contigs[anAnnotation.rightContigNumber]->getSeq())<<" Position: "<<anAnnotation.rightPositionOnContig<<" Strand: "<<anAnnotation.rightIsReverse<<endl;
+				cout<<"InsertSizeLowerBound="<<insertSizeLowerBound<<endl;
 			}else{
 				int insertSize=rightPosition-leftPosition;
 				if(leftReverse&&rightReverse){
@@ -352,7 +364,16 @@ int main(int argc,char*argv[]){
 
 
 	cout<<"Scaffolds: "<<currentColor-1<<endl;
-
+	for(map<int,map<int,vector<Annotation > > >::iterator i=annotations.begin();i!=annotations.end();i++){
+		for(map<int,vector<Annotation> >::iterator j=i->second.begin();j!=i->second.end();j++){
+			if(j->second.size()>=1){
+				int leftContig=i->first;
+				int rightContig=j->first;
+				theScaffolderGraphChildren[leftContig].insert(rightContig);
+				theScaffolderGraphParents[rightContig].insert(leftContig);
+			}
+		}
+	}
 
 	cout<<"Writing the graph"<<endl;
 	ofstream f("graph.graphviz");
