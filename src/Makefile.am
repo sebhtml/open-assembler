@@ -1,6 +1,6 @@
-bin_PROGRAMS = dna_FastaToSQL dna_DeBruijnAssembler dna_Merger dna_sffPairedToFasta  dna_Scaffolder dna_fastaToAMOS module_join # dna_DeBruijnSplitter  module_join
+bin_PROGRAMS =  dna_DeBruijnAssembler dna_Merger dna_sffPairedToFasta  dna_Scaffolder dna_fastaToAMOS module_join # dna_DeBruijnSplitter dna_FastaToSQL
 
-dna_FastaToSQL_SOURCES =  dump_sql_main.cpp  common_functions.h common_functions.cpp
+#dna_FastaToSQL_SOURCES =  dump_sql_main.cpp  common_functions.h common_functions.cpp
 
 dna_DeBruijnAssembler_SOURCES = De_Bruijn_De_Novo_Assembler_main.cpp  DeBruijnAssembler.h  Read.cpp \
 DeBruijnAssembler.cpp                               Read.h Loader.cpp Loader.h  SffLoader.h SffLoader.cpp \
