@@ -25,6 +25,22 @@
 #include"DeBruijnAssembler.h"
 using namespace std;
 
+class Annotation{
+
+public:
+int readNumber;
+
+int leftContigNumber;
+char leftIsReverse;
+int leftPositionOnContig;
+int leftPositionOnRead;
+
+int rightContigNumber;
+char rightIsReverse;
+int rightPositionOnContig;
+int rightPositionOnRead;
+};
+
 int main(int argc,char*argv[]){
 	DeBruijnAssembler::CommonHeader(&cout);
 	if(argc!=7){
@@ -131,7 +147,7 @@ int main(int argc,char*argv[]){
 	cout<<"Scaffolding now!"<<endl;
 	map<int,set<int> > theScaffolderGraphChildren;
 	map<int,set<int> > theScaffolderGraphParents;
-	
+	map<int,map<int,vector<Annotation> > > annotations;
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
 		set<int> anEntry;
 		theScaffolderGraphParents[contigNumber]=anEntry;
@@ -246,6 +262,31 @@ int main(int argc,char*argv[]){
 
 			if(leftContig!=rightContig){
 				notOnTheSame++;
+
+				theScaffolderGraphChildren[leftContig].insert(rightContig);
+				theScaffolderGraphParents[rightContig].insert(leftContig);
+				Annotation anAnnotation;
+				anAnnotation.readNumber=readNumber;
+				anAnnotation.leftContigNumber=leftContig;
+				anAnnotation.leftIsReverse='F';
+				if(leftReverse)
+					anAnnotation.leftIsReverse='R';
+	
+				anAnnotation.leftPositionOnContig=leftPosition;
+				
+				anAnnotation.rightContigNumber=rightContig;
+				anAnnotation.rightIsReverse='F';
+				if(rightReverse)
+					anAnnotation.rightIsReverse='R';
+	
+				anAnnotation.rightPositionOnContig=rightPosition;
+
+				annotations[leftContig][rightContig].push_back(anAnnotation);
+				cout<<"LINK"<<endl;
+				cout<<"Left"<<endl;
+				cout<<leftReads[anAnnotation.readNumber]->getId()<<" "<<" Contig: "<<anAnnotation.leftContigNumber<<" Position: "<<anAnnotation.leftPositionOnContig<<" Strand: "<<anAnnotation.leftIsReverse<<endl;
+				cout<<"Right"<<endl;
+				cout<<rightReads[anAnnotation.readNumber]->getId()<< " "<<" Contig: "<<anAnnotation.rightContigNumber<<" Position: "<<anAnnotation.rightPositionOnContig<<" Strand: "<<anAnnotation.rightIsReverse<<endl;
 			}else{
 				int insertSize=rightPosition-leftPosition;
 				if(leftReverse&&rightReverse){
@@ -262,10 +303,10 @@ int main(int argc,char*argv[]){
 					negativeInserts++;
 				}
 			}
-			theScaffolderGraphChildren[leftContig].insert(rightContig);
-			theScaffolderGraphParents[rightContig].insert(leftContig);
 		}
 	}
+	cout<<endl;
+	cout<<endl;
 	cout<<"activePairedReads "<<activePairedReads<<endl;
 	cout<<"not on the same "<<notOnTheSame<<endl;
 	cout<<"Insert mean: "<<sumOfInserts/numberOfInserts<<", n="<<numberOfInserts<<endl;
