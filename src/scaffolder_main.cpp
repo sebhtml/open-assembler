@@ -280,13 +280,13 @@ int main(int argc,char*argv[]){
 				anAnnotation.rightPositionOnContig=rightPosition;
 
 				int insertSizeLowerBound=0;
-				if(anAnnotation.leftIsReverse==false){
-					insertSizeLowerBound+=(strlen(contigs[leftContig]->getSeq()))-anAnnotation.leftPositionOnContig;
+				if(anAnnotation.leftIsReverse=='F'){
+					insertSizeLowerBound+=((strlen(contigs[leftContig]->getSeq()))-anAnnotation.leftPositionOnContig);
 				}else{
 					insertSizeLowerBound+=anAnnotation.leftPositionOnContig;
 				}	
-				if(anAnnotation.rightIsReverse==true){
-					insertSizeLowerBound+=(strlen(contigs[rightContig]->getSeq()))-anAnnotation.rightPositionOnContig;
+				if(anAnnotation.rightIsReverse=='R'){
+					insertSizeLowerBound+=((strlen(contigs[rightContig]->getSeq()))-anAnnotation.rightPositionOnContig);
 				}else{
 					insertSizeLowerBound+=anAnnotation.rightPositionOnContig;
 				}
