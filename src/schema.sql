@@ -1,4 +1,5 @@
-
+drop table edges;
+drop table vertex_annotations;
 
 create table edges (prefix bigint unsigned not null,suffix bigint unsigned not null);
 create index i1 on edges(prefix);

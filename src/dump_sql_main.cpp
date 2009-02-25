@@ -21,7 +21,11 @@ bool validMer(string*a,int wordSize){
 	return true;
 }
 
-void process_Read(MYSQL*mysql,int readNumber,int wordSize,string*readSequence,char readStrand){
+void process_Read(MYSQL*mysql,int readNumber,int wordSize,string*readSequence,char readStrand,ostream*out){
+
+	if(readNumber%1000==0&&readStrand=='F'){
+		//cout<<"Progress: "<<readNumber<<endl;
+	}
 	string theSequence=*readSequence;
 	if(readStrand=='R')
 		theSequence=reverseComplement(*readSequence);
@@ -32,25 +36,30 @@ void process_Read(MYSQL*mysql,int readNumber,int wordSize,string*readSequence,ch
 		bool suffixValid=validMer(&suffix,wordSize);
 		VERTEX_TYPE prefixInt;
 		VERTEX_TYPE suffixInt;
+		prefixInt=wordId(prefix.c_str());
+		suffixInt=wordId(suffix.c_str());
 		if(prefixValid){
-			prefixInt=wordId(prefix.c_str());
 			ostringstream query;
-			query<<"insert into vertex_annotations(vertex,readNumber,readStrand,readPosition) values ("<<prefixInt<<","<<readNumber<<",'"<<readStrand<<"',"<<readPosition<<")";
+			query<<"insert into vertex_annotations(vertex,readNumber,readStrand,readPosition) values ("<<prefixInt<<","<<readNumber<<",'"<<readStrand<<"',"<<readPosition<<") ;";
 			//cout<<query.str()<<endl;
-			mysql_query(mysql,query.str().c_str());
+			//mysql_query(mysql,query.str().c_str());
+			*out<<query.str()<<endl;
 		}
-		if(suffixValid){
-			suffixInt=wordId(suffix.c_str());
+/*
+		if(suffixValid&&readPosition!=theSequence.length()-1){
 			ostringstream query;
-			query<<"insert into vertex_annotations(vertex,readNumber,readStrand,readPosition) values("<<suffixInt<<","<<readNumber<<",'"<<readStrand<<"',"<<readPosition+1<<")";
-			mysql_query(mysql,query.str().c_str());
+			query<<"insert into vertex_annotations(vertex,readNumber,readStrand,readPosition) values("<<suffixInt<<","<<readNumber<<",'"<<readStrand<<"',"<<readPosition+1<<") ;";
+			//mysql_query(mysql,query.str().c_str());
 			//cout<<query.str()<<endl;
+			*out<<query.str()<<endl;
 		}
+*/
 		if(prefixValid&&suffixValid){
 			ostringstream query;
-			query<<"insert into edges (prefix,suffix) values("<<prefixInt<<","<<suffixInt<<")";
-			mysql_query(mysql,query.str().c_str());
+			query<<"insert into edges (prefix,suffix) values("<<prefixInt<<","<<suffixInt<<") ;";
+			//mysql_query(mysql,query.str().c_str());
 			//cout<<query.str()<<endl;
+			*out<<query.str()<<endl;
 		}
 	}
 
@@ -66,40 +75,44 @@ int main(int argc,char*argv[]){
 	MYSQL mysql;
 	MYSQL_ROW row;
 
-	cout<<"Usage:"<<endl;
-	cout<<"dna_FastaToSQL <wordSize> <fasta files>"<<endl;
-	if(argc<2)
+	if(argc<2){
+
+		cout<<"Usage:"<<endl;
+		cout<<"dna_FastaToSQL <wordSize> <fasta files>"<<endl;
 		return 0;
+	}
 	mysql_init(&mysql);
 	mysql_options(&mysql,MYSQL_READ_DEFAULT_GROUP,"your_prog_name");
-
-	if (!mysql_real_connect(&mysql,"localhost","root","root","assembly",0,NULL,0)){
+/*
+	string mysql_hostname=argv[1];
+	string mysql_user=argv[2];
+	string mysql_password=argv[3];
+	string mysql_database=argv[4];
+	if (!mysql_real_connect(&mysql,mysql_hostname.c_str(),mysql_user.c_str(),mysql_password.c_str(),mysql_database.c_str(),0,NULL,0)){
     		fprintf(stderr, "Failed to connect to database: Error: %s\n",
           	mysql_error(&mysql));
 	}
-	mysql_query(&mysql,"show tables");
+*/
+	//mysql_query(&mysql,"show tables");
 	unsigned int num_fields;
- 	MYSQL_RES *result=mysql_use_result(&mysql)  ;
-	num_fields = mysql_num_fields(result);
-	
-	cout<<"Checking tables"<<endl;
+ 	//MYSQL_RES *result=mysql_use_result(&mysql)  ;
+	//num_fields = mysql_num_fields(result);
+	/*
+	//cout<<"Checking tables"<<endl;
 	while(row = mysql_fetch_row(result)){
 		for(int i=0;i<num_fields;i++){
-			cout<<" "<<row[i];
+			//cout<<" "<<row[i];
 		}
-		cout<<endl;
+		//cout<<endl;
 	}
-
-	cout<<"Done"<<endl;
+*/
+	//cout<<"Done"<<endl;
 
 	int wordSize=atoi(argv[1]);
-	cout<<"Wordsize: "<<wordSize<<endl;
-	cout<<argc-2<<" files"<<endl;
+	//cout<<"Wordsize: "<<wordSize<<endl;
+	//cout<<argc-2<<" files"<<endl;
 	int readNumber=0;
 	for(int fileNumber=2;fileNumber<argc;fileNumber++){
-		if(readNumber%1000==0){
-			cout<<"Progress: "<<readNumber<<endl;
-		}
 		string fileName=argv[fileNumber];
 		ifstream f(fileName.c_str());
 		ostringstream sequence;
@@ -111,8 +124,8 @@ int main(int argc,char*argv[]){
 			if(line[0]=='>'){
 				string readSequence=sequence.str();
 				if(readSequence.length()>0){
-					process_Read(&mysql,readNumber,wordSize,&readSequence,'F');
-					process_Read(&mysql,readNumber,wordSize,&readSequence,'R');
+					process_Read(&mysql,readNumber,wordSize,&readSequence,'F',&cout);
+					process_Read(&mysql,readNumber,wordSize,&readSequence,'R',&cout);
 					readNumber++;
 				}
 				sequence.str("");
@@ -121,12 +134,14 @@ int main(int argc,char*argv[]){
 			}
 		}
 		string readSequence=sequence.str();
-		process_Read(&mysql,readNumber,wordSize,&readSequence,'F');
-		process_Read(&mysql,readNumber,wordSize,&readSequence,'R');
+		process_Read(&mysql,readNumber,wordSize,&readSequence,'F',&cout);
+		process_Read(&mysql,readNumber,wordSize,&readSequence,'R',&cout);
 
 		f.close();
-		cout<<"Loading "<<fileName<<endl;
+		//cout<<"Loading "<<fileName<<endl;
 	}
+	//graphSql.close();
+	cout<<"graph.sql written"<<endl;
 	cout<<"Reads: "<<readNumber<<endl;
 	cout<<"Closing MYSQL now."<<endl;
 	mysql_close(&mysql);
