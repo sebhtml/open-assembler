@@ -9,7 +9,7 @@ using namespace std;
 
 
 int main(int argc,char*argv[]){
-	DeBruijnAssembler::CommonHeader(&cout);
+	CommonHeader(&cout);
 
 	if(argc!=4){
 		cout<<"Usage"<<endl;
@@ -43,14 +43,14 @@ int main(int argc,char*argv[]){
 		string sequenceOfContig=contigs.at(contigNumber)->getSeq();
 		string contigHeadString=sequenceOfContig.substr(0,wordSize);
 		string contigTailString=sequenceOfContig.substr(sequenceOfContig.length()-1-wordSize,wordSize);
-		VERTEX_TYPE headInInt=DeBruijnAssembler::wordId(contigHeadString.c_str());
-		VERTEX_TYPE tailInInt=DeBruijnAssembler::wordId(contigTailString.c_str());
+		VERTEX_TYPE headInInt=wordId(contigHeadString.c_str());
+		VERTEX_TYPE tailInInt=wordId(contigTailString.c_str());
 		contigHeads[headInInt].push_back(contigNumber);
 		contigTails[tailInInt].push_back(contigNumber);
-		string contigHeadStringReverse=DeBruijnAssembler::reverseComplement(contigHeadString.c_str());
-		VERTEX_TYPE headInIntReverse=DeBruijnAssembler::wordId(contigHeadStringReverse.c_str());
-		string contigTailStringReverse=DeBruijnAssembler::reverseComplement(contigTailString.c_str());
-		VERTEX_TYPE tailInIntReverse=DeBruijnAssembler::wordId(contigTailStringReverse.c_str());
+		string contigHeadStringReverse=reverseComplement(contigHeadString.c_str());
+		VERTEX_TYPE headInIntReverse=wordId(contigHeadStringReverse.c_str());
+		string contigTailStringReverse=reverseComplement(contigTailString.c_str());
+		VERTEX_TYPE tailInIntReverse=wordId(contigTailStringReverse.c_str());
 		contigHeadsReverse[headInIntReverse].push_back(contigNumber);
 		contigTailsReverse[tailInIntReverse].push_back(contigNumber);
 	}
@@ -79,7 +79,7 @@ int main(int argc,char*argv[]){
 				string wordSequence=readSequence.substr(readPosition,wordSize);
 				if(wordSequence.length()!=wordSize)
 					continue;
-				VERTEX_TYPE wordInInt=DeBruijnAssembler::wordId(wordSequence.c_str());
+				VERTEX_TYPE wordInInt=wordId(wordSequence.c_str());
 				
 				if(contigHeads.count(wordInInt)>0){
 					positionsHeads.push_back(readPosition);
@@ -103,8 +103,8 @@ int main(int argc,char*argv[]){
 */
 				cout<<"Matching ForwardTail-ForwardHead "<<positionsTails.size()<<" "<<positionsHeads.size()<<endl;
 				if(positionsHeads.size()==1&&positionsTails.size()==1){
-					VERTEX_TYPE head=DeBruijnAssembler::wordId(readSequence.substr(positionsHeads[0],wordSize).c_str());
-					VERTEX_TYPE tail=DeBruijnAssembler::wordId(readSequence.substr(positionsTails[0],wordSize).c_str());
+					VERTEX_TYPE head=wordId(readSequence.substr(positionsHeads[0],wordSize).c_str());
+					VERTEX_TYPE tail=wordId(readSequence.substr(positionsTails[0],wordSize).c_str());
 					vector<int> headContigs=contigHeads[head];
 					vector<int> tailContigs=contigTails[tail];
 					/*
@@ -187,8 +187,8 @@ int main(int argc,char*argv[]){
 				cout<<"Matching ReverseTail-ForwardHead "<<positionsTailsReverse.size()<<" "<<positionsHeads.size()<<endl;
 
 				if(positionsHeads.size()==1&&positionsTailsReverse.size()==1){
-					VERTEX_TYPE head=DeBruijnAssembler::wordId(readSequence.substr(positionsHeads[0],wordSize).c_str());
-					VERTEX_TYPE tail=DeBruijnAssembler::wordId(readSequence.substr(positionsTailsReverse[0],wordSize).c_str());
+					VERTEX_TYPE head=wordId(readSequence.substr(positionsHeads[0],wordSize).c_str());
+					VERTEX_TYPE tail=wordId(readSequence.substr(positionsTailsReverse[0],wordSize).c_str());
 					vector<int> headContigs=contigHeads[head];
 					vector<int> tailContigsReverse=contigTailsReverse[tail];
 
@@ -205,7 +205,7 @@ int main(int argc,char*argv[]){
 						cout<<readSequence<<endl;
 						cout<<"tail"<<endl;
 						string firstSequence=firstContig->getSeq();
-						cout<<DeBruijnAssembler::reverseComplement(firstSequence.substr(firstSequence.length()-400-1,400))<<endl;
+						cout<<reverseComplement(firstSequence.substr(firstSequence.length()-400-1,400))<<endl;
 						cout<<"head"<<endl;
 						string lastSequence=lastContig->getSeq();
 						cout<<lastSequence.substr(0,400)<<endl;

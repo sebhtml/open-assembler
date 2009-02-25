@@ -24,6 +24,7 @@
 
 #define SOFTWARE_VERSION "dna-0.0.0-pre-alpha-dev"
 
+#include"common_functions.h"
 #include"SequenceDataFull.h"
 #include"VertexData.h"
 #include"Read.h"
@@ -75,7 +76,6 @@ class DeBruijnAssembler{
 	void contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,vector<int>*repeatAnnotations,VERTEX_TYPE source);
 	vector<VERTEX_TYPE> getWalk(VERTEX_TYPE prefix,vector<VERTEX_TYPE>*path,int length,vector<map<int,map<char,int > > >*currentReadPositions);
 
-	char getLastSymbol(VERTEX_TYPE i);
 	string pathToDNA(vector<VERTEX_TYPE>*path);
 
 	vector<VERTEX_TYPE> nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources,map<int,int>*usedReads);
@@ -115,16 +115,7 @@ public:
 	void Algorithm_Assembler_20090121();
 	void setMinimumCoverage(string coverage);
 
-	static string reverseComplement(string a);
-	static VERTEX_TYPE wordId(const char*a);
-	static string idToWord(VERTEX_TYPE i,int wordSize);
-	static char complement(char a);
 	static int m_WordSize;
-	static int m_NUCLEOTIDE_A;
-	static int m_NUCLEOTIDE_T;
-	static int m_NUCLEOTIDE_C;
-	static int m_NUCLEOTIDE_G;
-	static void CommonHeader(ostream*out);
 };
 
 #endif

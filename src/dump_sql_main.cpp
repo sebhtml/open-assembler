@@ -1,14 +1,65 @@
 #include<mysql.h>
+#include"Read.h"
 #include<fstream>
 #include<sstream>
 #include<string>
+#include"DeBruijnAssembler.h"
 #include<iostream>
 #include<stdlib.h>
 using namespace std;
 
-void process_Read(MYSQL*mysql,int readNumber,int wordSize,string*readSequence){
+bool validMer(string*a,int wordSize){
+	if(a->length()!=wordSize)
+		return false;
+	for(int i=0;i<a->length();i++){
+		char b=a->at(i);
+		if(b=='A'||b=='T'||b=='C'||b=='G'){
+		}else{
+			return false;
+		}
+	}
+	return true;
+}
+
+void process_Read(MYSQL*mysql,int readNumber,int wordSize,string*readSequence,char readStrand){
+	string theSequence=*readSequence;
+	if(readStrand=='R')
+		theSequence=reverseComplement(*readSequence);
+	for(int readPosition=0;readPosition<theSequence.length();readPosition++){
+		string prefix=theSequence.substr(readPosition,wordSize);
+		string suffix=theSequence.substr(readPosition+1,wordSize);
+		bool prefixValid=validMer(&prefix,wordSize);
+		bool suffixValid=validMer(&suffix,wordSize);
+		VERTEX_TYPE prefixInt;
+		VERTEX_TYPE suffixInt;
+		if(prefixValid){
+			prefixInt=wordId(prefix.c_str());
+			ostringstream query;
+			query<<"insert into vertex_annotations(vertex,readNumber,readStrand,readPosition) values ("<<prefixInt<<","<<readNumber<<",'"<<readStrand<<"',"<<readPosition<<")";
+			//cout<<query.str()<<endl;
+			mysql_query(mysql,query.str().c_str());
+		}
+		if(suffixValid){
+			suffixInt=wordId(suffix.c_str());
+			ostringstream query;
+			query<<"insert into vertex_annotations(vertex,readNumber,readStrand,readPosition) values("<<suffixInt<<","<<readNumber<<",'"<<readStrand<<"',"<<readPosition+1<<")";
+			mysql_query(mysql,query.str().c_str());
+			//cout<<query.str()<<endl;
+		}
+		if(prefixValid&&suffixValid){
+			ostringstream query;
+			query<<"insert into edges (prefix,suffix) values("<<prefixInt<<","<<suffixInt<<")";
+			mysql_query(mysql,query.str().c_str());
+			//cout<<query.str()<<endl;
+		}
+	}
+
+/*
 	cout<<"ReadNumber="<<readNumber<<endl;
 	cout<<"Nucleotides="<<readSequence->length()<<endl;
+	cout<<*readSequence<<endl;
+*/
+	
 }
 
 int main(int argc,char*argv[]){
@@ -46,6 +97,9 @@ int main(int argc,char*argv[]){
 	cout<<argc-2<<" files"<<endl;
 	int readNumber=0;
 	for(int fileNumber=2;fileNumber<argc;fileNumber++){
+		if(readNumber%1000==0){
+			cout<<"Progress: "<<readNumber<<endl;
+		}
 		string fileName=argv[fileNumber];
 		ifstream f(fileName.c_str());
 		ostringstream sequence;
@@ -53,19 +107,22 @@ int main(int argc,char*argv[]){
 		while(!f.eof()){
 			f.getline(buffer,2000);
 			string line=buffer;
+			//cout<<"Line="<<line<<endl;
 			if(line[0]=='>'){
 				string readSequence=sequence.str();
 				if(readSequence.length()>0){
-					process_Read(&mysql,readNumber,wordSize,&readSequence);
+					process_Read(&mysql,readNumber,wordSize,&readSequence,'F');
+					process_Read(&mysql,readNumber,wordSize,&readSequence,'R');
 					readNumber++;
 				}
-				sequence.clear();
+				sequence.str("");
 			}else{
 				sequence<<line;
 			}
 		}
 		string readSequence=sequence.str();
-		process_Read(&mysql,readNumber,wordSize,&readSequence);
+		process_Read(&mysql,readNumber,wordSize,&readSequence,'F');
+		process_Read(&mysql,readNumber,wordSize,&readSequence,'R');
 
 		f.close();
 		cout<<"Loading "<<fileName<<endl;

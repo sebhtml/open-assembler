@@ -20,17 +20,7 @@
 #ifndef _Read
 #define _Read
 
-/*
- *  unsigned long int
- *			for 64-bit machines, allows wordSize<=31
- *  unsigned int
- *  			for 32-bit machines, allows wordSize<=15
- */
-
-//#define VERTEX_TYPE unsigned long int
-//#define VERTEX_TYPE uint32_t
-#define VERTEX_TYPE uint64_t
-
+#include"common_functions.h"
 #include<string>
 #include<vector>
 using namespace std;

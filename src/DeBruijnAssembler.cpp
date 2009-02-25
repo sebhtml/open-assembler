@@ -37,7 +37,6 @@ using namespace std;
 
 
 
-
 int min(int a,int b){
 	if(a<b)
 		return a;
@@ -51,12 +50,6 @@ int abs_f(int a){
 }
 
 
-int DeBruijnAssembler::m_WordSize=5;
-int DeBruijnAssembler::m_NUCLEOTIDE_A=0;
-int DeBruijnAssembler::m_NUCLEOTIDE_T=1;
-int DeBruijnAssembler::m_NUCLEOTIDE_C=2;
-int DeBruijnAssembler::m_NUCLEOTIDE_G=3;
-
 DeBruijnAssembler::DeBruijnAssembler(ostream*m_cout){
 	m_DEBUG=false;
 	this->m_cout=m_cout;
@@ -65,32 +58,12 @@ DeBruijnAssembler::DeBruijnAssembler(ostream*m_cout){
 void DeBruijnAssembler::setWordSize(int k){
 	m_wordSize=k;
 	m_pairedAvailable=false;
-	DeBruijnAssembler::m_WordSize=k;
 	m_minimumCoverage=5;
 }
 
 
 
-char DeBruijnAssembler::complement(char a){
-	if(a=='A')
-		return 'T';
-	if(a=='T')
-		return 'A';
-	if(a=='C')
-		return 'G';
-	if(a=='G')
-		return 'C';
-	return a;
-}
 
-string DeBruijnAssembler::reverseComplement(string a){
-	ostringstream i;
-	for(int p=a.length()-1;p>=0;p--){
-		char b=complement(a[p]);
-		i<< b;
-	}
-	return i.str();
-}
 
 
 void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
@@ -208,8 +181,8 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		string wordString=idToWord(node,m_wordSize+1);
 		VERTEX_TYPE prefix=wordId(wordString.substr(0,m_wordSize).c_str());
 		VERTEX_TYPE suffix=wordId(wordString.substr(1,m_wordSize).c_str());
-		m_data.get(prefix)->addChild(suffix);
-		m_data.get(suffix)->addParent(prefix);
+		m_data.get(prefix)->addChild(suffix,m_wordSize);
+		m_data.get(suffix)->addParent(prefix,m_wordSize);
 	}
 	cout<<solidMers.size()<<" edges"<<endl;
 	cout<<endl;
@@ -321,8 +294,8 @@ void DeBruijnAssembler::load_graphFrom_file(){
 			VERTEX_TYPE b;
 			f>>b;
 			VertexData*childContainer=m_data.get(b);
-			childContainer->addParent(a);
-			dataPointerVertex->addChild(b);
+			childContainer->addParent(a,m_wordSize);
+			dataPointerVertex->addChild(b,m_wordSize);
 		}
 	}
 
@@ -363,7 +336,7 @@ void DeBruijnAssembler::writeGraph(){
 		VERTEX_TYPE prefix=nodes[(i)];
 		f<<prefix<<"\n";
 		VertexData*prefixData=&(theData[(i)]);
-		vector<VERTEX_TYPE>children=prefixData->getChildren(prefix);
+		vector<VERTEX_TYPE>children=prefixData->getChildren(prefix,m_wordSize);
 		vector<AnnotationElement>*annotations=prefixData->getAnnotations();
 		if(annotations!=NULL){
 			f<<annotations->size()<<"\n";
@@ -388,87 +361,15 @@ string DeBruijnAssembler::pathToDNA(vector<VERTEX_TYPE>*path){
 		if(i==path->begin()){
 			contigSequence<< idToWord(*i,m_wordSize);
 		}else{
-			contigSequence<<getLastSymbol(*i);
+			contigSequence<<getLastSymbol(*i,m_wordSize);
 		}
 	}
 	return contigSequence.str();
 }
 
 
-// convert k-mer to VERTEX_TYPE
-VERTEX_TYPE DeBruijnAssembler::wordId(const char*a){
-	VERTEX_TYPE i=0;
-	for(int j=0;j<(int)strlen(a);j++){
-		VERTEX_TYPE k=0;
-		if(a[j]=='A'){
-			// binary=00
-			// dec = 0
-			k=m_NUCLEOTIDE_A;
-		}else if(a[j]=='T'){
-			// binary=01
-			//  dec = 1
-			k=m_NUCLEOTIDE_T;
-		}else if(a[j]=='C'){
-			// binary=10
-			// dec = 2
-			k=m_NUCLEOTIDE_C;
-		}else if(a[j]=='G'){
-			// binary=11
-			// dec = 3
-			k=m_NUCLEOTIDE_G;
-		}
-		for(int l=0;l<=j;l++){
-			k*=4; // right shift two times two positions
-		}
-		i+=k;
-	}
-	return i;
-}
 
-string DeBruijnAssembler::idToWord(VERTEX_TYPE i,int wordSize){
-	string a="";
-	int maxSize=sizeof(VERTEX_TYPE)*8/2; // 32
-	for(int p=0;p<wordSize;p++){
-		VERTEX_TYPE j=i;
-		for(int k=0;k<(maxSize-p-2);k++){
-			j*=4;
-		}
-		for(int k=0;k<(maxSize-1);k++){
-			j/=4;
-		}
-		if(j==0){
-			a+='A';
-		}else if(j==1){
-			a+='T';
-		}else if(j==2){
-			a+='C';
-		}else if(j==3){
-			a+='G';
-		}else{
-		}
-		
 
-	}
-	return a;
-}
-
-char DeBruijnAssembler::getLastSymbol(VERTEX_TYPE i){
-        VERTEX_TYPE j=i;
-        for(int i=0;i<m_wordSize;i++){
-                j/=2;
-                j/=2;
-        }
-
-        if((int)j==m_NUCLEOTIDE_A)
-                return 'A';
-        if((int)j==m_NUCLEOTIDE_T)
-                return 'T';
-        if((int)j==m_NUCLEOTIDE_C)
-                return 'C';
-        if((int)j==m_NUCLEOTIDE_G)
-                return 'G';
-        return 'E';
-}
  
 void DeBruijnAssembler::setAssemblyDirectory(string assemblyDirectory){
 	m_assemblyDirectory=assemblyDirectory;
@@ -487,11 +388,11 @@ int DeBruijnAssembler::DFS_watch(VERTEX_TYPE a,int color){
 		//cout<<theQueue.size()<<endl;
 		VERTEX_TYPE b=theQueue.top();
 		theQueue.pop();
-		vector<VERTEX_TYPE> parents=m_data.get(b)->getParents(b,NULL);
+		vector<VERTEX_TYPE> parents=m_data.get(b)->getParents(b,NULL,m_wordSize);
 		if(parents.size()==1){
 			VERTEX_TYPE parent=parents[0];
 			VertexData*vData=m_data.get(parent);
-			if(vData->getColor()==-1&&vData->getParents(parent,NULL).size()<=1&&vData->getChildren(parent).size()<=1){
+			if(vData->getColor()==-1&&vData->getParents(parent,NULL,m_wordSize).size()<=1&&vData->getChildren(parent,m_wordSize).size()<=1){
 				vData->setColor(color);
 				numberOfVertices++;
 				theQueue.push(parent);
@@ -499,11 +400,11 @@ int DeBruijnAssembler::DFS_watch(VERTEX_TYPE a,int color){
 		}
 
 
-		vector<VERTEX_TYPE> children=m_data.get(b)->getChildren(b);
+		vector<VERTEX_TYPE> children=m_data.get(b)->getChildren(b,m_wordSize);
 		if(children.size()==1){
 			VERTEX_TYPE child=children[0];
 			VertexData*vData=m_data.get(child);
-			if(vData->getColor()==-1&&vData->getParents(child,NULL).size()<=1&&vData->getChildren(child).size()<=1){
+			if(vData->getColor()==-1&&vData->getParents(child,NULL,m_wordSize).size()<=1&&vData->getChildren(child,m_wordSize).size()<=1){
 				vData->setColor(color);
 				numberOfVertices++;
 				theQueue.push(child);
@@ -545,8 +446,8 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		}
 		VERTEX_TYPE vertex=theNodes[i];
 		VertexData*dataNode=m_data.get(vertex);
-		int parents=dataNode->getParents(vertex,NULL).size();
-		int children=dataNode->getChildren(vertex).size();
+		int parents=dataNode->getParents(vertex,NULL,m_wordSize).size();
+		int children=dataNode->getChildren(vertex,m_wordSize).size();
 		stats_parents_children[parents][children]++;
 		if(parents==1&&children==1)
 			continue;
@@ -583,7 +484,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		if(id%100000==0){
 			cout<<id+1<<" / "<<m_data.size()<<endl;
 		}
-		vector<VERTEX_TYPE> theParents=nodeDataInstance->getParents(prefix,NULL);
+		vector<VERTEX_TYPE> theParents=nodeDataInstance->getParents(prefix,NULL,m_wordSize);
 		//(*m_cout)<<theParents.size()<<endl;
 		if(theParents.size()>1){
 			//(*m_cout)<<theParents.size()<<endl;
@@ -881,7 +782,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		//(*m_cout)<<"adding "<<(*currentReadPositions).at(currentReadPositions->size()-1).size()<<endl;
 	}
 
-	vector<VERTEX_TYPE>children=m_data.get(prefix)->getChildren(prefix);
+	vector<VERTEX_TYPE>children=m_data.get(prefix)->getChildren(prefix,m_wordSize);
 
 	if(children.size()==0){
 		cout<<"Stop!, reason: this is a sink, no data available beyond this very nucleotide."<<endl;
@@ -958,7 +859,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources,map<int,int>*usedReads){
 	bool debugPrint=m_DEBUG;
 	VERTEX_TYPE prefix=path->at(path->size()-1);
-	vector<VERTEX_TYPE> children=m_data.get(prefix)->getChildren(prefix);
+	vector<VERTEX_TYPE> children=m_data.get(prefix)->getChildren(prefix,m_wordSize);
 	// start when nothing is done yet
 	//(*m_cout)<<currentReadPositions->size()<<" "<<path->size()<<endl;
 	if(currentReadPositions->size()==0){//||currentReadPositions->size()<path->size())
@@ -1100,8 +1001,8 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 		foundBest==false){
 		// attempt to detect homopolymer...
 		cout<<"Searching for homopolymer"<<endl;
-		string firstOne=DeBruijnAssembler::idToWord(children[0],m_wordSize);
-		string secondOne=DeBruijnAssembler::idToWord(children[1],m_wordSize);
+		string firstOne=idToWord(children[0],m_wordSize);
+		string secondOne=idToWord(children[1],m_wordSize);
 		int trailingHomoPolymerSize=0;
 		while(
 m_wordSize-2-trailingHomoPolymerSize>0 &&
@@ -1163,7 +1064,7 @@ firstOne[m_wordSize-2-trailingHomoPolymerSize]==
 
 	if(newSources!=NULL&&m_DEBUG){
 		(*m_cout)<<"No children scored. "<<endl;
-		vector<VERTEX_TYPE> allChildren=m_data.get(path->at(path->size()-1))->getChildren(path->at(path->size()-1));
+		vector<VERTEX_TYPE> allChildren=m_data.get(path->at(path->size()-1))->getChildren(path->at(path->size()-1),m_wordSize);
 		(*m_cout)<<"Before filtering "<<allChildren.size()<<endl;
 		for(int i=0;i<allChildren.size();i++)
 			(*m_cout)<<idToWord(allChildren[i],m_wordSize)<<endl;
@@ -1451,15 +1352,7 @@ bool DeBruijnAssembler::is_d_Threading(AnnotationElement*annotation,vector<map<i
 
 
 
-void DeBruijnAssembler::CommonHeader(ostream*out){
-	*out<<"********** Starting..."<<endl;
-	*out<<endl;
-	*out<<"DNA: De Novo Assembler"<<endl;
-	*out<<"Documentation: http://denovoassembler.sf.net/"<<endl;
-	*out<<"License: http://www.gnu.org/licenses/gpl.html"<<endl;
-	*out<<"Publication: in preparation"<<endl;
-	*out<<"Version: "<<"$Id$"<<endl;
-}
+
 
 // DFS (?) accumulate 
 int DeBruijnAssembler::visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int maxDepth,bool parents){
@@ -1480,9 +1373,9 @@ int DeBruijnAssembler::visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int ma
 		nodes->insert(aNode);
 		vector<VERTEX_TYPE> elements;
 		if(parents==true)
-			elements=m_data.get(aNode)->getParents(aNode,NULL);
+			elements=m_data.get(aNode)->getParents(aNode,NULL,m_wordSize);
 		else
-			elements=m_data.get(aNode)->getChildren(aNode);
+			elements=m_data.get(aNode)->getChildren(aNode,m_wordSize);
 
 		for(vector<VERTEX_TYPE>::iterator i=elements.begin();i!=elements.end();i++){
 			VERTEX_TYPE otherNode=*i;

@@ -29,7 +29,7 @@
 using namespace std;
 
 int main(int argc,char*argv[]){
-	DeBruijnAssembler::CommonHeader(&cout);
+	CommonHeader(&cout);
 	cout<<argv[0]<<" <sffFile>"<<endl;
 	if(argc!=2){
 		cout<<"Incorrect usage"<<endl;

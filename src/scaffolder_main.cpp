@@ -42,7 +42,7 @@ int rightPositionOnRead;
 };
 
 int main(int argc,char*argv[]){
-	DeBruijnAssembler::CommonHeader(&cout);
+	CommonHeader(&cout);
 	if(argc!=7){
 		cout<<"usage"<<endl;
 		cout<<"dna_Scaffolder left.fasta right.fasta insert stddev contigs.fasta scaffolds.fasta"<<endl;
@@ -78,14 +78,14 @@ int main(int argc,char*argv[]){
 			string word=sequenceLeft.substr(j,wordSize);
 			if(word.length()!=wordSize||!leftReads[i]->isValidDNA(word.c_str()))
 				continue;
-			VERTEX_TYPE leftWord=DeBruijnAssembler::wordId(word.c_str());
+			VERTEX_TYPE leftWord=wordId(word.c_str());
 			leftIndex[leftWord][i]=j;
 		}
 		for(int j=0;j<sequenceRight.length();j++){
 			string word=sequenceRight.substr(j,wordSize);
 			if(word.length()!=wordSize||!rightReads[i]->isValidDNA(word.c_str()))
 				continue;
-			VERTEX_TYPE rightWord=DeBruijnAssembler::wordId(word.c_str());
+			VERTEX_TYPE rightWord=wordId(word.c_str());
 			rightIndex[rightWord][i]=j;
 		}
 
@@ -111,9 +111,9 @@ int main(int argc,char*argv[]){
 			string word=sequence.substr(sequencePosition,wordSize);
 			if(word.length()!=wordSize||!leftReads[0]->isValidDNA(word.c_str()))
 				continue;
-			string reverseWordSeq=DeBruijnAssembler::reverseComplement(word);
-			VERTEX_TYPE forwardWord=DeBruijnAssembler::wordId(word.c_str());
-			VERTEX_TYPE reverseWord=DeBruijnAssembler::wordId(reverseWordSeq.c_str());
+			string reverseWordSeq=reverseComplement(word);
+			VERTEX_TYPE forwardWord=wordId(word.c_str());
+			VERTEX_TYPE reverseWord=wordId(reverseWordSeq.c_str());
 			if(leftIndex.count(forwardWord)>0){
 				for(map<int,int>::iterator i=leftIndex[forwardWord].begin();i!=leftIndex[forwardWord].end();i++){
 					int readNumber=i->first;

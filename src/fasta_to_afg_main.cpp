@@ -31,7 +31,7 @@ using namespace std;
 
 
 int main(int argc,char*argv[]){
-	DeBruijnAssembler::CommonHeader(&cout);
+	CommonHeader(&cout);
 	if(argc!=3){
 		cout<<"usage"<<endl;
 		cout<<"dna_fastaToAMOS fastaFile afgFile"<<endl;

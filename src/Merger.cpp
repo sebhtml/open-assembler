@@ -205,7 +205,7 @@ vector<Read*> Merger::reverseOverlapTailToTail(vector<Read*> contigSequences){
 			string sequence=contigSequences[i]->getSeq();
 			if(sequence.length()<100)
 				continue;
-			string revWord=DeBruijnAssembler::reverseComplement(sequence.substr(sequence.length()-m_wordSize-offset,m_wordSize));
+			string revWord=reverseComplement(sequence.substr(sequence.length()-m_wordSize-offset,m_wordSize));
 			index[revWord].push_back(i);
 		}
 		cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
@@ -238,9 +238,9 @@ vector<Read*> Merger::reverseOverlapTailToTail(vector<Read*> contigSequences){
 			for(int j=0;j<hits.size();j++){
 				string QuerySequence=sequence;
 				string subjectSequenceRaw=contigSequences[hits[j]]->getSeq();
-				string SubjectSequenceRev=DeBruijnAssembler::reverseComplement(subjectSequenceRaw);
+				string SubjectSequenceRev=reverseComplement(subjectSequenceRaw);
 				string endingSeed=QuerySequence.substr(QuerySequence.length()-m_wordSize-offset,m_wordSize);
-				string startingSeed=DeBruijnAssembler::reverseComplement(subjectSequenceRaw.substr(subjectSequenceRaw.length()-offset-m_wordSize,m_wordSize));
+				string startingSeed=reverseComplement(subjectSequenceRaw.substr(subjectSequenceRaw.length()-offset-m_wordSize,m_wordSize));
 				int AlignmentStartInQuery=0;
 				int AlignmentStartInSubject=0;
 				int AlignmentEndInQuery=0;
@@ -339,7 +339,7 @@ vector<Read*> Merger::reverseOverlapHeadToHead(vector<Read*> contigSequences){
 			string sequence=contigSequences[i]->getSeq();
 			if(sequence.length()<100)
 				continue;
-			string revWord=DeBruijnAssembler::reverseComplement(sequence.substr(offset,m_wordSize));
+			string revWord=reverseComplement(sequence.substr(offset,m_wordSize));
 			index[revWord].push_back(i);
 		}
 		cout<<contigSequences.size()<<" / "<<contigSequences.size()<<endl;
@@ -372,9 +372,9 @@ vector<Read*> Merger::reverseOverlapHeadToHead(vector<Read*> contigSequences){
 			for(int j=0;j<hits.size();j++){
 				string QuerySequence=sequence;
 				string subjectSequenceRaw=contigSequences[hits[j]]->getSeq();
-				string SubjectSequenceRev=DeBruijnAssembler::reverseComplement(subjectSequenceRaw);
+				string SubjectSequenceRev=reverseComplement(subjectSequenceRaw);
 				string startingSeed=QuerySequence.substr(offset,m_wordSize);
-				string endingSeed=DeBruijnAssembler::reverseComplement(subjectSequenceRaw.substr(offset,m_wordSize));
+				string endingSeed=reverseComplement(subjectSequenceRaw.substr(offset,m_wordSize));
 				int AlignmentStartInQuery=0;
 				int AlignmentStartInSubject=0;
 				int AlignmentEndInQuery=0;
@@ -590,8 +590,8 @@ vector<Read*> Merger::reverseMerge(vector<Read*> contigSequences){
 			string word=sequence.substr(j,m_wordSize);
 			if(word.length()!=m_wordSize)
 				continue;
-			string revWord=DeBruijnAssembler::reverseComplement(word);
-			indexOfRevWords[DeBruijnAssembler::wordId(revWord.c_str())].push_back(i);
+			string revWord=reverseComplement(word);
+			indexOfRevWords[wordId(revWord.c_str())].push_back(i);
 		}
 	}
 	int maxNotFound=2*m_wordSize;
@@ -610,7 +610,7 @@ vector<Read*> Merger::reverseMerge(vector<Read*> contigSequences){
 			if(word.length()!=m_wordSize)
 				continue;
 
-			vector<int> otherRevContigs2=indexOfRevWords[DeBruijnAssembler::wordId(word.c_str())];
+			vector<int> otherRevContigs2=indexOfRevWords[wordId(word.c_str())];
 			for(int k=0;k<otherRevContigs2.size();k++)
 				otherRevContigs.insert(otherRevContigs2[k]);
 		}
@@ -627,7 +627,7 @@ vector<Read*> Merger::reverseMerge(vector<Read*> contigSequences){
 		sequenceSmall.length()<=sequenceLong.length()&&
 				used==false
 			){
-				string sequenceLong_Rev=DeBruijnAssembler::reverseComplement(sequenceLong);
+				string sequenceLong_Rev=reverseComplement(sequenceLong);
 				string shortContig=sequenceSmall;
 				string longContig=sequenceLong_Rev;
 				set<VERTEX_TYPE> longMap;
@@ -635,7 +635,7 @@ vector<Read*> Merger::reverseMerge(vector<Read*> contigSequences){
 					string word=longContig.substr(o,m_wordSize);
 					if(word.length()!=m_wordSize)
 						continue;
-					longMap.insert(DeBruijnAssembler::wordId(word.c_str()));
+					longMap.insert(wordId(word.c_str()));
 				}
 
 				int notFound=0;
@@ -643,7 +643,7 @@ vector<Read*> Merger::reverseMerge(vector<Read*> contigSequences){
 					string word=shortContig.substr(o,m_wordSize);
 					if(word.length()!=m_wordSize)
 						continue;
-					if(longMap.count(DeBruijnAssembler::wordId(word.c_str()))==0){
+					if(longMap.count(wordId(word.c_str()))==0){
 						//cout<<"P "<<o<<endl;
 						notFound++;
 					}

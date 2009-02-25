@@ -26,13 +26,13 @@
 #include<stdint.h>
 #include<stdlib.h>
 #include"Merger.h"
-
+#include"common_functions.h"
 
 using namespace std;
 
 
 int main(int argc,char*argv[]){
-	DeBruijnAssembler::CommonHeader(&cout);
+	CommonHeader(&cout);
 	// show usage
 	cout<<endl;
 	cout<<"Usage:"<<endl;

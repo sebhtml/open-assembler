@@ -29,7 +29,7 @@
 using namespace std;
 
 int main(int argc,char*argv[]){
-	DeBruijnAssembler::CommonHeader(&cout);
+	CommonHeader(&cout);
 	cout<<"This is dna_Merger."<<endl;
 	if(argc!=3){
 		cout<<"usage"<<endl;

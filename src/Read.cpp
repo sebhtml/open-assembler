@@ -17,6 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include"common_functions.h"
 #include"Read.h"
 #include<cstdlib>
 #include<iostream>
@@ -59,9 +60,9 @@ vector<VERTEX_TYPE>Read::getHighQualityMers(int wordSize){
 		string wordReverse;
 		if(!isValidDNA(wordFoward.c_str()))
 			continue;
-		wordReverse=DeBruijnAssembler::reverseComplement(wordFoward);
-		highQualityMers.push_back(DeBruijnAssembler::wordId(wordFoward.c_str()));
-		highQualityMers.push_back(DeBruijnAssembler::wordId(wordReverse.c_str()));
+		wordReverse=reverseComplement(wordFoward);
+		highQualityMers.push_back(wordId(wordFoward.c_str()));
+		highQualityMers.push_back(wordId(wordReverse.c_str()));
 	}
 
 	return highQualityMers;
