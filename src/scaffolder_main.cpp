@@ -48,7 +48,7 @@ int main(int argc,char*argv[]){
 		cout<<"dna_Scaffolder left.fasta right.fasta insert stddev contigs.fasta scaffolds.fasta"<<endl;
 		return 0;
 	}
-	int MINIMUM_TILING_WINDOWS=3;
+	int MINIMUM_TILING_WINDOWS=20;
 	string leftReadsFile=argv[1];
 	string rightReadsFile=argv[2];
 	int insertSize=atoi(argv[3]);
@@ -284,9 +284,9 @@ int main(int argc,char*argv[]){
 				annotations[leftContig][rightContig].push_back(anAnnotation);
 				cout<<"LINK"<<endl;
 				cout<<"Left"<<endl;
-				cout<<leftReads[anAnnotation.readNumber]->getId()<<" "<<" Contig: "<<anAnnotation.leftContigNumber<<" Position: "<<anAnnotation.leftPositionOnContig<<" Strand: "<<anAnnotation.leftIsReverse<<endl;
+				cout<<leftReads[anAnnotation.readNumber]->getId()<<" "<<" Contig: "<<contigs[anAnnotation.leftContigNumber]->getId()<<" Length: "<<strlen(contigs[anAnnotation.leftContigNumber]->getSeq())<<" Position: "<<anAnnotation.leftPositionOnContig<<" Strand: "<<anAnnotation.leftIsReverse<<endl;
 				cout<<"Right"<<endl;
-				cout<<rightReads[anAnnotation.readNumber]->getId()<< " "<<" Contig: "<<anAnnotation.rightContigNumber<<" Position: "<<anAnnotation.rightPositionOnContig<<" Strand: "<<anAnnotation.rightIsReverse<<endl;
+				cout<<rightReads[anAnnotation.readNumber]->getId()<< " "<<" Contig: "<<contigs[anAnnotation.rightContigNumber]->getId()<<" Length: "<<strlen(contigs[anAnnotation.rightContigNumber]->getSeq())<<" Position: "<<anAnnotation.rightPositionOnContig<<" Strand: "<<anAnnotation.rightIsReverse<<endl;
 			}else{
 				int insertSize=rightPosition-leftPosition;
 				if(leftReverse&&rightReverse){
