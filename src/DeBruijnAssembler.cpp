@@ -560,6 +560,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			vector<map<int,map<char,int> > > currentReadPositions;
 			vector<int> repeatAnnotations;
 			vector<VERTEX_TYPE> localNewSources;
+			//contig_From_SINGLE_2(&currentReadPositions,&path,prefix);
 			contig_From_SINGLE(&currentReadPositions,&path,&localNewSources,&repeatAnnotations,prefix);
 			m_cout<<path.size()<<" vertices"<<endl;
 /*
@@ -626,6 +627,26 @@ bool DeBruijnAssembler::DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VER
 	return false;
 }
 
+void DeBruijnAssembler::contig_From_SINGLE_2(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,vector<int>*repeatAnnotations,VERTEX_TYPE source){
+	vector<VERTEX_TYPE> nextToDo;
+	map<int,int> lastPositionForARead;
+	nextToDo.push_back(source);
+	while(nextToDo.size()==1){
+		VERTEX_TYPE prefix=nextToDo[0];
+		if(m_data.get(prefix)->IsAssembled()&&path->size()<50){
+			cout<<"Skipping spurious source"<<endl;
+			return;
+		}
+		path->push_back(prefix);
+		prefixVertexData->addPositionInContig(source,path->size());
+		path->push_back(prefix);
+		map<int,map<char,int> > a;
+		(*currentReadPositions).push_back(a);
+
+		vector<VERTEX_TYPE> theNewNext;
+		vector<VERTEX_TYPE> children=m_data.get(prefix)->getChildren(prefix,m_wordSize);
+	}
+}
 
 
 void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,vector<int>*repeatAnnotations,VERTEX_TYPE source){
@@ -675,13 +696,14 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			}
 		}
 */
+		path->push_back(prefix);
 		prefixVertexData->addPositionInContig(source,path->size());
-		//cout<<DeBruijnAssembler::idToWord(prefix,DeBruijnAssembler::m_wordSize)<<endl;
-		//prefixVertexData->printPositions();
-		//cout<<"Position:" <<path->size()<<" "<<idToWord(prefix,m_wordSize)<<endl;
 		path->push_back(prefix);
 		map<int,map<char,int> > a;
 		(*currentReadPositions).push_back(a);
+		//cout<<DeBruijnAssembler::idToWord(prefix,DeBruijnAssembler::m_wordSize)<<endl;
+		//prefixVertexData->printPositions();
+		//cout<<"Position:" <<path->size()<<" "<<idToWord(prefix,m_wordSize)<<endl;
 		//(*m_cout)<<"Pushing "<<idToWord(prefix,m_wordSize)<<endl;
 		int added=0;
 
