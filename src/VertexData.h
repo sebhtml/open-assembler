@@ -68,6 +68,7 @@ public:
 	void printPositions();
 	bool NotTrivial(VERTEX_TYPE a,int w);
 	void addPositionInContig(VERTEX_TYPE a,int b);
+	bool hasManyChildren(VERTEX_TYPE a,int w);
 };
 
 #endif

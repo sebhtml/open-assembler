@@ -769,7 +769,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 
 
 		prefixNextVertices=nextVertices(path,currentReadPositions,newSources,&usedReads);
-		if(added==0){
+		if(added==0&&m_data.get(prefix)->hasManyChildren(prefix,m_wordSize)){
 			(*m_cout)<<"Stop!, reason: No read threaded, "<<endl;
 			break;
 		}
@@ -778,7 +778,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		if(added==1&&path->size()>400){
 			lowCoverageLength++;
 		}
-		if(lowCoverageLength>30){
+		if(lowCoverageLength>30&&m_data.get(prefix)->NotTrivial(prefix,m_wordSize)){
 			cout<<"Stop!, reason: Extensive 1-Coverage."<<endl;
 			break;
 		}
@@ -803,7 +803,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		newSources->push_back(children[j]);
 	}
 	*/
-	if(!debug_print){
+	if(!debug_print&&false){
 		return;
 	}
 	//return;
@@ -863,6 +863,8 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 	bool debugPrint=m_DEBUG;
 	VERTEX_TYPE prefix=path->at(path->size()-1);
 	vector<VERTEX_TYPE> children=m_data.get(prefix)->getChildren(prefix,m_wordSize);
+	if(children.size()==1)
+		return children;
 	// start when nothing is done yet
 	//(*m_cout)<<currentReadPositions->size()<<" "<<path->size()<<endl;
 	if(currentReadPositions->size()==0){//||currentReadPositions->size()<path->size())
@@ -1134,8 +1136,15 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 			// TODO: remove the true
 			// TODO only annotate the  first
 			VertexData*aVertexData=m_data.get(wordInBits);
-			if(aVertexData->NotTrivial(wordInBits,m_wordSize)||(strand=='F'&&readPosition==sequenceData->at(readId)->getStartForward())||
-			(strand=='R'&&readPosition==sequenceData->at(readId)->getStartForward()))
+			bool hasMixedParents=false;
+			vector<VERTEX_TYPE> theParents=m_data.get(wordInBits)->getParents(wordInBits,NULL,m_wordSize);
+			for(vector<VERTEX_TYPE>::iterator ii=theParents.begin();ii!=theParents.end();ii++){
+				vector<VERTEX_TYPE> theChildren=m_data.get(*ii)->getChildren(*ii,m_wordSize);
+				if(theChildren.size()>1)
+					hasMixedParents=true;
+			}
+			if((strand=='F'&&readPosition==sequenceData->at(readId)->getStartForward())||
+			(strand=='R'&&readPosition==sequenceData->at(readId)->getStartForward())||false)
 				m_data.get(wordInBits)->addAnnotation(readId,readPosition,strand);
 		}
 	}

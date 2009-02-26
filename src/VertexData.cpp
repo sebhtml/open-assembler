@@ -195,6 +195,9 @@ bool VertexData::NotTrivial(VERTEX_TYPE a,int m_wordSize){
 	return getParents(a,NULL,m_wordSize).size()>1||getChildren(a,m_wordSize).size()>1;
 }
 
+bool VertexData::hasManyChildren(VERTEX_TYPE a,int w){
+	return getChildren(a,w).size()>1;
+}
 
 void VertexData::addPositionInContig(VERTEX_TYPE a,int b){
 	m_positionInContig[a].push_back(b);

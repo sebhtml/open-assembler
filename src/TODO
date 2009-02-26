@@ -5,3 +5,10 @@ scaffolder
 changes:
 
 	vertex are annotated, not edges
+
+
+annotate only the first part of any read
+
+start at a source:
+	keep the aligned read at each position of the contig.a
+	when faced with a choice, select the one that align the best on it 
