@@ -171,6 +171,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		m_data.add(*i);
 	}
 	cout<<nodes.size()<<" vertices"<<endl;
+	nodes.clear();
 	cout<<endl;
 	m_data.makeMemory();
 
@@ -185,20 +186,22 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		m_data.get(suffix)->addParent(prefix,m_wordSize);
 	}
 	cout<<solidMers.size()<<" edges"<<endl;
+	solidMers.clear();
 	cout<<endl;
 
 
 	m_cout<<"********** Indexing solid mers in reads..."<<endl; // <-------
 	cout<<endl;
+/*
 	VERTEX_TYPE*solidMersPTR=new VERTEX_TYPE[solidMers.size()];
 	for(int i=0;i<solidMers.size();i++)
 		solidMersPTR[i]=solidMers[i];
-
+*/
 	for(int readId=0;readId<(int)sequenceData->size();readId++){
 		if(readId%10000==0)
 			m_cout<<"Reads: "<<readId<<" / "<<sequenceData->size()<<endl;
-		indexReadStrand(readId,'F',sequenceData,solidMersPTR,solidMers.size());
-		indexReadStrand(readId,'R',sequenceData,solidMersPTR,solidMers.size());
+		indexReadStrand(readId,'F',sequenceData);
+		indexReadStrand(readId,'R',sequenceData);
 	
 	}
 	m_cout<<"Reads: "<<sequenceData->size()<<" / "<<sequenceData->size()<<endl;
@@ -312,7 +315,7 @@ void DeBruijnAssembler::writeGraph(){
 	f<<"PeakCoverage "<<m_coverage_mean<<"\n";
 	f<<"RepeatDetectionCoverage "<<m_REPEAT_DETECTION<<"\n";
 	
-	VERTEX_TYPE*nodes=m_data.getNodes();
+	vector<VERTEX_TYPE>*nodes=m_data.getNodes();
 	f<<"Vertices: "<<m_data.size()<<"\n";
 	int k=0;
 	//for(vector<VERTEX_TYPE>::iterator i=nodes->begin();i!=nodes->end();i++){
@@ -320,7 +323,7 @@ void DeBruijnAssembler::writeGraph(){
 		if(k%100000==0){
 			cout<<"Vertices: "<<k<<" / "<<m_data.size()<<"\n";
 		}
-		f<<nodes[i]<<"\n";
+		f<<(*nodes)[i]<<"\n";
 		k++;
 	}
 
@@ -333,7 +336,7 @@ void DeBruijnAssembler::writeGraph(){
 			cout<<"Edges: "<<k<<" / "<<m_data.size()<<endl;
 		}
 		k++;
-		VERTEX_TYPE prefix=nodes[(i)];
+		VERTEX_TYPE prefix=(*nodes)[(i)];
 		f<<prefix<<"\n";
 		VertexData*prefixData=&(theData[(i)]);
 		vector<VERTEX_TYPE>children=prefixData->getChildren(prefix,m_wordSize);
@@ -417,7 +420,7 @@ int DeBruijnAssembler::DFS_watch(VERTEX_TYPE a,int color){
 
 void DeBruijnAssembler::Walk_In_GRAPH(){
 	cout<<endl;
-	VERTEX_TYPE*theNodes=m_data.getNodes();
+	vector<VERTEX_TYPE>*theNodes=m_data.getNodes();
 	(*m_cout)<<"********* Simplifying the graph"<<endl;
 	cout<<endl;
 	int color=0;
@@ -425,9 +428,9 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		if(i%100000==0){
 			cout<<"Simplifying: "<<i<<" / "<<m_data.size()<<endl;
 		}
-		if(m_data.get(theNodes[i])->getColor()==-1){
+		if(m_data.get((*theNodes)[i])->getColor()==-1){
 			color++;
-			int count=DFS_watch(theNodes[i],color);
+			int count=DFS_watch((*theNodes)[i],color);
 			if(count>=100){
 				//cout<<color<<" : "<<count<<endl;
 			}
@@ -444,7 +447,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		if(i%1000000==0){
 			cout<<"Inspecting: "<<i<<" / "<<m_data.size()<<endl;
 		}
-		VERTEX_TYPE vertex=theNodes[i];
+		VERTEX_TYPE vertex=(*theNodes)[i];
 		VertexData*dataNode=m_data.get(vertex);
 		int parents=dataNode->getParents(vertex,NULL,m_wordSize).size();
 		int children=dataNode->getChildren(vertex,m_wordSize).size();
@@ -466,7 +469,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	}
 	cout<<endl;
 
-	VERTEX_TYPE*nodes=m_data.getNodes();
+	vector<VERTEX_TYPE>*nodes=m_data.getNodes();
 	VertexData*nodeData=m_data.getNodeData();
 	(*m_cout)<<endl;
 	(*m_cout)<<"********** Removing spurious edges"<<endl;
@@ -477,7 +480,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	for(int myDataIterator=0;myDataIterator<m_data.size();myDataIterator++){
 		break;
 	//for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
-		VERTEX_TYPE prefix=nodes[(myDataIterator)];
+		VERTEX_TYPE prefix=(*nodes)[(myDataIterator)];
 		VertexData*nodeDataInstance=&(nodeData[myDataIterator]);
 		if(nodeDataInstance->IsEliminated())
 			continue;
@@ -1097,7 +1100,7 @@ void DeBruijnAssembler::setMinimumCoverage(string coverage){
 	m_minimumCoverageParameter=coverage;
 }
 
-void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData,VERTEX_TYPE*solidMers,int m_size){
+void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData){
 	Read*read=sequenceData->at(readId);
 	string sequence=read->getSeq();
 
@@ -1130,7 +1133,10 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 			// it is on a non-trivial node...
 			// TODO: remove the true
 			// TODO only annotate the  first
-			m_data.get(wordInBits)->addAnnotation(readId,readPosition,strand);
+			VertexData*aVertexData=m_data.get(wordInBits);
+			if(aVertexData->NotTrivial(wordInBits,m_wordSize)||(strand=='F'&&readPosition==sequenceData->at(readId)->getStartForward())||
+			(strand=='R'&&readPosition==sequenceData->at(readId)->getStartForward()))
+				m_data.get(wordInBits)->addAnnotation(readId,readPosition,strand);
 		}
 	}
 	free(myWord);

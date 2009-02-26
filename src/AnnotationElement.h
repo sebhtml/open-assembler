@@ -27,7 +27,7 @@ class AnnotationElement{
 public:
 	uint32_t readId;
 	POSITION_TYPE readPosition;
-	uint8_t readStrand;
+	uint8_t readStrand;  // TODO: replace  this with 2 objects instead
 
 };
 

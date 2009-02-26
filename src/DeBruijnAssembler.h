@@ -88,7 +88,7 @@ class DeBruijnAssembler{
 	void Walk_In_GRAPH();
 
 
-	void indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData,VERTEX_TYPE*solidMers,int c);
+	void indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData);
 
 	void writeContig_fasta(vector<VERTEX_TYPE>*path,ofstream*file,int i);
 	void writeContig_Amos(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);

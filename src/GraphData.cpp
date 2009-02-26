@@ -24,7 +24,7 @@
 using namespace std;
 
 VertexData*GraphData::get(VERTEX_TYPE a){
-	int index=BinarySearch(m_node_ptr,a,m_size);
+	int index=BinarySearch(&m_nodes,a,m_size);
 	if(index==-1){
 		cout<<"Error, not found (should not happen...)"<<endl;
 		exit(0);
@@ -33,11 +33,11 @@ VertexData*GraphData::get(VERTEX_TYPE a){
 }
 
 bool GraphData::hasNode(VERTEX_TYPE a){
-	return BinarySearch(m_node_ptr,a,m_size)!=-1;
+	return BinarySearch(&m_nodes,a,m_size)!=-1;
 }
 
-VERTEX_TYPE*GraphData::getNodes(){
-	return m_node_ptr;
+vector<VERTEX_TYPE>*GraphData::getNodes(){
+	return &m_nodes;
 }
 
 VertexData*GraphData::getNodeData(){
@@ -54,23 +54,13 @@ void GraphData::add(VERTEX_TYPE a){
 
 void GraphData::makeMemory(){
 	m_size=m_nodes.size();
-	m_node_ptr=new VERTEX_TYPE[m_size];
 	m_node_data=new VertexData[m_size];
-	for(int i=0;i<m_size;i++){
-		m_node_ptr[i]=m_nodes[i];
-	}
-	m_nodes.clear();
 }
 
 GraphData::GraphData(){
-	m_node_ptr=NULL;
 	m_node_data=NULL;
 }
 GraphData::~GraphData(){
-	if(m_node_ptr!=NULL){
-		delete [] m_node_ptr;
-		m_node_ptr=NULL;
-	}
 	if(m_node_data!=NULL){
 		delete [] m_node_data;
 		m_node_data=NULL;

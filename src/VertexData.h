@@ -31,7 +31,6 @@ class GraphData;
 
 
 class VertexData{
-	static vector<AnnotationElement> m_empty_vector;
 	// bit    nucleotide
 	// 0      A
 	// 1      T
@@ -42,7 +41,7 @@ class VertexData{
 	// 6	Unused
 	// 7	Unused
 	
-	bool m_isEliminated;
+	//bool m_isEliminated;
 	map<VERTEX_TYPE,vector<int> > m_positionInContig;
 	uint8_t m_parents;
 	uint32_t m_color;

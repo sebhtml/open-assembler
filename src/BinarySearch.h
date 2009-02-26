@@ -18,7 +18,7 @@
 */
 
 #include<stdint.h>
+#include<vector>
+using namespace std;
 
-extern "C"{
-int BinarySearch(uint64_t*a,uint64_t b,int c);
-}
+int BinarySearch(vector<uint64_t>*a,uint64_t b,int c);

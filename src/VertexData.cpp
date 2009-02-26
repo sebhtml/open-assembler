@@ -27,10 +27,9 @@
 
 using namespace std;
 
-vector<AnnotationElement> VertexData::m_empty_vector;
 
 VertexData::VertexData(){
-	m_isEliminated=false;
+	//m_isEliminated=false;
 	m_parents=0;
 	m_children=0;
 	m_color=-1;
@@ -171,13 +170,13 @@ VertexData::~VertexData(){
 }
 
 void VertexData::eliminateNow(){
-	m_isEliminated=true;
+	//m_isEliminated=true;
 }
 
 bool VertexData::IsEliminated(){
-	return m_isEliminated;
+	//return m_isEliminated;
+	return false;
 }
-
 
 bool VertexData::IsAssembled(){
 	return m_positionInContig.size()>0;

@@ -31,12 +31,11 @@ class GraphData{
 	int m_size;
 	vector<VERTEX_TYPE> m_nodes;
 	VertexData*m_node_data;
-	VERTEX_TYPE*m_node_ptr;
 public:
 	GraphData();
 	~GraphData();
 	VertexData*get(VERTEX_TYPE a);
-	VERTEX_TYPE*getNodes();
+	vector<VERTEX_TYPE>*getNodes();
 	VertexData*getNodeData();
 	int size();
 	void add(VERTEX_TYPE a);

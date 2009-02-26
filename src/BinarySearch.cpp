@@ -19,14 +19,15 @@
 
 #include"BinarySearch.h"
 
-int BinarySearch(uint64_t*a,uint64_t b,int c){
+int BinarySearch(vector<uint64_t>*a,uint64_t b,int c){
 	int start=0;
 	int end=c-1;
 	while(start<=end){
 		int mid=(start+end)/2;
-		if(b<a[(mid)]){
+		uint64_t v=(*a)[mid];
+		if(b<v){
 			end=mid-1;
-		}else if(a[mid]<b){	
+		}else if(v<b){	
 			start=mid+1;
 		}else{
 			return mid;
