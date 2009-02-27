@@ -693,6 +693,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		int added=0;
 
 		vector<AnnotationElement>*annotations=m_data.get(prefix)->getAnnotations();
+/*
 		if(debug_print&&annotations!=NULL){
 			(*m_cout)<<idToWord(path->at(path->size()-1),m_wordSize)<<" ";
 			(*m_cout)<<annotations->size();
@@ -701,7 +702,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			}
 			(*m_cout)<<endl;
 		}
-
+*/
 
 
 		//(*m_cout)<<"Path position "<<path->size()-1<<endl;
@@ -739,8 +740,10 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			
 				)){ // add at most a given amount of "new reads" to avoid depletion
 					if(annotations->size()<m_REPEAT_DETECTION){
+/*
 						cout<<(*currentReadPositions).size()<<endl;
 						cout<<path->size()<<endl;
+*/
 						(*currentReadPositions)[path->size()-1][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition; // = 0
 						//(*m_cout)<<path->size()<<" "<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
 						//(*m_cout)<<"Adding read "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;	
