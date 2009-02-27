@@ -45,15 +45,13 @@ int main(int argc,char*argv[]){
 	CommonHeader(&cout);
 	if(argc!=7){
 		cout<<"usage"<<endl;
-		cout<<"dna_Scaffolder left.fasta right.fasta insert stddev contigs.fasta scaffolds.fasta"<<endl;
+		cout<<"dna_Scaffolder left.fasta right.fasta contigs.fasta scaffolds.fasta"<<endl;
 		return 0;
 	}
 	int MINIMUM_TILING_WINDOWS=20;
 	string leftReadsFile=argv[1];
 	string rightReadsFile=argv[2];
-	int insertSize=atoi(argv[3]);
-	int stddev=atoi(argv[4]);
-	string contigsFile=argv[5];
+	string contigsFile=argv[3];
 	int wordSize=21;
 	vector<Read*> contigs;
 	Loader loader;
