@@ -51,8 +51,6 @@ class DeBruijnAssembler{
 	int m_minimumCoverage;
 	int m_REPEAT_DETECTION;
 	int m_wordSize;
-	bool m_pairedAvailable;
-	string m_pairedInfoFile;
 	bool m_DEBUG;
 	//CustomMap<VertexData>*m_data;
 	GraphData m_data;
@@ -65,7 +63,6 @@ class DeBruijnAssembler{
 	ostream*m_cout;
 	string m_assemblyDirectory;
 
-	void load_graphFrom_file();
 
 
 	bool is_d_Threading(AnnotationElement*annotation,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,map<int,int>*usedReads,bool beforeAdding);
@@ -103,16 +100,15 @@ class DeBruijnAssembler{
 	int visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int maxDepth,bool parents);
 public:
 	DeBruijnAssembler(ostream*m_cout);
-	void setPairedInfo(string a);
 	void setWordSize(int k);
-	void buildGraph(SequenceDataFull*sequenceData);
+	void setSequenceData(SequenceDataFull*sequenceData);
+	void buildGraph();
 	void setAssemblyDirectory(string assemblyDirectory);
-	void setMinimumContigSize(int minimumContigSize);
 	void outputContigs();
 	void debug();
-
+	void loadParameters();
+	void load_graphFrom_file();
 	~DeBruijnAssembler();
-	void setBuckets(uint64_t buckets);
 	void Algorithm_Assembler_20090121();
 	void setMinimumCoverage(string coverage);
 

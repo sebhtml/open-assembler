@@ -21,6 +21,7 @@
 #include"DeBruijnAssembler.h"
 #include"LightVertex.h"
 #include<iostream>
+#include"common_functions.h"
 using namespace  std;
 
 LightVertex::LightVertex(){
@@ -31,7 +32,7 @@ LightVertex::LightVertex(){
 
 vector<VERTEX_TYPE> LightVertex::getChildren(VERTEX_TYPE prefix,int wordSize){
 	vector<VERTEX_TYPE> output;
-	string self=DeBruijnAssembler::idToWord(prefix,wordSize);
+	string self=idToWord(prefix,wordSize);
 	string thePart=self.substr(1,wordSize-1);
 	//cout<<"CHIDLREN "<<(int)m_children<<endl;
 	for(int i=0;i<4;i++){
@@ -53,14 +54,14 @@ vector<VERTEX_TYPE> LightVertex::getChildren(VERTEX_TYPE prefix,int wordSize){
 				a='G';
 			}
 			string b=thePart+a;
-			output.push_back(DeBruijnAssembler::wordId(b.c_str()));
+			output.push_back(wordId(b.c_str()));
 		}
 	}
 	return output;
 }
 
 void LightVertex::addChild(VERTEX_TYPE suffix,int wordSize){
-	string v=DeBruijnAssembler::idToWord(suffix,wordSize);
+	string v=idToWord(suffix,wordSize);
 	char a=v[wordSize-1];
 	//cout<<"Adding "<<a<<endl;
 	uint8_t toAdd=1;
@@ -88,7 +89,7 @@ uint32_t LightVertex::getColor(){
 
 vector<VERTEX_TYPE> LightVertex::getParents(VERTEX_TYPE prefix,int wordSize){
 	vector<VERTEX_TYPE> output;
-	string self=DeBruijnAssembler::idToWord(prefix,wordSize);
+	string self=idToWord(prefix,wordSize);
 	string thePart=self.substr(0,wordSize-1);
 	for(int i=0;i<4;i++){
 		//     7 6 5 4 3 2 1 0
@@ -109,14 +110,14 @@ vector<VERTEX_TYPE> LightVertex::getParents(VERTEX_TYPE prefix,int wordSize){
 				a='G';
 			}
 			string b=a+thePart;
-			output.push_back(DeBruijnAssembler::wordId(b.c_str()));
+			output.push_back(wordId(b.c_str()));
 		}
 	}
 	return output;
 }
 
 void LightVertex::addParent(VERTEX_TYPE parent,int wordSize){
-	string v=DeBruijnAssembler::idToWord(parent,wordSize);
+	string v=idToWord(parent,wordSize);
 	char a=v[0];
 	uint8_t toAdd=1;
 	if(a=='A'){

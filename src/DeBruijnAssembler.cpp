@@ -57,7 +57,6 @@ DeBruijnAssembler::DeBruijnAssembler(ostream*m_cout){
 
 void DeBruijnAssembler::setWordSize(int k){
 	m_wordSize=k;
-	m_pairedAvailable=false;
 	m_minimumCoverage=5;
 }
 
@@ -214,44 +213,30 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	m_cout<<endl;
 
 	// paired information
-	if(m_pairedInfoFile=="none")
-		return;
-	ifstream f(m_pairedInfoFile.c_str());
-	if(!f){
-		f.close();
-		return;
-	}
 }
 
 
 
-void DeBruijnAssembler::buildGraph(SequenceDataFull*sequenceData){
-	m_sequenceData=sequenceData;
-	ostream&m_cout=*(this->m_cout);
+void DeBruijnAssembler::buildGraph(){
 	bool debug=m_DEBUG;
-	//debug=false;
-	bool useCache=false;
-	useCache=true;
-	bool writeGraphFile=useCache;
-	if(debug){
-		useCache=true;
-	}
 
-	ifstream f(m_graphFile.c_str());
-	if(!f)
-		useCache=false;
+	build_From_Scratch(m_sequenceData);
+	writeGraph();
+	string parametersFile=m_assemblyDirectory+"/Parameters.txt";
+	ofstream f(parametersFile.c_str());
+	f<<"WordSize "<<m_wordSize<<endl;
+	f<<"MinimumCoverage "<<m_minimumCoverage<<"\n";
+	f<<"PeakCoverage "<<m_coverage_mean<<"\n";
+	f<<"RepeatDetectionCoverage "<<m_REPEAT_DETECTION<<"\n";
 	f.close();
+}
 
-	if(useCache){
-		cout<<endl;
-		load_graphFrom_file();
-	}else{
-		build_From_Scratch(sequenceData);
-		if(writeGraphFile){
-			writeGraph();
-		}
-	}
-
+void DeBruijnAssembler::loadParameters(){
+	string parametersFile=m_assemblyDirectory+"/Parameters.txt";
+	ifstream f(parametersFile.c_str());
+	string buffer;
+	f>>buffer>>m_wordSize>>buffer>>m_minimumCoverage>>buffer>>m_coverage_mean>>buffer>>m_REPEAT_DETECTION;
+	f.close();
 }
 
 
@@ -261,12 +246,15 @@ void DeBruijnAssembler::load_graphFrom_file(){
 	ifstream f(m_graphFile.c_str());
 	string version;
 	string buffer;
-	f>>version>>buffer>>m_minimumCoverage>>buffer>>m_coverage_mean>>buffer>>m_REPEAT_DETECTION>>buffer;
+	//f>>version>>buffer>>m_minimumCoverage>>buffer>>m_coverage_mean>>buffer>>m_REPEAT_DETECTION>>buffer;
+	f>>buffer;
 	int n;
-	cout<<"Version: "<<version<<endl;
+	//cout<<"Version: "<<version<<endl;
+/*
 	cout<<"MinimumCoverage: "<<m_minimumCoverage<<endl;
 	cout<<"PeakCoverage: "<<m_coverage_mean<<endl;
 	cout<<"RepeatDetectionCoverage: "<<m_REPEAT_DETECTION<<endl;
+*/
 	f>>n;
 	for(int i=0;i<n;i++){
 		if(i%1000000==0){
@@ -316,11 +304,12 @@ void DeBruijnAssembler::writeGraph(){
 	cout<<"********** Writing graph file."<<endl;
 
 	ofstream f(m_graphFile.c_str());
+	/*
 	f<<"GraphFormatVersion1"<<"\n";
 	f<<"MinimumCoverage "<<m_minimumCoverage<<"\n";
 	f<<"PeakCoverage "<<m_coverage_mean<<"\n";
 	f<<"RepeatDetectionCoverage "<<m_REPEAT_DETECTION<<"\n";
-	
+	*/
 	vector<VERTEX_TYPE>*nodes=m_data.getNodes();
 	f<<"Vertices: "<<m_data.size()<<"\n";
 	int k=0;
@@ -1531,4 +1520,8 @@ int DeBruijnAssembler::visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int ma
 		}
 	}
 	return bestDepth;
+}
+
+void DeBruijnAssembler::setSequenceData(SequenceDataFull*sequenceData){
+	m_sequenceData=sequenceData;
 }

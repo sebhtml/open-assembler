@@ -33,19 +33,20 @@ using namespace std;
 
 
 int main(int argc,char*argv[]){
-	cout<<"VertexDataSize <- "<<sizeof(VertexData)<<endl;
+	//cout<<"VertexDataSize <- "<<sizeof(VertexData)<<endl;
 	CommonHeader(&cout);
 	// show usage
 	cout<<endl;
 	cout<<"Usage:"<<endl;
-	cout<<"dna_DeBruijnAssembler [options] <files (fasta, sff, or fastq)>"<<endl;
+	cout<<argv[0]<<" [options] <files (fasta, sff, or fastq)>"<<endl;
 
 	// show options
 	cout<<" OPTIONS"<<endl;
 	vector<string> inputFiles;
-
+	
+	bool assemblyDirectoryWasSet=false;
 	string assemblyDirectory="Assembly";
-	cout<<" -assemblyDirectory   default: "<<assemblyDirectory<<endl;
+	cout<<" -directory   default: "<<assemblyDirectory<<endl;
 	cout<<"                      description: the directory where files will be written."<<endl;
 	int wordSize=21;
 	cout<<" -wordSize            default: "<<wordSize<<" (maximum: 31)"<<endl;
@@ -53,9 +54,6 @@ int main(int argc,char*argv[]){
 	string m_minimumCoverageParameter="2";
 	cout<<" -minimumCoverage     default: "<<m_minimumCoverageParameter<<""<<endl;
 	cout<<"    auto if you want to use the distribution curve"<<endl;
-	int minimumContigSize=500;
-	cout<<" -minimumContigSize   default: "<<minimumContigSize<<endl;
-	cout<<"                      description: the minimum length of contigs generated with the graph."<<endl;
 	bool DEBUGMODE=false;
 	//cout<<" [ -debug ]"<<endl;
 	string pairedInfo="none";
@@ -68,22 +66,14 @@ int main(int argc,char*argv[]){
 	// collect arguments
 	for(int i=1;i<argc;i++){
 		string option=argv[i];
-		if(option=="-assemblyDirectory"){
+		if(option=="-directory"&&i!=argc-1){
 			i++;
+			assemblyDirectoryWasSet=true;
 			assemblyDirectory=argv[i];
-		}else if(option=="-pairedInfo"){
-			i++;
-			pairedInfo=argv[i];
-		}else if(option=="-minimumCoverage"){
+		}else if(option=="-minimumCoverage"&&i!=argc-1){
 			i++;
 			m_minimumCoverageParameter=argv[i];
-		}else if(option=="-debug"){
-			DEBUGMODE=true;
-
-		}else if(option=="-minimumContigSize"){
-			i++;
-			minimumContigSize=atoi(argv[i]);
-		}else if(option=="-wordSize"){
+		}else if(option=="-wordSize"&&i!=argc-1){
 			i++;
 			if(wordSize>31){
 				cout<<"Wordsize cannot be greater than 31"<<endl;
@@ -95,16 +85,24 @@ int main(int argc,char*argv[]){
 		}
 	}
 
-	cout<<"  -assemblyDirectory="<<assemblyDirectory<<endl;
+	if(assemblyDirectoryWasSet==false){
+		cout<<"Error: please provide a value for -directory"<<endl;
+		return 0;
+	}
+	cout<<"  -directory="<<assemblyDirectory<<endl;
 	cout<<"  -minimumCoverage="<<m_minimumCoverageParameter<<endl;
 
 	cout<<"  -wordSize="<<wordSize<<endl;
-	cout<<"  -minimumContigSize="<<minimumContigSize<<endl;
 	cout<<" <FILES>"<<endl;
-	for(int i=0;i<(int)inputFiles.size();i++)
+	string filesFile=assemblyDirectory+"/InputFiles.txt";
+	cout<<"writing files to "<<filesFile<<endl;
+	ofstream aFilesStream(filesFile.c_str());
+	for(int i=0;i<(int)inputFiles.size();i++){
 		cout<<" "<<inputFiles[i]<<endl;
+		aFilesStream<<inputFiles[i]<<endl;
+	}
+	aFilesStream.close();
 	cout<<endl;
-
 
 
 	string command=" mkdir -p "+assemblyDirectory+" # [dna] ";
@@ -146,96 +144,17 @@ int main(int argc,char*argv[]){
 	if(DEBUGMODE)
 		assembler.debug();
 
-	assembler.buildGraph(&sequenceData);
-	assembler.Algorithm_Assembler_20090121();
+	assembler.setSequenceData(&sequenceData);
+	assembler.buildGraph();
+	string applicationName=argv[0];
+	cout<<"Graph is built."<<endl;	
+	return 0;
+	//assembler.Algorithm_Assembler_20090121();
 
 	//assembler.outputContigs();
 
 	//cout<<"Files written in "+assemblyDirectory<<endl;
-	cout<<"Done!"<<endl;
-	string hawkeyeFile=assemblyDirectory+"/RunHawkeye.sh";
-	string bankFile=assemblyDirectory+"/CreateBank.sh";
-	ofstream fileStreamBank(bankFile.c_str());
-	ofstream fileStream(hawkeyeFile.c_str());
-	string currentDirectory;
-	string pwdFile=assemblyDirectory+"/pwd.txt";
-	string pwdCommand="pwd > "+pwdFile;
-	system(pwdCommand.c_str());
-	ifstream pwdFileStream(pwdFile.c_str());
-	pwdFileStream>>currentDirectory;
-	pwdFileStream.close();
-	fileStream<<"if test -d bank"<<endl;
-	fileStream<<"then"<<endl;
-	fileStream<<"	true"<<endl;
-	fileStream<<"else"<<endl;
-	fileStream<<"	bash CreateBank.sh > bank.log"<<endl;
-	fileStream<<"fi"<<endl;
-	fileStream.close();
-	fileStreamBank<<"bank-transact -m "<<AMOS_FILE_NAME<<" -b bank -c"<<endl;
-	fileStreamBank<<"cat";
-	for(int i=0;i<inputFiles.size();i++){
-		if(inputFiles[i][0]!='/'){
-			fileStreamBank<<" "<<currentDirectory<<"/"<<inputFiles[i];
-		}else{
-			fileStreamBank<<" "<<inputFiles[i];
-		}
-	}
-	fileStreamBank<<" > reads.afg"<<endl;
-	fileStreamBank.close();
+	//cout<<"Done!"<<endl;
 
-	cout<<endl;
-	cout<<"********** Merging contigs..."<<endl;
-	cout<<endl;
-	Merger merger;
-	vector<Read*> finalContigs;
-	Loader loader;
-	string fastaFile=assemblyDirectory+"/"+FASTA_FILE_NAME;
-	int columns=60;
-	loader.load(fastaFile,&finalContigs);
-	vector<Read*> mergedContigs=merger.mergeContigs(finalContigs);
-	string mergedContigsFile=assemblyDirectory+"/LargeMergedContigs.fasta";
-	ofstream streamForMergedContigs(mergedContigsFile.c_str());
-	cout<<endl;
-	for(vector<Read*>::iterator i=mergedContigs.begin();i!=mergedContigs.end();i++){
-		string dnaSequence=(*i)->getSeq();
-		string name=(*i)->getId();
-		int lengthOfContig=dnaSequence.length();
-		if(lengthOfContig<minimumContigSize)
-			continue;
-
-		int j=0;
-		streamForMergedContigs<<">"<<name<<" "<<lengthOfContig<<" nucleotides"<<endl;
-		cout<<">"<<name<<" "<<lengthOfContig<<" nucleotides"<<endl;
-		while(j<lengthOfContig){
-			streamForMergedContigs<<dnaSequence.substr(j,columns)<<endl;
-			j+=columns;
-		}
-	}
-
-	string readmeFile=assemblyDirectory+"/README.txt";
-	ofstream readmeStream(readmeFile.c_str());
-	readmeStream<<"********** Assembly files"<<endl;
-	readmeStream<<"LargeMergedContigs.fasta - final contigs"<<endl;
-	readmeStream<<"contigs-amos.afg - AMOS MESSAGE of the assembly"<<endl;
-	readmeStream<<"contigs.fasta - all contigs, not merged"<<endl;
-	readmeStream<<endl;
-	readmeStream<<"********** Assembly meta data"<<endl;
-
-	readmeStream<<"contigs-coverage.txt - coverage at each position of contigs"<<endl;
-	readmeStream<<"contigs-repeats.txt - repeat detection at each position of contigs"<<endl;
-	readmeStream<<endl;
-	readmeStream<<"********* Quality analysis"<<endl;
-	readmeStream<<"CoverageDistribution.txt - coverage distribution"<<endl;
-	readmeStream<<endl;
-	readmeStream<<"********** Shell scripts"<<endl;
-	readmeStream<<"CreateBank.sh - Create an AMOS bank"<<endl;
-
-	readmeStream<<"RunHawkeye.sh - run hawkeye"<<endl;
-	readmeStream<<endl;
-	readmeStream<<"********** Other files"<<endl;
-	readmeStream<<"pwd.txt - working directory"<<endl;
-	readmeStream<<"README.txt - description of files"<<endl;
-	readmeStream.close();
-
-	return 0;
+	//return 0;
 }
