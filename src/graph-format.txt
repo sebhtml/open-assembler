@@ -1,0 +1,14 @@
+Vertices: <NumberOfVertices>
+<Vertice1>
+<Vertice2>
+...
+
+Data: <NumberOfVertices>
+<Vertice1>
+<NumberOfAnnotations>
+	<ReadNumber> <ReadStrand> <ReadPositionOnStrand>
+	...
+
+<NumberOfChildren>
+	<ChildrenValue>
+	...
