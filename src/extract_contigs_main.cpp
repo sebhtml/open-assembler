@@ -1,7 +1,7 @@
 /*
 	dna: De Novo Assembler
     Copyright (C) 2008, 2009 Sébastien Boisvert
-	$Id: DeBruijnAssembler.cpp 116 2009-02-16 21:19:41Z boiseb01 $
+	$Id$
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -44,6 +44,10 @@ int main(int argc,char*argv[]){
 	ifstream input(filesFile.c_str());
 	cout<<"Loading files from "<<filesFile<<endl;
 	string aFile;
+	if(!input){
+		cout<<"InputFiles.txt is not present.."<<endl;	
+		return 0;
+	}
 	while(!input.eof()){
 		aFile="";
 		input>>aFile;

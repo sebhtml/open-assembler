@@ -43,9 +43,9 @@ int rightPositionOnRead;
 
 int main(int argc,char*argv[]){
 	CommonHeader(&cout);
-	if(argc!=7){
+	if(argc!=5){
 		cout<<"usage"<<endl;
-		cout<<"dna_Scaffolder left.fasta right.fasta contigs.fasta scaffolds.fasta"<<endl;
+		cout<<argv[0]<<" left.fasta right.fasta contigs.fasta scaffolds.fasta"<<endl;
 		return 0;
 	}
 	int MINIMUM_TILING_WINDOWS=20;

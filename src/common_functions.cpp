@@ -1,7 +1,7 @@
 /*
 	dna: De Novo Assembler
     Copyright (C) 2008, 2009 Sébastien Boisvert
-	$Id: DeBruijnAssembler.cpp 116 2009-02-16 21:19:41Z boiseb01 $
+	$Id$
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -116,7 +116,7 @@ void CommonHeader(ostream*out){
 	*out<<"Documentation: http://denovoassembler.sf.net/"<<endl;
 	*out<<"License: http://www.gnu.org/licenses/gpl.html"<<endl;
 	*out<<"Publication: in preparation"<<endl;
-	*out<<"Version: "<<"$Id: DeBruijnAssembler.cpp 180 2009-02-22 21:55:22Z boiseb01 $"<<endl;
+	*out<<"Version: "<<"$Id$"<<endl;
 }
 
 char getLastSymbol(VERTEX_TYPE i,int m_wordSize){
