@@ -19,7 +19,7 @@
 
 
 
-
+#include<cstdlib>
 #include"Loader.h"
 #include<fstream>
 #include<string>
