@@ -772,23 +772,26 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 
 		//   snap readss
 		string theSequence=idToWord(prefix,m_wordSize);
+		char theNucleotideToMatch=theSequence[m_wordSize-1];
 		//cout<<"Snaping reads, prefix  is "<<theSequence<<endl;
 		for(set<int>::iterator j=theReadsThatAreRelevant.begin();j!=theReadsThatAreRelevant.end();j++){
 			int lastPositionInPath=(usedReads)[*j];
 			int readNumber=*j;
+			char readStrand=(readStrands)[readNumber];
 /*
 			cout<<"Read <- "<<readNumber<<endl;
 			
 			cout<<readNumber<<" last seen at "<<lastPositionInPath<<endl;
 */
-			int lastPositionInRead=(*currentReadPositions)[lastPositionInPath][readNumber][(readStrands)[readNumber]];
-			string sequence=m_sequenceData->at(readNumber)->getSeq();
-			if((readStrands)[readNumber]=='R')
-				sequence=reverseComplement(sequence);
+			int lastPositionInRead=(*currentReadPositions)[lastPositionInPath][readNumber][readStrand];
+			//string sequence=m_sequenceData->at(readNumber)->getSeq();
+			//if((readStrands)[readNumber]=='R')
+				//sequence=reverseComplement(sequence);
 			int delta=path->size()-lastPositionInPath;
 			int deltaOffset=delta+lastPositionInRead-1;
-			if(deltaOffset<sequence.length()){
-				string subWord=sequence.substr(deltaOffset,m_wordSize);
+			if(deltaOffset+m_wordSize-1<m_sequenceData->at(readNumber)->length()){
+				char theNucleotide=m_sequenceData->at(readNumber)->nucleotideAt(deltaOffset+m_wordSize-1,readStrand);
+				//string subWord=sequence.substr(deltaOffset,m_wordSize);
 /*
 				cout<<"Position in read at this position: "<<lastPositionInRead<<endl;
 				cout<<"Delta <- "<<delta<<endl;
@@ -798,9 +801,10 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 				cout<<"Good, got something to compare with for the moment.."<<endl;
 				cout<<"The subword <--== "<<subWord<<endl;
 */
-				if(subWord==theSequence){
+				if(theNucleotide==theNucleotideToMatch){
 					(*currentReadPositions)[path->size()-1][readNumber][(readStrands)[readNumber]]=deltaOffset;
 					usedReads[readNumber]=path->size()-1;
+					//cout<<"SNAP SINGLE"<<endl;
 				}
 			}else{
 			}
@@ -984,6 +988,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 	//(*m_cout)<<"Children"<<endl;
 	for(vector<VERTEX_TYPE>::iterator i=children.begin();i!=children.end();i++){
 		string theChildrenSequence=idToWord(*i,m_wordSize);
+		char theNucleotideToMatch=theChildrenSequence[m_wordSize-1];
 		//cout<<"Children <- "<<theChildrenSequence<<endl;
 		/*
 		//(*m_cout)<<"Child "<<idToWord(children[i],m_wordSize)<<endl;
@@ -1011,18 +1016,22 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 		for(set<int>::iterator j=theReadsThatAreRelevant->begin();j!=theReadsThatAreRelevant->end();j++){
 			int lastPositionInPath=(*usedReads)[*j];
 			int readNumber=*j;
+			char readStrand=(*readStrands)[readNumber];
 /*
 			cout<<"Read <- "<<readNumber<<endl;
 			
 			cout<<readNumber<<" last seen at "<<lastPositionInPath<<endl;
+	
 */
-			int lastPositionInRead=(*currentReadPositions)[lastPositionInPath][readNumber][(*readStrands)[readNumber]];
+			int lastPositionInRead=(*currentReadPositions)[lastPositionInPath][readNumber][readStrand];
+/*
 			string sequence=m_sequenceData->at(readNumber)->getSeq();
 			if((*readStrands)[readNumber]=='R')
 				sequence=reverseComplement(sequence);
+*/
 			int delta=path->size()-lastPositionInPath;
 			int deltaOffset=delta+lastPositionInRead;
-			if(deltaOffset<sequence.length()){
+			if(deltaOffset+m_wordSize-1<m_sequenceData->at(readNumber)->length()){
 /*
 				cout<<"Position in read at this position: "<<lastPositionInRead<<endl;
 				cout<<"Delta <- "<<delta<<endl;
@@ -1031,9 +1040,17 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 				cout<<"DeltA-OFFSET <- "<<deltaOffset<<endl;
 				cout<<"Good, got something to compare with for the moment.."<<endl;
 */
-				string subWord=sequence.substr(deltaOffset,m_wordSize);
+				//string subWord=sequence.substr(deltaOffset,m_wordSize);
+				char theNucleotidePresent=m_sequenceData->at(readNumber)->nucleotideAt(deltaOffset+m_wordSize-1,readStrand);
 				//cout<<"The subword <--== "<<subWord<<endl;
-				if(subWord==theChildrenSequence){
+				//if(theNucleotidePresent==theNucleotideToMatch){
+		/*
+				cout<<"Strand "<<readStrand<<endl;
+				cout<<subWord<<" "<<theChildrenSequence<<endl;
+				cout<<theNucleotidePresent<<" "<<theNucleotideToMatch<<endl;
+		*/
+				//if(subWord==theChildrenSequence){
+				if(theNucleotidePresent==theNucleotideToMatch){
 					scoresSum[*i]+=deltaOffset;
 				}
 			}else{

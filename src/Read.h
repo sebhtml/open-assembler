@@ -40,6 +40,8 @@ public:
 	int getStartForward();
 	int getStartReverse();
 	void setStartForward(int i);
+	int length();
+	char nucleotideAt(int pos,char strand);
 	void setStartReverse(int i);
 };
 

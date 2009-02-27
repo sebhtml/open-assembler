@@ -93,3 +93,32 @@ void Read::setStartForward(int i){
 void Read::setStartReverse(int i){
 	m_startReverse=i;
 }
+
+int Read::length(){
+	return strlen(m_sequence);
+}
+
+/*	
+		0	1	2	3
+		3	2	1	0
+
+			p
+	-------------------------------------->
+	<--------------------------------------
+
+*/
+char Read::nucleotideAt(int pos,char strand){
+	if(strand=='F'){
+		return m_sequence[pos];
+	}
+	pos=length()-pos-1;
+	char aSymbol=m_sequence[pos];
+	if(aSymbol=='A')
+		return 'T';
+	if(aSymbol=='T')
+		return 'A';
+	if(aSymbol=='C')
+		return 'G';
+	if(aSymbol=='G')
+		return 'C';
+}
