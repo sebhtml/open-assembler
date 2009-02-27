@@ -322,6 +322,19 @@ int main(int argc,char*argv[]){
 	cout<<"Insert mean: "<<sumOfInserts/numberOfInserts<<", n="<<numberOfInserts<<endl;
 	cout<<"negative insert sizes?: "<<negativeInserts<<endl;
 
+	for(map<int,map<int,vector<Annotation > > >::iterator i=annotations.begin();i!=annotations.end();i++){
+		for(map<int,vector<Annotation> >::iterator j=i->second.begin();j!=i->second.end();j++){
+			if(j->second.size()>=1){
+				int leftContig=i->first;
+				int rightContig=j->first;
+				theScaffolderGraphChildren[leftContig].insert(rightContig);
+				theScaffolderGraphParents[rightContig].insert(leftContig);
+			}
+		}
+	}
+
+
+
 	map<int,int> scaffoldColors;
 	int currentColor=1;
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
@@ -362,17 +375,6 @@ int main(int argc,char*argv[]){
 
 
 	cout<<"Scaffolds: "<<currentColor-1<<endl;
-	for(map<int,map<int,vector<Annotation > > >::iterator i=annotations.begin();i!=annotations.end();i++){
-		for(map<int,vector<Annotation> >::iterator j=i->second.begin();j!=i->second.end();j++){
-			if(j->second.size()>=1){
-				int leftContig=i->first;
-				int rightContig=j->first;
-				theScaffolderGraphChildren[leftContig].insert(rightContig);
-				theScaffolderGraphParents[rightContig].insert(leftContig);
-			}
-		}
-	}
-
 	cout<<"Writing the graph"<<endl;
 	ofstream f("graph.graphviz");
 	f<<"digraph{"<<endl;
