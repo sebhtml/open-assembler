@@ -50,7 +50,7 @@ int main(int argc,char*argv[]){
 		cout<<argv[0]<<" left.fasta right.fasta contigs.fasta scaffolds.fasta"<<endl;
 		return 0;
 	}
-	int MINIMUM_TILING_WINDOWS=30;
+	int MINIMUM_TILING_WINDOWS=40;
 	string leftReadsFile=argv[1];
 	string rightReadsFile=argv[2];
 	string contigsFile=argv[3];
@@ -338,6 +338,7 @@ int main(int argc,char*argv[]){
 			if(validAnnotations>=1){
 				int leftContig=i->first;
 				int rightContig=j->first;
+				
 				theScaffolderGraphChildren[leftContig].insert(rightContig);
 				theScaffolderGraphParents[rightContig].insert(leftContig);
 			}
