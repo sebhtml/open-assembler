@@ -30,6 +30,8 @@ class Annotation{
 public:
 int readNumber;
 
+int InsertSizeLowerBound;
+
 int leftContigNumber;
 char leftIsReverse;
 int leftPositionOnContig;
@@ -48,7 +50,7 @@ int main(int argc,char*argv[]){
 		cout<<argv[0]<<" left.fasta right.fasta contigs.fasta scaffolds.fasta"<<endl;
 		return 0;
 	}
-	int MINIMUM_TILING_WINDOWS=20;
+	int MINIMUM_TILING_WINDOWS=30;
 	string leftReadsFile=argv[1];
 	string rightReadsFile=argv[2];
 	string contigsFile=argv[3];
@@ -94,7 +96,7 @@ int main(int argc,char*argv[]){
 
 	cout<<"Processing contigs now.."<<endl;
 
-	//  read,  contig  position
+	//  read,  contig  positionInContig
 	map<int,map<int,vector<int> > > leftForwardHits;
 	map<int,map<int,vector<int> > >rightForwardHits;
 	map<int,map<int,vector<int> > >leftReverseHits;
@@ -143,6 +145,8 @@ int main(int argc,char*argv[]){
 
 
 	cout<<"Scaffolding now!"<<endl;
+
+	// contig left  contig right
 	map<int,set<int> > theScaffolderGraphChildren;
 	map<int,set<int> > theScaffolderGraphParents;
 	map<int,map<int,vector<Annotation> > > annotations;
@@ -289,7 +293,7 @@ int main(int argc,char*argv[]){
 					insertSizeLowerBound+=anAnnotation.rightPositionOnContig;
 				}
 
-
+				anAnnotation.InsertSizeLowerBound=insertSizeLowerBound;
 				annotations[leftContig][rightContig].push_back(anAnnotation);
 				cout<<"LINK"<<endl;
 				cout<<"Left"<<endl;
@@ -320,11 +324,18 @@ int main(int argc,char*argv[]){
 	cout<<"activePairedReads "<<activePairedReads<<endl;
 	cout<<"not on the same "<<notOnTheSame<<endl;
 	cout<<"Insert mean: "<<sumOfInserts/numberOfInserts<<", n="<<numberOfInserts<<endl;
+	int insertMeanLength=sumOfInserts/numberOfInserts;
 	cout<<"negative insert sizes?: "<<negativeInserts<<endl;
 
 	for(map<int,map<int,vector<Annotation > > >::iterator i=annotations.begin();i!=annotations.end();i++){
 		for(map<int,vector<Annotation> >::iterator j=i->second.begin();j!=i->second.end();j++){
-			if(j->second.size()>=1){
+			int validAnnotations=0;
+			for(int k=0;k<j->second.size();k++){
+				int deviation=insertMeanLength/3;
+				if(insertMeanLength-2*deviation <= j->second[k].InsertSizeLowerBound && j->second[k].InsertSizeLowerBound <= insertMeanLength+2*deviation)
+					validAnnotations++;
+			}
+			if(validAnnotations>=1){
 				int leftContig=i->first;
 				int rightContig=j->first;
 				theScaffolderGraphChildren[leftContig].insert(rightContig);
