@@ -78,7 +78,8 @@ class DeBruijnAssembler{
 
 	string pathToDNA(vector<VERTEX_TYPE>*path);
 
-	vector<VERTEX_TYPE> nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources,map<int,int>*usedReads);
+	vector<VERTEX_TYPE> nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources,map<int,int>*usedReads,map<int,char>*readStrands,
+		set<int>*theReadsThatAreRelevant);
 	bool DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VERTEX_TYPE b);
 
 	VERTEX_TYPE reverseComplement_VERTEX(VERTEX_TYPE a);
@@ -88,7 +89,6 @@ class DeBruijnAssembler{
 	void Walk_In_GRAPH();
 
 
-	void contig_From_SINGLE_2(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,vector<int>*repeatAnnotations,VERTEX_TYPE source);
 	void indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData);
 
 	void writeContig_fasta(vector<VERTEX_TYPE>*path,ofstream*file,int i);

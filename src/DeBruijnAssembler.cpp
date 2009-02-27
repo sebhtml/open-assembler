@@ -627,30 +627,13 @@ bool DeBruijnAssembler::DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VER
 	return false;
 }
 
-void DeBruijnAssembler::contig_From_SINGLE_2(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,vector<int>*repeatAnnotations,VERTEX_TYPE source){
-	vector<VERTEX_TYPE> nextToDo;
-	map<int,int> lastPositionForARead;
-	nextToDo.push_back(source);
-	while(nextToDo.size()==1){
-		VERTEX_TYPE prefix=nextToDo[0];
-		if(m_data.get(prefix)->IsAssembled()&&path->size()<50){
-			cout<<"Skipping spurious source"<<endl;
-			return;
-		}
-		path->push_back(prefix);
-		prefixVertexData->addPositionInContig(source,path->size());
-		path->push_back(prefix);
-		map<int,map<char,int> > a;
-		(*currentReadPositions).push_back(a);
 
-		vector<VERTEX_TYPE> theNewNext;
-		vector<VERTEX_TYPE> children=m_data.get(prefix)->getChildren(prefix,m_wordSize);
-	}
-}
 
 
 void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,vector<int>*repeatAnnotations,VERTEX_TYPE source){
 	map<int,int> usedReads;
+	set<int> theReadsThatAreRelevant;
+	map<int,char> readStrands;
 	map<int,int> firstReadOccurance;
 	bool debug_print=m_DEBUG;
 	//debug_print=true;
@@ -698,7 +681,6 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 */
 		path->push_back(prefix);
 		prefixVertexData->addPositionInContig(source,path->size());
-		path->push_back(prefix);
 		map<int,map<char,int> > a;
 		(*currentReadPositions).push_back(a);
 		//cout<<DeBruijnAssembler::idToWord(prefix,DeBruijnAssembler::m_wordSize)<<endl;
@@ -732,6 +714,8 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		}else{
 			repeatAnnotations->push_back(0);
 		}
+
+		// add new read in threading queue
 		for(int h=0;h<(int)annotations->size();h++){
 			bool addedInContig=false;
 			//(*m_cout)<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readPosition<<" "<<annotations->at(h).readStrand;
@@ -752,12 +736,17 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			
 				)){ // add at most a given amount of "new reads" to avoid depletion
 					if(annotations->size()<m_REPEAT_DETECTION){
+						cout<<(*currentReadPositions).size()<<endl;
+						cout<<path->size()<<endl;
 						(*currentReadPositions)[path->size()-1][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition; // = 0
 						//(*m_cout)<<path->size()<<" "<<idToWord(path->at(path->size()-2),m_wordSize)<<" -> "<<idToWord(path->at(path->size()-1),m_wordSize)<<endl;
 						//(*m_cout)<<"Adding read "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<" "<<annotations->at(h).readStrand<<" "<<annotations->at(h).readPosition<<endl;	
 						//cout<<" Added ";
 						added++;
 						usedReads[(annotations->at(h).readId)]=path->size()-1;
+						theReadsThatAreRelevant.insert((annotations->at(h).readId));
+						//cout<<"ADding a relevant read. "<<(annotations->at(h).readId)<<endl;
+						readStrands[(annotations->at(h).readId)]=annotations->at(h).readStrand;
 						addedInContig=true;
 					}else{
 						reads_that_can_start_After_repeat.insert(annotations->at(h).readId);
@@ -768,6 +757,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 				if(m_carry_forward_offset==0||true){
 					//cout<<" Threaded ";
 					usedReads[annotations->at(h).readId]=path->size()-1;
+					theReadsThatAreRelevant.insert((annotations->at(h).readId));
 					addedInContig=true;
 					(*currentReadPositions)[path->size()-1][annotations->at(h).readId][annotations->at(h).readStrand]=annotations->at(h).readPosition;
 					//cout<<"Threading "<<m_sequenceData->at(annotations->at(h).readId)->getId()<<endl;
@@ -778,6 +768,43 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			}
 			//cout<<endl;
 		}
+
+		//   snap readss
+		string theSequence=idToWord(prefix,m_wordSize);
+		//cout<<"Snaping reads, prefix  is "<<theSequence<<endl;
+		for(set<int>::iterator j=theReadsThatAreRelevant.begin();j!=theReadsThatAreRelevant.end();j++){
+			int lastPositionInPath=(usedReads)[*j];
+			int readNumber=*j;
+/*
+			cout<<"Read <- "<<readNumber<<endl;
+			
+			cout<<readNumber<<" last seen at "<<lastPositionInPath<<endl;
+*/
+			int lastPositionInRead=(*currentReadPositions)[lastPositionInPath][readNumber][(readStrands)[readNumber]];
+			string sequence=m_sequenceData->at(readNumber)->getSeq();
+			if((readStrands)[readNumber]=='R')
+				sequence=reverseComplement(sequence);
+			int delta=path->size()-lastPositionInPath;
+			int deltaOffset=delta+lastPositionInRead-1;
+			if(deltaOffset<sequence.length()){
+				string subWord=sequence.substr(deltaOffset,m_wordSize);
+/*
+				cout<<"Position in read at this position: "<<lastPositionInRead<<endl;
+				cout<<"Delta <- "<<delta<<endl;
+				cout<<"Read sequence: "<<sequence<<endl;
+				cout<<"OffsetInRead <- "<<lastPositionInRead<<endl;
+				cout<<"DeltA-OFFSET <- "<<deltaOffset<<endl;
+				cout<<"Good, got something to compare with for the moment.."<<endl;
+				cout<<"The subword <--== "<<subWord<<endl;
+*/
+				if(subWord==theSequence){
+					(*currentReadPositions)[path->size()-1][readNumber][(readStrands)[readNumber]]=deltaOffset;
+					usedReads[readNumber]=path->size()-1;
+				}
+			}else{
+			}
+		}
+
 
 		if(debug_print){
 			(*m_cout)<<(*currentReadPositions)[path->size()-1].size();
@@ -790,7 +817,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		}
 
 
-		prefixNextVertices=nextVertices(path,currentReadPositions,newSources,&usedReads);
+		prefixNextVertices=nextVertices(path,currentReadPositions,newSources,&usedReads,&readStrands,&theReadsThatAreRelevant);
 		if(added==0&&m_data.get(prefix)->hasManyChildren(prefix,m_wordSize)){
 			(*m_cout)<<"Stop!, reason: No read threaded, "<<endl;
 			break;
@@ -825,7 +852,7 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		newSources->push_back(children[j]);
 	}
 	*/
-	if(!debug_print&&false){
+	if(!debug_print){
 		return;
 	}
 	//return;
@@ -881,10 +908,32 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 /**
  * \param simple  force passFilter to use passFilter_ShortRead
  */
-vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources,map<int,int>*usedReads){
+vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources,map<int,int>*usedReads,
+	map<int,char>*readStrands,set<int>*theReadsThatAreRelevant){
 	bool debugPrint=m_DEBUG;
 	VERTEX_TYPE prefix=path->at(path->size()-1);
 	vector<VERTEX_TYPE> children=m_data.get(prefix)->getChildren(prefix,m_wordSize);
+	/*
+	cout<<endl;
+	cout<<"Path size: "<<path->size()<<endl;
+	cout<<"Prefix << "<<idToWord(prefix,m_wordSize)<<endl;
+	cout<<"haha "<<children.size()<<" children"<<endl;
+*/
+/*
+	if(true){
+		cout<<"Debug mode"<<endl;
+		cout<<"Prefix"<<prefix<<endl;
+		cout<<"Children"<<endl;
+		for(vector<VERTEX_TYPE>::iterator i=children.begin();i!=children.end();i++)
+			cout<<*i<<endl;
+
+		cout<<"Contig reads.."<<endl;
+		for(map<int,int>::iterator i=usedReads->begin();i!=usedReads->end();i++){
+			cout<<i->first<<" last seen at "<<i->second<<endl;
+			cout<<"Position in read at this position: "<<(*currentReadPositions)[i->second][i->first][(*readStrands)[i->first]]<<endl;
+		}
+	}
+
 	if(children.size()==1)
 		return children;
 	// start when nothing is done yet
@@ -907,12 +956,13 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 			return children;
 		}
 	}
+*/
 
-
+/*
 	if(children.size()>1&&m_DEBUG){
 		(*m_cout)<<"More than 1 children: "<<children.size()<<endl;
 	}
-
+*/
 /*
 	for(map<int,map<int,map<char,int> > >::iterator k=currentReadPositions->begin();k!=currentReadPositions->end();k++){
 		for(map<int,map<char,int> >::iterator i=k->second.begin();i!=k->second.end();i++){
@@ -932,7 +982,9 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 	ostringstream debugBuffer;
 	//(*m_cout)<<"Children"<<endl;
 	for(vector<VERTEX_TYPE>::iterator i=children.begin();i!=children.end();i++){
-
+		string theChildrenSequence=idToWord(*i,m_wordSize);
+		//cout<<"Children <- "<<theChildrenSequence<<endl;
+		/*
 		//(*m_cout)<<"Child "<<idToWord(children[i],m_wordSize)<<endl;
 		vector<AnnotationElement>*thisEdgeData=(m_data.get(*i)->getAnnotations());
 		coverageOfEdges[*i]=0;
@@ -952,6 +1004,46 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 				}
 			}
 		}
+*/
+		//for(map<int,int>::iterator j=usedReads->begin();j!=usedReads->end();j++){
+		vector<int> toRemoveFromRelevantReads;
+		for(set<int>::iterator j=theReadsThatAreRelevant->begin();j!=theReadsThatAreRelevant->end();j++){
+			int lastPositionInPath=(*usedReads)[*j];
+			int readNumber=*j;
+/*
+			cout<<"Read <- "<<readNumber<<endl;
+			
+			cout<<readNumber<<" last seen at "<<lastPositionInPath<<endl;
+*/
+			int lastPositionInRead=(*currentReadPositions)[lastPositionInPath][readNumber][(*readStrands)[readNumber]];
+			string sequence=m_sequenceData->at(readNumber)->getSeq();
+			if((*readStrands)[readNumber]=='R')
+				sequence=reverseComplement(sequence);
+			int delta=path->size()-lastPositionInPath;
+			int deltaOffset=delta+lastPositionInRead;
+			if(deltaOffset<sequence.length()){
+/*
+				cout<<"Position in read at this position: "<<lastPositionInRead<<endl;
+				cout<<"Delta <- "<<delta<<endl;
+				cout<<"Read sequence: "<<sequence<<endl;
+				cout<<"OffsetInRead <- "<<lastPositionInRead<<endl;
+				cout<<"DeltA-OFFSET <- "<<deltaOffset<<endl;
+				cout<<"Good, got something to compare with for the moment.."<<endl;
+*/
+				string subWord=sequence.substr(deltaOffset,m_wordSize);
+				//cout<<"The subword <--== "<<subWord<<endl;
+				if(subWord==theChildrenSequence){
+					scoresSum[*i]+=deltaOffset;
+				}
+			}else{
+				toRemoveFromRelevantReads.push_back(*j);
+			}
+		}
+		for(vector<int>::iterator j=toRemoveFromRelevantReads.begin();j!=toRemoveFromRelevantReads.end();j++){
+			theReadsThatAreRelevant->erase(*j); // bang, erase it since it is no longer relevant.
+		}
+
+
 	}
 
 	if(m_DEBUG)
@@ -988,6 +1080,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 		}
 	}
 
+/*
 	// best max
 	for(map<VERTEX_TYPE,int>::iterator i=scoresMax.begin();i!=scoresMax.end();i++){
 		if(foundBest==true)
@@ -1024,6 +1117,7 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 		}
 	}
 
+*/
 	if(children.size()==2&&
 		foundBest==false){
 		// attempt to detect homopolymer...
@@ -1165,7 +1259,7 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 				if(theChildren.size()>1)
 					hasMixedParents=true;
 			}
-			if((strand=='F'&&readPosition==sequenceData->at(readId)->getStartForward())||
+			if(m_data.get(wordInBits)->NotTrivial(wordInBits,m_wordSize)||(strand=='F'&&readPosition==sequenceData->at(readId)->getStartForward())||
 			(strand=='R'&&readPosition==sequenceData->at(readId)->getStartForward())||false)
 				m_data.get(wordInBits)->addAnnotation(readId,readPosition,strand);
 		}
