@@ -27,11 +27,13 @@
 #include<stdlib.h>
 #include"Merger.h"
 #include"common_functions.h"
+#include"VertexData.h"
 
 using namespace std;
 
 
 int main(int argc,char*argv[]){
+	cout<<"VertexDataSize <- "<<sizeof(VertexData)<<endl;
 	CommonHeader(&cout);
 	// show usage
 	cout<<endl;

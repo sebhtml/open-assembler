@@ -27,21 +27,29 @@
 
 using namespace std;
 
+vector<AnnotationElement> VertexData::m_empty_vector;
 
 VertexData::VertexData(){
 	//m_isEliminated=false;
 	m_parents=0;
 	m_children=0;
-	m_color=-1;
+	//m_color=-1;
+	m_annotations=NULL;
+	m_assembled=false;
 }
 
+void VertexData::assemble(){
+	m_assembled=true;
+}
 
 void VertexData::addAnnotation(uint32_t read,POSITION_TYPE position,uint8_t strand){
+	if(m_annotations==NULL)
+		m_annotations=new vector<AnnotationElement>;
 	AnnotationElement element;
 	element.readId=read;
 	element.readPosition=position;
 	element.readStrand=strand;
-	m_annotations.push_back(element);
+	m_annotations->push_back(element);
 }
 
 void VertexData::addChild(VERTEX_TYPE child,int m_wordSize){
@@ -84,7 +92,9 @@ void VertexData::addParent(VERTEX_TYPE parent,int m_WordSize){
  *
  */
 vector<AnnotationElement>*VertexData::getAnnotations(){
-	return &m_annotations;
+	if(m_annotations==NULL)
+		return &m_empty_vector;
+	return m_annotations;
 }
 
 
@@ -167,6 +177,10 @@ vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix,GraphData*m_data,i
 
 
 VertexData::~VertexData(){
+	if(m_annotations!=NULL){
+		delete m_annotations;
+		m_annotations=NULL;
+	}
 }
 
 void VertexData::eliminateNow(){
@@ -179,16 +193,17 @@ bool VertexData::IsEliminated(){
 }
 
 bool VertexData::IsAssembled(){
-	return m_positionInContig.size()>0;
+	//return m_positionInContig.size()>0;
+	return m_assembled;
 }
 
-
 uint32_t VertexData::getColor(){
-	return m_color;
+	//return m_color;
+	return 0;
 }
 
 void VertexData::setColor(uint32_t c){
-	m_color=c;
+	//m_color=c;
 }
 
 bool VertexData::NotTrivial(VERTEX_TYPE a,int m_wordSize){
@@ -199,9 +214,11 @@ bool VertexData::hasManyChildren(VERTEX_TYPE a,int w){
 	return getChildren(a,w).size()>1;
 }
 
+/*
 void VertexData::addPositionInContig(VERTEX_TYPE a,int b){
-	m_positionInContig[a].push_back(b);
+	//m_positionInContig[a].push_back(b);
 }
+
 
 map<VERTEX_TYPE,vector<int> >*VertexData::getPositions(){
 	return &m_positionInContig;
@@ -214,3 +231,4 @@ void VertexData::printPositions(){
 		}
 	}
 }
+*/

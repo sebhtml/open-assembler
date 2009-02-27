@@ -31,6 +31,7 @@ class GraphData;
 
 
 class VertexData{
+	static vector<AnnotationElement> m_empty_vector;
 	// bit    nucleotide
 	// 0      A
 	// 1      T
@@ -42,11 +43,12 @@ class VertexData{
 	// 7	Unused
 	
 	//bool m_isEliminated;
-	map<VERTEX_TYPE,vector<int> > m_positionInContig;
+	//map<VERTEX_TYPE,vector<int> > m_positionInContig;
+	bool m_assembled;
 	uint8_t m_parents;
-	uint32_t m_color;
+	//uint32_t m_color;
 	uint8_t m_children;
-	vector<AnnotationElement>m_annotations;
+	vector<AnnotationElement>*m_annotations;
 	
 public:
 
@@ -66,6 +68,7 @@ public:
 	void setColor(uint32_t c);
 	bool IsAssembled();
 	void printPositions();
+	void assemble();
 	bool NotTrivial(VERTEX_TYPE a,int w);
 	void addPositionInContig(VERTEX_TYPE a,int b);
 	bool hasManyChildren(VERTEX_TYPE a,int w);

@@ -421,6 +421,7 @@ int DeBruijnAssembler::DFS_watch(VERTEX_TYPE a,int color){
 void DeBruijnAssembler::Walk_In_GRAPH(){
 	cout<<endl;
 	vector<VERTEX_TYPE>*theNodes=m_data.getNodes();
+/*
 	(*m_cout)<<"********* Simplifying the graph"<<endl;
 	cout<<endl;
 	int color=0;
@@ -436,8 +437,9 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			}
 		}
 	}
-	cout<<"Simplifying: "<<m_data.size()<<" / "<<m_data.size()<<endl;
 
+	cout<<"Simplifying: "<<m_data.size()<<" / "<<m_data.size()<<endl;
+*/
 	cout<<endl;
 	vector<VERTEX_TYPE> withoutParents;
 	(*m_cout)<<"********* Inspecting the graph"<<endl;
@@ -680,7 +682,8 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		}
 */
 		path->push_back(prefix);
-		prefixVertexData->addPositionInContig(source,path->size());
+		//prefixVertexData->addPositionInContig(source,path->size());
+		prefixVertexData->assemble();
 		map<int,map<char,int> > a;
 		(*currentReadPositions).push_back(a);
 		//cout<<DeBruijnAssembler::idToWord(prefix,DeBruijnAssembler::m_wordSize)<<endl;
