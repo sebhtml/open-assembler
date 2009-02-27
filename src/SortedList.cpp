@@ -26,19 +26,23 @@
 using namespace std;
 
 
+SortedList::SortedList(){
+	m_list=new vector<VERTEX_TYPE>;
+}
+
 void SortedList::add(VERTEX_TYPE a){
-	m_list.push_back(a);
+	m_list->push_back(a);
 }
 
 
 vector<VERTEX_TYPE> SortedList::elementsWithALeastCCoverage(int c){
 	vector<VERTEX_TYPE> output;
-	vector<VERTEX_TYPE>::iterator i=m_list.begin();
-	while(i!=m_list.end()){
+	vector<VERTEX_TYPE>::iterator i=m_list->begin();
+	while(i!=m_list->end()){
 		int currentCount=1;
 		VERTEX_TYPE currentValue=*i;
 		i++;
-		while(i!=m_list.end()&&*i==currentValue){
+		while(i!=m_list->end()&&*i==currentValue){
 			currentCount++;
 			i++;
 		}
@@ -52,12 +56,12 @@ vector<VERTEX_TYPE> SortedList::elementsWithALeastCCoverage(int c){
 
 map<int,int> SortedList::getDistributionOfCoverage(){
 	map<int,int> m_coverageDistribution;
-	vector<VERTEX_TYPE>::iterator i=m_list.begin();
-	while(i!=m_list.end()){
+	vector<VERTEX_TYPE>::iterator i=m_list->begin();
+	while(i!=m_list->end()){
 		VERTEX_TYPE currentValue=*i;
 		int currentCount=1;
 		i++;
-		while(i!=m_list.end()&&*i==currentValue){
+		while(i!=m_list->end()&&*i==currentValue){
 			currentCount++;
 			i++;
 		}
@@ -68,11 +72,13 @@ map<int,int> SortedList::getDistributionOfCoverage(){
 }
 
 void SortedList::sort(){
-	cout<<"Sorting "<<m_list.size()<<" elements"<<endl;
-	std::sort(m_list.begin(),m_list.end());
+	cout<<"Sorting "<<m_list->size()<<" elements"<<endl;
+	std::sort(m_list->begin(),m_list->end());
 }
 
 void SortedList::clear(){
-	m_list.clear();
+	m_list->clear();
+	delete m_list;
+	m_list=NULL;
 }
 

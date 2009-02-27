@@ -142,10 +142,11 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	uint64_t total_bases=0;
 	//uint64_t solid_bases=0;
 	
-	vector<VERTEX_TYPE> solidMers=myList.elementsWithALeastCCoverage(m_minimumCoverage);
+	vector<VERTEX_TYPE>*solidMers=new vector<VERTEX_TYPE>;
+	*solidMers=myList.elementsWithALeastCCoverage(m_minimumCoverage);
 	myList.clear();
-	cout<<"c-confident mers: "<<solidMers.size()<<", c="<<m_minimumCoverage<<endl;
-	if(solidMers.size()==0){
+	cout<<"c-confident mers: "<<solidMers->size()<<", c="<<m_minimumCoverage<<endl;
+	if(solidMers->size()==0){
 		m_cout<<"Error: mers are depleted..."<<endl;
 		exit(0);
 	}
@@ -156,7 +157,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	m_cout<<"********** Creating vertices..."<<endl;
 	cout<<endl;
 	SortedList graphNodesList;
-	for(vector<VERTEX_TYPE>::iterator i=solidMers.begin();i!=solidMers.end();i++){
+	for(vector<VERTEX_TYPE>::iterator i=solidMers->begin();i!=solidMers->end();i++){
 		VERTEX_TYPE node=*i;
 		string wordString=idToWord(node,m_wordSize+1);
 		VERTEX_TYPE prefix=wordId(wordString.substr(0,m_wordSize).c_str());
@@ -165,19 +166,22 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		graphNodesList.add(suffix);
 	}
 	graphNodesList.sort();
-	vector<VERTEX_TYPE> nodes=graphNodesList.elementsWithALeastCCoverage(1);
+	vector<VERTEX_TYPE>*nodes=new vector<VERTEX_TYPE>;
+	*nodes=graphNodesList.elementsWithALeastCCoverage(1);
 	graphNodesList.clear();
-	for(vector<VERTEX_TYPE>::iterator i=nodes.begin();i!=nodes.end();i++){
+	for(vector<VERTEX_TYPE>::iterator i=nodes->begin();i!=nodes->end();i++){
 		m_data.add(*i);
 	}
-	cout<<nodes.size()<<" vertices"<<endl;
-	nodes.clear();
+	cout<<nodes->size()<<" vertices"<<endl;
+	nodes->clear();
+	delete nodes;
+	nodes=NULL;
 	cout<<endl;
 	m_data.makeMemory();
 
 	m_cout<<"********** Creating edges..."<<endl;
 	cout<<endl;
-	for(vector<VERTEX_TYPE>::iterator i=solidMers.begin();i!=solidMers.end();i++){
+	for(vector<VERTEX_TYPE>::iterator i=solidMers->begin();i!=solidMers->end();i++){
 		VERTEX_TYPE node=*i;
 		string wordString=idToWord(node,m_wordSize+1);
 		VERTEX_TYPE prefix=wordId(wordString.substr(0,m_wordSize).c_str());
@@ -185,8 +189,10 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		m_data.get(prefix)->addChild(suffix,m_wordSize);
 		m_data.get(suffix)->addParent(prefix,m_wordSize);
 	}
-	cout<<solidMers.size()<<" edges"<<endl;
-	solidMers.clear();
+	cout<<solidMers->size()<<" edges"<<endl;
+	solidMers->clear();
+	delete solidMers;
+	solidMers=NULL;
 	cout<<endl;
 
 
