@@ -8,295 +8,209 @@
 using namespace std;
 
 
+class Hit{
+	int m_contigNumber;
+	int m_contigPosition;
+	char m_contigStrand;
+	
+	int m_readNumber;
+	int m_readPosition;
+	char m_readStrand;
+public:
+	Hit(int contigNumber,int contigPosition,char contigStrand,
+		int readNumber,int readPosition,char readStrand);
+	void show();
+	int getContigNumber();
+	int getContigPosition();
+	char getContigStrand();
+};
+
+
+int Hit::getContigPosition(){
+	return m_contigPosition;
+}
+
+int Hit::getContigNumber(){
+	return m_contigNumber;
+}
+
+char Hit::getContigStrand(){
+	return m_contigStrand;
+}
+
+Hit::Hit(int contigNumber,int contigPosition,char contigStrand,
+		int readNumber,int readPosition,char readStrand){
+	m_contigNumber=contigNumber;
+	m_contigPosition=contigPosition;
+	m_contigStrand=contigStrand;
+	m_readNumber=readNumber;
+	m_readPosition=readPosition;
+	m_readStrand=readStrand;
+}
+
+void Hit::show(){
+	cout<<m_contigNumber<<" "<<m_contigStrand<<" "<<m_contigPosition<<" ~ "<<m_readNumber<<" "<<m_readStrand<<" "<<m_readPosition<<endl;
+}
+
+
+class HitPair{
+	Hit*m_left;
+	Hit*m_right;
+public:
+	HitPair(Hit*left,Hit*right);
+	HitPair();
+	bool valid();
+	void show();
+};
+
+HitPair::HitPair(Hit*left,Hit*right){
+	m_left=left;
+	m_right=right;
+}
+
+HitPair::HitPair(){
+}
+
+bool HitPair::valid(){
+	if(m_left->getContigPosition()==0&&m_right->getContigPosition()==0)
+		return false;
+	if(m_left->getContigStrand()==m_right->getContigStrand()&&
+		((m_left->getContigPosition()==0&&m_right->getContigPosition()==0)||
+		(m_left->getContigPosition()!=0&&m_right->getContigPosition()!=0)))
+		return false;
+
+	return true;
+}
+
+void HitPair::show(){
+	cout<<"Hitpair"<<endl;
+	m_left->show();
+	m_right->show();
+}
+
 int main(int argc,char*argv[]){
 	CommonHeader(&cout);
 
-	if(argc!=4){
+	if(argc!=5){
 		cout<<"Usage"<<endl;
-		cout<<"module_join <wordSize> <contigs> <reads>"<<endl;
+		cout<<"module_join <wordSize> <contigs> <reads> <output.fasta>"<<endl;
 		return 0;
 	}
-	int MINIMUM_MATCHES=30;
-	double MINIMUM_IDENTITY=0.85;
-	Loader readLoader;
-	Loader contigsLoader;
+
+/*
+	f_start						f_end
+	r_end						r_start
+		--------------------------------------->
+		<---------------------------------------
+
+*/
+
+	map<uint64_t,vector<int> > f_end_index;
+	map<uint64_t,vector<int> > f_start_index;
+	map<uint64_t,vector<int> > r_start_index;
+	map<uint64_t,vector<int> > r_end_index;
+
 	int wordSize=atoi(argv[1]);
 	vector<Read*> contigs;
-	vector<Read*> reads;
 	string contigsFile=argv[2];
-	string readsFile=argv[3];
-	readLoader.load(readsFile,&reads);
-	contigsLoader.load(contigsFile,&contigs);
 
-	cout<<endl;
-	cout<<"Reads: "<<reads.size()<<endl;
-	cout<<"Contigs: "<<contigs.size()<<endl;
-	cout<<"WordSize: "<<wordSize<<endl;
+	Loader loader;
+	loader.load(contigsFile,&contigs);
 
-	map<VERTEX_TYPE,vector<int> >contigHeads;
-	map<VERTEX_TYPE,vector<int> >contigTails;
-	map<VERTEX_TYPE,vector<int> >contigHeadsReverse;
-	map<VERTEX_TYPE,vector<int> >contigTailsReverse;
-
-
+	map<int,set<int> > theGraph;
+	map<int,map<int,HitPair> > edgeAnnotations;
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
-		string sequenceOfContig=contigs.at(contigNumber)->getSeq();
-		string contigHeadString=sequenceOfContig.substr(0,wordSize);
-		string contigTailString=sequenceOfContig.substr(sequenceOfContig.length()-1-wordSize,wordSize);
-		VERTEX_TYPE headInInt=wordId(contigHeadString.c_str());
-		VERTEX_TYPE tailInInt=wordId(contigTailString.c_str());
-		contigHeads[headInInt].push_back(contigNumber);
-		contigTails[tailInInt].push_back(contigNumber);
-		string contigHeadStringReverse=reverseComplement(contigHeadString.c_str());
-		VERTEX_TYPE headInIntReverse=wordId(contigHeadStringReverse.c_str());
-		string contigTailStringReverse=reverseComplement(contigTailString.c_str());
-		VERTEX_TYPE tailInIntReverse=wordId(contigTailStringReverse.c_str());
-		contigHeadsReverse[headInIntReverse].push_back(contigNumber);
-		contigTailsReverse[tailInIntReverse].push_back(contigNumber);
+		set<int> a;
+		theGraph[contigNumber]=a;
+		string contigSequence=contigs[contigNumber]->getSeq();
+		string f_start=contigSequence.substr(0,wordSize);
+		// 0 1 2 3 4
+		//
+		string f_end=contigSequence.substr(contigSequence.length()-1-wordSize,wordSize);
+		string r_end=reverseComplement(f_start);
+		string r_start=reverseComplement(f_end);
+		f_end_index[wordId(f_end.c_str())].push_back(contigNumber);
+		f_start_index[wordId(f_start.c_str())].push_back(contigNumber);
+		r_end_index[wordId(r_end.c_str())].push_back(contigNumber);
+		r_start_index[wordId(r_start.c_str())].push_back(contigNumber);
 	}
-	
-	cout<<endl;
+
 	cout<<"Done indexing contigs"<<endl;
 
 
-	map<int,map<int,vector<int> > > forwardForward;
-
-	bool done=false;
-	while(done==false){
-		vector<Read*>stepForwardTailForwardHead_contigs;
-		set<int>contigStat;
-		for(int readNumber=0;readNumber<reads.size();readNumber++){
-			if(readNumber%10000==0){
-				cout<<readNumber<<" / "<<reads.size()<<endl;
+	Loader readsLoader;
+	vector<Read*> theReads;
+	string readsFile=argv[3];
+	readsLoader.load(readsFile,&theReads);
+	string outputRead=argv[4];
+	ofstream outputStream(outputRead.c_str());
+	for(int readNumber=0;readNumber<theReads.size();readNumber++){
+		if(readNumber%10000==0){
+			cout<<readNumber<<" / "<<theReads.size()<<endl;
+		}
+		string readSequence=theReads[readNumber]->getSeq();
+		vector<Hit> forwardHits;
+		for(int readPosition=0;readPosition<readSequence.length();readPosition++){
+			string wordAtPosition=readSequence.substr(readPosition,wordSize);
+			if(wordAtPosition.length()!=wordSize){
+				continue;
 			}
-			//cout<<readNumber<<endl;
-			vector<int> positionsHeads;
-			vector<int> positionsTails;
-			vector<int> positionsHeadsReverse;
-			vector<int> positionsTailsReverse;
-			string readSequence=reads[readNumber]->getSeq();
-			for(int readPosition=0;readPosition<readSequence.length();readPosition++){
-				string wordSequence=readSequence.substr(readPosition,wordSize);
-				if(wordSequence.length()!=wordSize)
-					continue;
-				VERTEX_TYPE wordInInt=wordId(wordSequence.c_str());
-				
-				if(contigHeads.count(wordInInt)>0){
-					positionsHeads.push_back(readPosition);
-				}
-				if(contigTails.count(wordInInt)>0){
-					positionsTails.push_back(readPosition);
-				}
-				if(contigHeadsReverse.count(wordInInt)>0){
-					positionsHeadsReverse.push_back(readPosition);
-				}
-				if(contigTailsReverse.count(wordInInt)>0){
-					positionsTailsReverse.push_back(readPosition);
-				}
+			// f_end
+			for(vector<int>::iterator i=f_end_index[wordId(wordAtPosition.c_str())].begin();i!=f_end_index[wordId(wordAtPosition.c_str())].end();i++){
+				int contigNumber=*i;
+				string contigSequence=contigs[contigNumber]->getSeq();
+				Hit myHit(contigNumber,contigSequence.length()-1-wordSize,'F',
+					readNumber,readPosition,'F');
+				forwardHits.push_back(myHit);
 			}
-			if(positionsHeads.size()>0&&positionsTails.size()>0){
-/*
- 						--------------------> Read
-		----------------------------------->
-								----------------------------------->
-
-*/
-				cout<<"Matching ForwardTail-ForwardHead "<<positionsTails.size()<<" "<<positionsHeads.size()<<endl;
-				if(positionsHeads.size()==1&&positionsTails.size()==1){
-					VERTEX_TYPE head=wordId(readSequence.substr(positionsHeads[0],wordSize).c_str());
-					VERTEX_TYPE tail=wordId(readSequence.substr(positionsTails[0],wordSize).c_str());
-					vector<int> headContigs=contigHeads[head];
-					vector<int> tailContigs=contigTails[tail];
-					/*
-					cout<<headContigs.size()<<" Heads"<<endl;
-				cout<<headContigs[0]<<endl;
-				cout<<tailContigs.size()<<" Tails"<<endl;
-				cout<<tailContigs[0]<<endl;
-				*/
-					if(headContigs.size()==1&&tailContigs.size()==1&&contigStat.count(tailContigs[0])==0&&
-						contigStat.count(headContigs[0])==0&&
-							tailContigs[0]!=headContigs[0]){
-						Read*firstContig=contigs[tailContigs[0]];
-						Read*lastContig=contigs[headContigs[0]];
-						cout<<"Read "<<reads[readNumber]->getId()<<" suggests that "<<firstContig->getId()<<" and "<<lastContig->getId()<<" should be linked"<<endl;
-						cout<<"read"<<endl;
-						cout<<readSequence<<endl;
-						cout<<"tail"<<endl;
-						string firstSequence=firstContig->getSeq();
-						cout<<firstSequence.substr(firstSequence.length()-400-1,400)<<endl;
-						cout<<"head"<<endl;
-						string lastSequence=lastContig->getSeq();
-						cout<<lastSequence.substr(0,400)<<endl;
-						forwardForward[tailContigs[0]][headContigs[0]].push_back(readNumber);
-						
-						// 2 cases:
-					// 1) there is a gap (>=0)
-					// 2) there is an overlap
-						int tailPositionInRead=positionsTails[0];
-						int headPositionInRead=positionsHeads[0];
-						int difference=headPositionInRead-tailPositionInRead;
-						cout<<"Difference: "<<difference<<endl;
-						int leftHits=0;
-						int rightHits=0;
-						int i=0;
-						while(i+headPositionInRead<readSequence.length()){
-							if(lastSequence[i]==readSequence[headPositionInRead+i])
-								rightHits++;
-							i++;
-						}
-						double rightPercentage=rightHits/(i+0.0);
-						cout<<"rightHits "<<rightHits<<"/"<<rightPercentage<<endl;
-						i=0;
-						while(tailPositionInRead-i+wordSize>=0){
-							//cout<<firstSequence[firstSequence.length()-1-i]<<" "<<readSequence[tailPositionInRead-i+wordSize]<<endl;
-							if(firstSequence[firstSequence.length()-1-i]==readSequence[tailPositionInRead-i+wordSize])
-								leftHits++;
-							i++;
-						}
-						double leftPercentage=leftHits/(i+0.0);
-	
-						cout<<"leftHits "<<leftHits<<"/"<<leftPercentage<<endl;
-						if(rightHits>=30&&leftHits>=30&&leftPercentage>=0.9&&rightPercentage>=0.9){
-							int overlap=wordSize-difference;
-							if(overlap<0)
-								overlap=0;
-							ostringstream newContigSequence;
-							newContigSequence<<firstSequence;
-							for(int i=tailPositionInRead+wordSize+1;i<headPositionInRead;i++){
-								newContigSequence<<readSequence[i];
-							}
-							newContigSequence<<lastSequence.substr(overlap)<<endl;
-							cout<<"overlap "<<overlap<<endl;
-							cout<<"merge"<<endl;
-							//cout<<newContigSequence.str()<<endl;
-							contigStat.insert(tailContigs[0]);
-							contigStat.insert(headContigs[0]);
-							ostringstream aName;
-							aName<<firstContig->getId()<<"_"<<lastContig->getId();
-							Read*read=new Read(aName.str().c_str(),newContigSequence.str().c_str());
-
-							stepForwardTailForwardHead_contigs.push_back(read);
-						}
-				
-					}else{
-						cout<<"Not 1-1"<<endl;
-					}
-				}
+			// f_start
+			for(vector<int>::iterator i=f_start_index[wordId(wordAtPosition.c_str())].begin();i!=f_start_index[wordId(wordAtPosition.c_str())].end();i++){
+				int contigNumber=*i;
+				string contigSequence=contigs[contigNumber]->getSeq();
+				Hit myHit(contigNumber,0,'F',
+					readNumber,readPosition,'F');
+				forwardHits.push_back(myHit);
 			}
-			if(positionsHeads.size()>0&&positionsTailsReverse.size()>0){
-				cout<<"Matching ReverseTail-ForwardHead "<<positionsTailsReverse.size()<<" "<<positionsHeads.size()<<endl;
-
-				if(positionsHeads.size()==1&&positionsTailsReverse.size()==1){
-					VERTEX_TYPE head=wordId(readSequence.substr(positionsHeads[0],wordSize).c_str());
-					VERTEX_TYPE tail=wordId(readSequence.substr(positionsTailsReverse[0],wordSize).c_str());
-					vector<int> headContigs=contigHeads[head];
-					vector<int> tailContigsReverse=contigTailsReverse[tail];
-
-					cout<<tailContigsReverse.size()<<" Tails"<<endl;
-					cout<<headContigs.size()<<" Heads"<<endl;
-
-					if(headContigs.size()==1&&tailContigsReverse.size()==1&&contigStat.count(tailContigsReverse[0])==0&&
-						contigStat.count(headContigs[0])==0&&
-							tailContigsReverse[0]!=headContigs[0]){
-						Read*firstContig=contigs[tailContigsReverse[0]];
-						Read*lastContig=contigs[headContigs[0]];
-						cout<<"Read "<<reads[readNumber]->getId()<<" suggests that "<<firstContig->getId()<<" (rev) and "<<lastContig->getId()<<" should be linked"<<endl;
-						cout<<"read"<<endl;
-						cout<<readSequence<<endl;
-						cout<<"tail"<<endl;
-						string firstSequence=firstContig->getSeq();
-						cout<<reverseComplement(firstSequence.substr(firstSequence.length()-400-1,400))<<endl;
-						cout<<"head"<<endl;
-						string lastSequence=lastContig->getSeq();
-						cout<<lastSequence.substr(0,400)<<endl;
-						
-						// 2 cases:
-					// 1) there is a gap (>=0)
-					// 2) there is an overlap
-						int tailPositionInRead=positionsTailsReverse[0];
-						int headPositionInRead=positionsHeads[0];
-						int difference=headPositionInRead-tailPositionInRead;
-						cout<<"Difference: "<<difference<<endl;
-						int leftHits=0;
-						int rightHits=0;
-						int i=0;
-						while(i+headPositionInRead<readSequence.length()){
-							if(lastSequence[i]==readSequence[headPositionInRead+i])
-								rightHits++;
-							i++;
-						}
-						double rightPercentage=rightHits/(i+0.0);
-						cout<<"rightHits "<<rightHits<<"/"<<rightPercentage<<endl;
-						i=0;
-						while(tailPositionInRead-i+wordSize>=0){
-							//cout<<firstSequence[firstSequence.length()-1-i]<<" "<<readSequence[tailPositionInRead-i+wordSize]<<endl;
-							if(firstSequence[firstSequence.length()-1-i]==readSequence[tailPositionInRead-i+wordSize])
-								leftHits++;
-							i++;
-						}
-						double leftPercentage=leftHits/(i+0.0);
-	
-						cout<<"leftHits "<<leftHits<<"/"<<leftPercentage<<endl;
-						if(rightHits>=MINIMUM_MATCHES&&leftHits>=MINIMUM_MATCHES&&leftPercentage>=MINIMUM_IDENTITY&&rightPercentage>=MINIMUM_IDENTITY){
-							int overlap=wordSize-difference;
-							if(overlap<0)
-								overlap=0;
-							ostringstream newContigSequence;
-							newContigSequence<<firstSequence;
-							for(int i=tailPositionInRead+wordSize+1;i<headPositionInRead;i++){
-								newContigSequence<<readSequence[i];
-							}
-							newContigSequence<<lastSequence.substr(overlap)<<endl;
-							cout<<"overlap "<<overlap<<endl;
-							cout<<"merge"<<endl;
-							//cout<<newContigSequence.str()<<endl;
-							contigStat.insert(tailContigsReverse[0]);
-							contigStat.insert(headContigs[0]);
-							ostringstream aName;
-							aName<<firstContig->getId()<<"_"<<lastContig->getId();
-							Read*read=new Read(aName.str().c_str(),newContigSequence.str().c_str());
-
-							stepForwardTailForwardHead_contigs.push_back(read);
-						}
-				
-					}else{
-						cout<<"Not 1-1"<<endl;
-					}
-				}
-
+			// r_end
+			for(vector<int>::iterator i=r_end_index[wordId(wordAtPosition.c_str())].begin();i!=r_end_index[wordId(wordAtPosition.c_str())].end();i++){
+				int contigNumber=*i;
+				string contigSequence=contigs[contigNumber]->getSeq();
+				Hit myHit(contigNumber,contigSequence.length()-1-wordSize,'R',
+					readNumber,readPosition,'F');
+				forwardHits.push_back(myHit);
 			}
-			if(positionsHeadsReverse.size()>0&&positionsTails.size()>0){
-				cout<<"Matching ForwardTail-ReverseHead"<<endl;
-			}
-			if(positionsHeadsReverse.size()>0&&positionsTailsReverse.size()>0){
-				cout<<"Matching ReverseTail-ReverseHead"<<endl;
+			// r_start
+			for(vector<int>::iterator i=r_start_index[wordId(wordAtPosition.c_str())].begin();i!=r_start_index[wordId(wordAtPosition.c_str())].end();i++){
+				int contigNumber=*i;
+				string contigSequence=contigs[contigNumber]->getSeq();
+				Hit myHit(contigNumber,0,'R',
+					readNumber,readPosition,'F');
+				forwardHits.push_back(myHit);
 			}
 		}
-
-		for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
-			if(contigStat.count(contigNumber)==0){
-				stepForwardTailForwardHead_contigs.push_back(contigs[contigNumber]);
+		if(forwardHits.size()==2&&forwardHits[0].getContigNumber()!=forwardHits[1].getContigNumber()){
+			HitPair hitPair(&(forwardHits[0]),&(forwardHits[1]));
+			if(hitPair.valid()){
+				cout<<endl;
+				int leftContig=forwardHits[0].getContigNumber();
+				int rightContig=forwardHits[1].getContigNumber();
+				if(forwardHits[0].getContigPosition()==0&&forwardHits[1].getContigPosition()!=0){
+					HitPair hitPair2(&forwardHits[1],&forwardHits[0]);
+					hitPair=hitPair2;
+					int t=leftContig;
+					leftContig=rightContig;
+					rightContig=t;
+				}
+				hitPair.show();
+				theGraph[leftContig].insert(rightContig);
+				edgeAnnotations[leftContig][rightContig]=hitPair;
+				outputStream<<">"<<theReads[readNumber]->getId()<<endl;
+				outputStream<<theReads[readNumber]->getSeq()<<endl;
 			}
 		}
-		cout<<contigs.size()<<" -> "<<stepForwardTailForwardHead_contigs.size()<<endl;
-		done=contigs.size()==stepForwardTailForwardHead_contigs.size();
-		contigs=stepForwardTailForwardHead_contigs;
+		//string reverseSequence=reverseComplement(readSequence);
 	}
-
-/*
-	cout<<"Statistics"<<endl;
-	cout<<"ForwardTail-ForwardHead"<<endl;
-	for(map<int,map<int,vector<int> > >::iterator i=forwardForward.begin();i!=forwardForward.end();i++){
-		for(map<int,vector<int> >::iterator j=i->second.begin();j!=i->second.end();j++){
-			cout<<contigs[i->first]->getId()<<" "<<contigs[j->first]->getId()<<" "<<j->second.size()<<endl;
-		}
-	}
-*/
-
-
-	cout<<reads.size()<<" / "<<reads.size()<<endl;
-
-	cout<<"Done indexing reads"<<endl;
+	outputStream.close();
 	return 0;
 }
 
