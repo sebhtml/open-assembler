@@ -827,9 +827,9 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 			(*m_cout)<<"Stop!, reason: No read threaded, "<<endl;
 			break;
 		}
-		if(added>1)
+		if(added>=m_minimumCoverage)
 			lowCoverageLength=0;
-		if(added==1&&path->size()>400){
+		if(added<m_minimumCoverage&&path->size()>400){
 			lowCoverageLength++;
 		}
 		if(lowCoverageLength>30&&m_data.get(prefix)->NotTrivial(prefix,m_wordSize)){

@@ -61,7 +61,17 @@ public:
 	HitPair();
 	bool valid();
 	void show();
+	Hit*getLeft();
+	Hit*getRight();
 };
+
+Hit*HitPair::getLeft(){
+	return m_left;
+}
+
+Hit*HitPair::getRight(){
+	return m_right;
+}
 
 HitPair::HitPair(Hit*left,Hit*right){
 	m_left=left;
@@ -91,9 +101,9 @@ void HitPair::show(){
 int main(int argc,char*argv[]){
 	CommonHeader(&cout);
 
-	if(argc!=5){
+	if(argc!=4){
 		cout<<"Usage"<<endl;
-		cout<<"module_join <wordSize> <contigs> <reads> <output.fasta>"<<endl;
+		cout<<"module_join <wordSize> <contigs> <reads>"<<endl;
 		return 0;
 	}
 
@@ -118,9 +128,11 @@ int main(int argc,char*argv[]){
 	loader.load(contigsFile,&contigs);
 
 	map<int,set<int> > theGraph;
+	map<int,set<int> > theParents;
 	map<int,map<int,HitPair> > edgeAnnotations;
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
 		set<int> a;
+		theParents[contigNumber]=a;
 		theGraph[contigNumber]=a;
 		string contigSequence=contigs[contigNumber]->getSeq();
 		string f_start=contigSequence.substr(0,wordSize);
@@ -142,8 +154,8 @@ int main(int argc,char*argv[]){
 	vector<Read*> theReads;
 	string readsFile=argv[3];
 	readsLoader.load(readsFile,&theReads);
-	string outputRead=argv[4];
-	ofstream outputStream(outputRead.c_str());
+	//string outputRead=argv[4];
+	//ofstream outputStream(outputRead.c_str());
 	for(int readNumber=0;readNumber<theReads.size();readNumber++){
 		if(readNumber%10000==0){
 			cout<<readNumber<<" / "<<theReads.size()<<endl;
@@ -203,14 +215,132 @@ int main(int argc,char*argv[]){
 				}
 				hitPair.show();
 				theGraph[leftContig].insert(rightContig);
+				theParents[rightContig].insert(leftContig);
 				edgeAnnotations[leftContig][rightContig]=hitPair;
-				outputStream<<">"<<theReads[readNumber]->getId()<<endl;
-				outputStream<<theReads[readNumber]->getSeq()<<endl;
+				//outputStream<<">"<<theReads[readNumber]->getId()<<endl;
+				//outputStream<<theReads[readNumber]->getSeq()<<endl;
 			}
 		}
-		//string reverseSequence=reverseComplement(readSequence);
+		string reverseSequence=reverseComplement(readSequence);
+
+		vector<Hit> reverseHits;
+		for(int readPosition=0;readPosition<reverseSequence.length();readPosition++){
+			string wordAtPosition=reverseSequence.substr(readPosition,wordSize);
+			if(wordAtPosition.length()!=wordSize){
+				continue;
+			}
+			// f_end
+			for(vector<int>::iterator i=f_end_index[wordId(wordAtPosition.c_str())].begin();i!=f_end_index[wordId(wordAtPosition.c_str())].end();i++){
+				int contigNumber=*i;
+				string contigSequence=contigs[contigNumber]->getSeq();
+				Hit myHit(contigNumber,contigSequence.length()-1-wordSize,'F',
+					readNumber,readPosition,'R');
+				forwardHits.push_back(myHit);
+			}
+			// f_start
+			for(vector<int>::iterator i=f_start_index[wordId(wordAtPosition.c_str())].begin();i!=f_start_index[wordId(wordAtPosition.c_str())].end();i++){
+				int contigNumber=*i;
+				string contigSequence=contigs[contigNumber]->getSeq();
+				Hit myHit(contigNumber,0,'F',
+					readNumber,readPosition,'R');
+				forwardHits.push_back(myHit);
+			}
+			// r_end
+			for(vector<int>::iterator i=r_end_index[wordId(wordAtPosition.c_str())].begin();i!=r_end_index[wordId(wordAtPosition.c_str())].end();i++){
+				int contigNumber=*i;
+				string contigSequence=contigs[contigNumber]->getSeq();
+				Hit myHit(contigNumber,contigSequence.length()-1-wordSize,'R',
+					readNumber,readPosition,'R');
+				forwardHits.push_back(myHit);
+			}
+			// r_start
+			for(vector<int>::iterator i=r_start_index[wordId(wordAtPosition.c_str())].begin();i!=r_start_index[wordId(wordAtPosition.c_str())].end();i++){
+				int contigNumber=*i;
+				string contigSequence=contigs[contigNumber]->getSeq();
+				Hit myHit(contigNumber,0,'R',
+					readNumber,readPosition,'R');
+				forwardHits.push_back(myHit);
+			}
+		}
+		if(forwardHits.size()==2&&forwardHits[0].getContigNumber()!=forwardHits[1].getContigNumber()){
+			HitPair hitPair(&(forwardHits[0]),&(forwardHits[1]));
+			if(hitPair.valid()){
+				cout<<endl;
+				int leftContig=forwardHits[0].getContigNumber();
+				int rightContig=forwardHits[1].getContigNumber();
+				if(forwardHits[0].getContigPosition()==0&&forwardHits[1].getContigPosition()!=0){
+					HitPair hitPair2(&forwardHits[1],&forwardHits[0]);
+					hitPair=hitPair2;
+					int t=leftContig;
+					leftContig=rightContig;
+					rightContig=t;
+				}
+				hitPair.show();
+				theGraph[leftContig].insert(rightContig);
+				theParents[rightContig].insert(leftContig);
+				edgeAnnotations[leftContig][rightContig]=hitPair;
+				//outputStream<<">"<<theReads[readNumber]->getId()<<endl;
+				//outputStream<<theReads[readNumber]->getSeq()<<endl;
+			}
+		}
+
+		if(reverseHits.size()==2&&reverseHits[0].getContigNumber()!=reverseHits[1].getContigNumber()){
+			HitPair hitPair(&(reverseHits[0]),&(reverseHits[1]));
+			if(hitPair.valid()){
+				cout<<endl;
+				int leftContig=reverseHits[0].getContigNumber();
+				int rightContig=reverseHits[1].getContigNumber();
+				if(reverseHits[0].getContigPosition()==0&&reverseHits[1].getContigPosition()!=0){
+					HitPair hitPair2(&reverseHits[1],&reverseHits[0]);
+					hitPair=hitPair2;
+					int t=leftContig;
+					leftContig=rightContig;
+					rightContig=t;
+				}
+				hitPair.show();
+				theGraph[leftContig].insert(rightContig);
+				theParents[rightContig].insert(leftContig);
+				edgeAnnotations[leftContig][rightContig]=hitPair;
+				//outputStream<<">"<<theReads[readNumber]->getId()<<endl;
+				//outputStream<<theReads[readNumber]->getSeq()<<endl;
+			}
+		}
 	}
-	outputStream.close();
+	//outputStream.close();
+
+	
+	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
+		if(theParents[contigNumber].size()==0){
+			cout<<"Building new Contig"<<endl;
+			bool canChangeStrand=true;
+			int currentContig=contigNumber;
+			char contigStrand='F';
+			while(currentContig!=-1){
+				// show the contig
+				int nextContigToGet=-1;
+				char nextStrandToGet='F';
+				if(theGraph[currentContig].size()>0){
+					for(set<int>::iterator k=theGraph[currentContig].begin();k!=theGraph[currentContig].end();k++){
+						int nextContig=*k;
+						HitPair aHitPair=edgeAnnotations[currentContig][nextContig];
+						if(aHitPair.getLeft()->getContigStrand()!=contigStrand&&canChangeStrand){
+							contigStrand=aHitPair.getLeft()->getContigStrand();
+							canChangeStrand=false;
+						}
+						if(aHitPair.getLeft()->getContigStrand()==contigStrand){
+							nextContigToGet=aHitPair.getRight()->getContigNumber();
+							nextStrandToGet=aHitPair.getRight()->getContigStrand();
+							break;
+						}
+					}
+				}
+				cout<<"Contig: "<<currentContig<<" "<<contigStrand<<endl;
+				currentContig=nextContigToGet;
+				contigStrand=nextStrandToGet;
+			}
+		}
+	}
+
 	return 0;
 }
 
