@@ -19,12 +19,15 @@ class Hit{
 public:
 	Hit(int contigNumber,int contigPosition,char contigStrand,
 		int readNumber,int readPosition,char readStrand);
+	Hit();
 	void show();
 	int getContigNumber();
 	int getContigPosition();
 	char getContigStrand();
 };
 
+Hit::Hit(){
+}
 
 int Hit::getContigPosition(){
 	return m_contigPosition;
@@ -54,8 +57,8 @@ void Hit::show(){
 
 
 class HitPair{
-	Hit*m_left;
-	Hit*m_right;
+	Hit m_left;
+	Hit m_right;
 public:
 	HitPair(Hit*left,Hit*right);
 	HitPair();
@@ -66,27 +69,27 @@ public:
 };
 
 Hit*HitPair::getLeft(){
-	return m_left;
+	return &m_left;
 }
 
 Hit*HitPair::getRight(){
-	return m_right;
+	return &m_right;
 }
 
 HitPair::HitPair(Hit*left,Hit*right){
-	m_left=left;
-	m_right=right;
+	m_left=*left;
+	m_right=*right;
 }
 
 HitPair::HitPair(){
 }
 
 bool HitPair::valid(){
-	if(m_left->getContigPosition()==0&&m_right->getContigPosition()==0)
+	if(m_left.getContigPosition()==0&&m_right.getContigPosition()==0)
 		return false;
-	if(m_left->getContigStrand()==m_right->getContigStrand()&&
-		((m_left->getContigPosition()==0&&m_right->getContigPosition()==0)||
-		(m_left->getContigPosition()!=0&&m_right->getContigPosition()!=0)))
+	if(m_left.getContigStrand()==m_right.getContigStrand()&&
+		((m_left.getContigPosition()==0&&m_right.getContigPosition()==0)||
+		(m_left.getContigPosition()!=0&&m_right.getContigPosition()!=0)))
 		return false;
 
 	return true;
@@ -94,8 +97,8 @@ bool HitPair::valid(){
 
 void HitPair::show(){
 	cout<<"Hitpair"<<endl;
-	m_left->show();
-	m_right->show();
+	m_left.show();
+	m_right.show();
 }
 
 int main(int argc,char*argv[]){
@@ -221,6 +224,8 @@ int main(int argc,char*argv[]){
 				//outputStream<<theReads[readNumber]->getSeq()<<endl;
 			}
 		}
+
+
 		string reverseSequence=reverseComplement(readSequence);
 
 		vector<Hit> reverseHits;
@@ -235,7 +240,7 @@ int main(int argc,char*argv[]){
 				string contigSequence=contigs[contigNumber]->getSeq();
 				Hit myHit(contigNumber,contigSequence.length()-1-wordSize,'F',
 					readNumber,readPosition,'R');
-				forwardHits.push_back(myHit);
+				reverseHits.push_back(myHit);
 			}
 			// f_start
 			for(vector<int>::iterator i=f_start_index[wordId(wordAtPosition.c_str())].begin();i!=f_start_index[wordId(wordAtPosition.c_str())].end();i++){
@@ -243,7 +248,7 @@ int main(int argc,char*argv[]){
 				string contigSequence=contigs[contigNumber]->getSeq();
 				Hit myHit(contigNumber,0,'F',
 					readNumber,readPosition,'R');
-				forwardHits.push_back(myHit);
+				reverseHits.push_back(myHit);
 			}
 			// r_end
 			for(vector<int>::iterator i=r_end_index[wordId(wordAtPosition.c_str())].begin();i!=r_end_index[wordId(wordAtPosition.c_str())].end();i++){
@@ -251,7 +256,7 @@ int main(int argc,char*argv[]){
 				string contigSequence=contigs[contigNumber]->getSeq();
 				Hit myHit(contigNumber,contigSequence.length()-1-wordSize,'R',
 					readNumber,readPosition,'R');
-				forwardHits.push_back(myHit);
+				reverseHits.push_back(myHit);
 			}
 			// r_start
 			for(vector<int>::iterator i=r_start_index[wordId(wordAtPosition.c_str())].begin();i!=r_start_index[wordId(wordAtPosition.c_str())].end();i++){
@@ -259,31 +264,9 @@ int main(int argc,char*argv[]){
 				string contigSequence=contigs[contigNumber]->getSeq();
 				Hit myHit(contigNumber,0,'R',
 					readNumber,readPosition,'R');
-				forwardHits.push_back(myHit);
+				reverseHits.push_back(myHit);
 			}
 		}
-		if(forwardHits.size()==2&&forwardHits[0].getContigNumber()!=forwardHits[1].getContigNumber()){
-			HitPair hitPair(&(forwardHits[0]),&(forwardHits[1]));
-			if(hitPair.valid()){
-				cout<<endl;
-				int leftContig=forwardHits[0].getContigNumber();
-				int rightContig=forwardHits[1].getContigNumber();
-				if(forwardHits[0].getContigPosition()==0&&forwardHits[1].getContigPosition()!=0){
-					HitPair hitPair2(&forwardHits[1],&forwardHits[0]);
-					hitPair=hitPair2;
-					int t=leftContig;
-					leftContig=rightContig;
-					rightContig=t;
-				}
-				hitPair.show();
-				theGraph[leftContig].insert(rightContig);
-				theParents[rightContig].insert(leftContig);
-				edgeAnnotations[leftContig][rightContig]=hitPair;
-				//outputStream<<">"<<theReads[readNumber]->getId()<<endl;
-				//outputStream<<theReads[readNumber]->getSeq()<<endl;
-			}
-		}
-
 		if(reverseHits.size()==2&&reverseHits[0].getContigNumber()!=reverseHits[1].getContigNumber()){
 			HitPair hitPair(&(reverseHits[0]),&(reverseHits[1]));
 			if(hitPair.valid()){
@@ -308,9 +291,15 @@ int main(int argc,char*argv[]){
 	}
 	//outputStream.close();
 
-	
+	ofstream fGraphViz("Graphviz.txt");
+	fGraphViz<<"digraph{"<<endl;
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
-		if(theParents[contigNumber].size()==0){
+		set<int> links=theGraph[contigNumber];
+		fGraphViz<<"c"<<contigNumber<<endl;
+		for(set<int>::iterator i=links.begin();i!=links.end();i++){
+			fGraphViz<<"c"<<contigNumber<<" -> c"<<*i<<endl;
+		}
+		if(theParents[contigNumber].size()<=1){
 			cout<<"Building new Contig"<<endl;
 			bool canChangeStrand=true;
 			int currentContig=contigNumber;
@@ -323,10 +312,12 @@ int main(int argc,char*argv[]){
 					for(set<int>::iterator k=theGraph[currentContig].begin();k!=theGraph[currentContig].end();k++){
 						int nextContig=*k;
 						HitPair aHitPair=edgeAnnotations[currentContig][nextContig];
+/*
 						if(aHitPair.getLeft()->getContigStrand()!=contigStrand&&canChangeStrand){
 							contigStrand=aHitPair.getLeft()->getContigStrand();
 							canChangeStrand=false;
 						}
+*/
 						if(aHitPair.getLeft()->getContigStrand()==contigStrand){
 							nextContigToGet=aHitPair.getRight()->getContigNumber();
 							nextStrandToGet=aHitPair.getRight()->getContigStrand();
@@ -340,7 +331,8 @@ int main(int argc,char*argv[]){
 			}
 		}
 	}
-
+	fGraphViz<<"}"<<endl;
+	fGraphViz.close();
 	return 0;
 }
 
