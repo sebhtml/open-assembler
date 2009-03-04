@@ -323,7 +323,7 @@ int main(int argc,char*argv[]){
 	}
 
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
-		if(theGraph[contigNumber].size()==1)
+		if(theGraph[contigNumber].size()==1||theGraph[contigNumber].size()==0)
 			_heads.insert(contigNumber);
 		if(theGraph[contigNumber].size()==2){
 			set<int>::iterator anIterator=theGraph[contigNumber].begin();
