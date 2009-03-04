@@ -318,11 +318,23 @@ int main(int argc,char*argv[]){
 	set<int> _heads; // where to start.
 	set<int> _mixed; // mixed vertices
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
-		if(theGraph[contigNumber].size()==1)
-			_heads.insert(contigNumber);
 		if(theGraph[contigNumber].size()>2)
 			_mixed.insert(contigNumber);
 	}
+
+	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
+		if(theGraph[contigNumber].size()==1)
+			_heads.insert(contigNumber);
+		if(theGraph[contigNumber].size()==2){
+			set<int>::iterator anIterator=theGraph[contigNumber].begin();
+			int theFirst=*anIterator;
+			anIterator++;
+			int theSecond=*anIterator;
+			if(_mixed.count(theFirst)>0||_mixed.count(theSecond)>0)
+				_heads.insert(contigNumber);
+		}
+	}
+
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
 		set<int> links=theGraph[contigNumber];
 		fGraphViz<<"c"<<contigNumber<<endl;
@@ -382,10 +394,10 @@ int main(int argc,char*argv[]){
 				}
 				if(hasNext){
 					if(nextContigStartPosition==0){
-						contigSequence<<"_INSERT_";
+						//contigSequence<<"_INSERT_";
 						contigSequence<<sequenceFromRead;
 					}else{
-						contigSequence<<"_OVERLAP_";
+						//contigSequence<<"_OVERLAP_";
 					}
 				}
 				currentContig=nextContigToGet;
