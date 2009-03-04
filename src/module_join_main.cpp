@@ -25,7 +25,12 @@ public:
 	int getContigNumber();
 	int getContigPosition();
 	char getContigStrand();
+	int getReadPosition();
 };
+
+int Hit::getReadPosition(){
+	return m_readPosition;
+}
 
 Hit::Hit(){
 }
@@ -319,20 +324,31 @@ int main(int argc,char*argv[]){
 			ostringstream contigName;
 			contigName<<">SuperContig_";
 			int currentContig=contigNumber;
+			int contigStartToPrintAtPosition=0;
 			ostringstream contigSequence;
 			char contigStrand='F';
 			while(currentContig!=-1){
 				// show the contig
 				int nextContigToGet=-1;
 				char nextStrandToGet='F';
-				if(theGraph[currentContig].size()>0){
+				int nextContigStartPosition=0;
+				bool hasNext=false;
+				if(theGraph[currentContig].size()>0&&_mixed.count(currentContig)==0){
 					for(set<int>::iterator k=theGraph[currentContig].begin();k!=theGraph[currentContig].end();k++){
 						int nextContig=*k;
 						HitPair aHitPair=edgeAnnotations[currentContig][nextContig];
 						
-						if(aHitPair.getLeft()->getContigStrand()==contigStrand){
+						if(aHitPair.getLeft()->getContigStrand()==contigStrand){//found it yes
 							nextContigToGet=aHitPair.getRight()->getContigNumber();
 							nextStrandToGet=aHitPair.getRight()->getContigStrand();
+							int theDistance=aHitPair.getRight()->getReadPosition()-(aHitPair.getLeft()->getReadPosition()+wordSize-1);
+							cout<<"Distance <- "<<theDistance<<endl;
+							hasNext=true;
+							if(theDistance>=0){
+								nextContigStartPosition=0;
+							}else{
+								nextContigStartPosition=-theDistance;
+							}
 							break;
 						}
 					}
@@ -343,10 +359,21 @@ int main(int argc,char*argv[]){
 				if(contigStrand=='R')
 					sequence=reverseComplement(sequence);
 
-				contigSequence<<sequence;
-				contigSequence<<"NNNNNNNNNNNNNN";
+				contigSequence<<sequence.substr(contigStartToPrintAtPosition);
+				
+				if(currentContig!=-1){
+					//contigSequence<<"NNNNNNNNNNNNNN";
+				}
+				if(hasNext){
+					if(nextContigStartPosition==0){
+						contigSequence<<"_INSERT_";
+					}else{
+						contigSequence<<"_OVERLAP_";
+					}
+				}
 				currentContig=nextContigToGet;
 				contigStrand=nextStrandToGet;
+				contigStartToPrintAtPosition=nextContigStartPosition;
 				if(_mixed.count(currentContig)>0)
 					currentContig=-1;
 			}
