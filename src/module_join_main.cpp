@@ -26,7 +26,17 @@ public:
 	int getContigPosition();
 	char getContigStrand();
 	int getReadPosition();
+	int getReadNumber();
+	char getReadStrand();
 };
+
+char Hit::getReadStrand(){
+	return m_readStrand;
+}
+
+int Hit::getReadNumber(){
+	return m_readNumber;
+}
 
 int Hit::getReadPosition(){
 	return m_readPosition;
@@ -333,6 +343,7 @@ int main(int argc,char*argv[]){
 				char nextStrandToGet='F';
 				int nextContigStartPosition=0;
 				bool hasNext=false;
+				string sequenceFromRead="";
 				if(theGraph[currentContig].size()>0&&_mixed.count(currentContig)==0){
 					for(set<int>::iterator k=theGraph[currentContig].begin();k!=theGraph[currentContig].end();k++){
 						int nextContig=*k;
@@ -341,9 +352,14 @@ int main(int argc,char*argv[]){
 						if(aHitPair.getLeft()->getContigStrand()==contigStrand){//found it yes
 							nextContigToGet=aHitPair.getRight()->getContigNumber();
 							nextStrandToGet=aHitPair.getRight()->getContigStrand();
-							int theDistance=aHitPair.getRight()->getReadPosition()-(aHitPair.getLeft()->getReadPosition()+wordSize-1);
+							int theDistance=aHitPair.getRight()->getReadPosition()-(aHitPair.getLeft()->getReadPosition()+wordSize-1)-1;
 							cout<<"Distance <- "<<theDistance<<endl;
 							hasNext=true;
+							string readSequenceForGap=theReads[aHitPair.getLeft()->getReadNumber()]->getSeq();
+							if(aHitPair.getLeft()->getReadStrand()=='R'){
+								readSequenceForGap=reverseComplement(readSequenceForGap);
+							}
+							sequenceFromRead=readSequenceForGap.substr(aHitPair.getLeft()->getReadPosition()+wordSize,theDistance);
 							if(theDistance>=0){
 								nextContigStartPosition=0;
 							}else{
@@ -367,6 +383,7 @@ int main(int argc,char*argv[]){
 				if(hasNext){
 					if(nextContigStartPosition==0){
 						contigSequence<<"_INSERT_";
+						contigSequence<<sequenceFromRead;
 					}else{
 						contigSequence<<"_OVERLAP_";
 					}

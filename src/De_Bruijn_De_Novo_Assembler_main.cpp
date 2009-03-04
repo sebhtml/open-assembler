@@ -94,6 +94,11 @@ int main(int argc,char*argv[]){
 
 	cout<<"  -wordSize="<<wordSize<<endl;
 	cout<<" <FILES>"<<endl;
+
+
+	string command=" mkdir -p "+assemblyDirectory+" # [dna] ";
+	system(command.c_str());
+
 	string filesFile=assemblyDirectory+"/InputFiles.txt";
 	ofstream aFilesStream(filesFile.c_str());
 	for(int i=0;i<(int)inputFiles.size();i++){
@@ -105,8 +110,6 @@ int main(int argc,char*argv[]){
 
 	cout<<"writing files to "<<filesFile<<endl;
 
-	string command=" mkdir -p "+assemblyDirectory+" # [dna] ";
-	system(command.c_str());
 	
 	// switching to cout instead of cout
 	if(inputFiles.size()==0){
