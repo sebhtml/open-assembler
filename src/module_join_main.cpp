@@ -301,9 +301,12 @@ int main(int argc,char*argv[]){
 	string outputFile=argv[4];
 	ofstream fStream(outputFile.c_str());
 	set<int> _heads; // where to start.
+	set<int> _mixed; // mixed vertices
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
-		if(theGraph[contigNumber].size()!=2)
+		if(theGraph[contigNumber].size()==1)
 			_heads.insert(contigNumber);
+		if(theGraph[contigNumber].size()>2)
+			_mixed.insert(contigNumber);
 	}
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
 		set<int> links=theGraph[contigNumber];
@@ -311,7 +314,7 @@ int main(int argc,char*argv[]){
 		for(set<int>::iterator i=links.begin();i!=links.end();i++){
 			fGraphViz<<"c"<<contigNumber<<" -> c"<<*i<<endl;
 		}
-		if(_heads.count(contigNumber)>0){
+		if(_heads.count(contigNumber)>0||_mixed.count(contigNumber)>0){
 			cout<<"Building new Contig"<<endl;
 			ostringstream contigName;
 			contigName<<">SuperContig_";
@@ -344,7 +347,7 @@ int main(int argc,char*argv[]){
 				contigSequence<<"NNNNNNNNNNNNNN";
 				currentContig=nextContigToGet;
 				contigStrand=nextStrandToGet;
-				if(_heads.count(currentContig)>0)
+				if(_mixed.count(currentContig)>0)
 					currentContig=-1;
 			}
 			fStream<<contigName.str()<<endl;
@@ -352,7 +355,7 @@ int main(int argc,char*argv[]){
 			int columns=60;
 			string superContigSequence=contigSequence.str();
 			while(pp<superContigSequence.length()){
-				fStream<<superContigSequence.substr(pp,columns);
+				fStream<<superContigSequence.substr(pp,columns)<<endl;
 				pp+=columns;
 			}
 		}
