@@ -54,6 +54,12 @@ int main(int argc,char*argv[]){
 	string m_minimumCoverageParameter="2";
 	cout<<" -minimumCoverage     default: "<<m_minimumCoverageParameter<<""<<endl;
 	cout<<"    auto if you want to use the distribution curve"<<endl;
+	cout<<" -onlyOneStrand       default: no"<<endl;
+	cout<<"                      description: set to yes to use only the forward strand of reads"<<endl;
+	cout<<" -onlyFirstMer        default: no"<<endl;
+	cout<<"                      description: set to yes to use only the first (k+1)-mer of reads to build the graph"<<endl;
+	string onlyOneStrand="no";
+	string onlyFirstMer="no";
 	bool DEBUGMODE=false;
 	//cout<<" [ -debug ]"<<endl;
 	string pairedInfo="none";
@@ -70,6 +76,12 @@ int main(int argc,char*argv[]){
 			i++;
 			assemblyDirectoryWasSet=true;
 			assemblyDirectory=argv[i];
+		}else if(option=="-onlyOneStrand"&&i!=argc-1){
+			i++;
+			onlyOneStrand=argv[i];
+		}else if(option=="-onlyFirstMer"&&i!=argc-1){
+			i++;
+			onlyFirstMer=argv[i];
 		}else if(option=="-minimumCoverage"&&i!=argc-1){
 			i++;
 			m_minimumCoverageParameter=argv[i];
@@ -148,6 +160,8 @@ int main(int argc,char*argv[]){
 		assembler.debug();
 
 	assembler.setSequenceData(&sequenceData);
+	assembler.setStrandUsage(onlyOneStrand);
+	assembler.setMerUsage(onlyFirstMer);
 	assembler.buildGraph();
 	string applicationName=argv[0];
 	cout<<"Graph is built."<<endl;	

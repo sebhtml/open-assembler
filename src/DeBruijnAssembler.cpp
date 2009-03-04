@@ -78,19 +78,21 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		if(i%100000==0){
 			m_cout<<"Reads: "<<i<<" / "<<sequenceData->size()<<endl;
 		}
-		vector<VERTEX_TYPE> highQualityMers=sequenceData->at(i)->getHighQualityMers(m_wordSize);
+		vector<VERTEX_TYPE> highQualityMers=sequenceData->at(i)->getHighQualityMers(m_wordSize,'F');
 		for(vector<VERTEX_TYPE>::iterator iteratorMer=highQualityMers.begin();iteratorMer!=highQualityMers.end();iteratorMer++){
 			myList.add(*iteratorMer);
-/*
-			if(!words.find(*iteratorMer))
-				words.add(*iteratorMer,0);
+			if(m_onlyFirstMer!="no")// only use the first one..
+				break;
+		}
 
-			words.set(*iteratorMer,words.get(*iteratorMer)+1);
-			if((int)words.size()%1000000==0&&(int)words.size()!=last_vertices_size){
-				m_cout<<"Mers: "<<words.size()<<endl;
-				last_vertices_size=words.size();
-			}
-*/
+		if(m_onlyOneStrand!="no") // only sample the F strand.
+			continue;
+	
+		highQualityMers=sequenceData->at(i)->getHighQualityMers(m_wordSize,'R');
+		for(vector<VERTEX_TYPE>::iterator iteratorMer=highQualityMers.begin();iteratorMer!=highQualityMers.end();iteratorMer++){
+			myList.add(*iteratorMer);
+			if(m_onlyFirstMer!="no")// only use the first one..
+				break;
 		}
 	}	
 
@@ -1542,3 +1544,12 @@ int DeBruijnAssembler::visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int ma
 void DeBruijnAssembler::setSequenceData(SequenceDataFull*sequenceData){
 	m_sequenceData=sequenceData;
 }
+
+void DeBruijnAssembler::setStrandUsage(string a){
+	m_onlyOneStrand=a;
+}
+
+void DeBruijnAssembler::setMerUsage(string a){
+	m_onlyFirstMer=a;
+}
+

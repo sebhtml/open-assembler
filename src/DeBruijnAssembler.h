@@ -48,6 +48,8 @@ class DeBruijnAssembler{
 	int m_carry_forward_offset;
 	string m_graphFile;
 	string m_minimumCoverageParameter;
+	string m_onlyFirstMer;
+	string m_onlyOneStrand;
 	int m_minimumCoverage;
 	int m_REPEAT_DETECTION;
 	int m_wordSize;
@@ -104,6 +106,8 @@ public:
 	void setSequenceData(SequenceDataFull*sequenceData);
 	void buildGraph();
 	void setAssemblyDirectory(string assemblyDirectory);
+	void setStrandUsage(string onlyOneStrand);
+	void setMerUsage(string onlyFirstMer);
 	void outputContigs();
 	void debug();
 	void loadParameters();

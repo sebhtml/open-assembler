@@ -50,7 +50,7 @@ char*Read::getSeq(){
 }
 
 // return (k+1)-mers from read, without Ns
-vector<VERTEX_TYPE>Read::getHighQualityMers(int wordSize){
+vector<VERTEX_TYPE>Read::getHighQualityMers(int wordSize,char strand){
 	vector<VERTEX_TYPE> highQualityMers;
 
 	string sequence=m_sequence;
@@ -61,8 +61,11 @@ vector<VERTEX_TYPE>Read::getHighQualityMers(int wordSize){
 		if(!isValidDNA(wordFoward.c_str()))
 			continue;
 		wordReverse=reverseComplement(wordFoward);
-		highQualityMers.push_back(wordId(wordFoward.c_str()));
-		highQualityMers.push_back(wordId(wordReverse.c_str()));
+		if(strand=='F'){
+			highQualityMers.push_back(wordId(wordFoward.c_str()));
+		}else{
+			highQualityMers.push_back(wordId(wordReverse.c_str()));
+		}
 	}
 
 	return highQualityMers;
