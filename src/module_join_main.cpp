@@ -5,6 +5,7 @@
 #include<vector>
 #include"Read.h"
 #include<iostream>
+#include<sstream>
 using namespace std;
 
 
@@ -87,7 +88,7 @@ HitPair::HitPair(){
 bool HitPair::valid(){
 	if(m_left.getContigPosition()==0&&m_right.getContigPosition()==0)
 		return false;
-	if(m_left.getContigStrand()==m_right.getContigStrand()&&
+	if(//m_left.getContigStrand()==m_right.getContigStrand()&&
 		((m_left.getContigPosition()==0&&m_right.getContigPosition()==0)||
 		(m_left.getContigPosition()!=0&&m_right.getContigPosition()!=0)))
 		return false;
@@ -104,9 +105,9 @@ void HitPair::show(){
 int main(int argc,char*argv[]){
 	CommonHeader(&cout);
 
-	if(argc!=4){
+	if(argc!=5){
 		cout<<"Usage"<<endl;
-		cout<<"module_join <wordSize> <contigs> <reads>"<<endl;
+		cout<<"module_join <wordSize> <contigs> <reads> <superContigs>"<<endl;
 		return 0;
 	}
 
@@ -141,7 +142,7 @@ int main(int argc,char*argv[]){
 		string f_start=contigSequence.substr(0,wordSize);
 		// 0 1 2 3 4
 		//
-		string f_end=contigSequence.substr(contigSequence.length()-1-wordSize,wordSize);
+		string f_end=contigSequence.substr(contigSequence.length()-wordSize,wordSize);
 		string r_end=reverseComplement(f_start);
 		string r_start=reverseComplement(f_end);
 		f_end_index[wordId(f_end.c_str())].push_back(contigNumber);
@@ -174,7 +175,7 @@ int main(int argc,char*argv[]){
 			for(vector<int>::iterator i=f_end_index[wordId(wordAtPosition.c_str())].begin();i!=f_end_index[wordId(wordAtPosition.c_str())].end();i++){
 				int contigNumber=*i;
 				string contigSequence=contigs[contigNumber]->getSeq();
-				Hit myHit(contigNumber,contigSequence.length()-1-wordSize,'F',
+				Hit myHit(contigNumber,contigSequence.length()-wordSize,'F',
 					readNumber,readPosition,'F');
 				forwardHits.push_back(myHit);
 			}
@@ -190,7 +191,7 @@ int main(int argc,char*argv[]){
 			for(vector<int>::iterator i=r_end_index[wordId(wordAtPosition.c_str())].begin();i!=r_end_index[wordId(wordAtPosition.c_str())].end();i++){
 				int contigNumber=*i;
 				string contigSequence=contigs[contigNumber]->getSeq();
-				Hit myHit(contigNumber,contigSequence.length()-1-wordSize,'R',
+				Hit myHit(contigNumber,contigSequence.length()-wordSize,'R',
 					readNumber,readPosition,'F');
 				forwardHits.push_back(myHit);
 			}
@@ -238,7 +239,7 @@ int main(int argc,char*argv[]){
 			for(vector<int>::iterator i=f_end_index[wordId(wordAtPosition.c_str())].begin();i!=f_end_index[wordId(wordAtPosition.c_str())].end();i++){
 				int contigNumber=*i;
 				string contigSequence=contigs[contigNumber]->getSeq();
-				Hit myHit(contigNumber,contigSequence.length()-1-wordSize,'F',
+				Hit myHit(contigNumber,contigSequence.length()-wordSize,'F',
 					readNumber,readPosition,'R');
 				reverseHits.push_back(myHit);
 			}
@@ -254,7 +255,7 @@ int main(int argc,char*argv[]){
 			for(vector<int>::iterator i=r_end_index[wordId(wordAtPosition.c_str())].begin();i!=r_end_index[wordId(wordAtPosition.c_str())].end();i++){
 				int contigNumber=*i;
 				string contigSequence=contigs[contigNumber]->getSeq();
-				Hit myHit(contigNumber,contigSequence.length()-1-wordSize,'R',
+				Hit myHit(contigNumber,contigSequence.length()-wordSize,'R',
 					readNumber,readPosition,'R');
 				reverseHits.push_back(myHit);
 			}
@@ -292,17 +293,30 @@ int main(int argc,char*argv[]){
 	//outputStream.close();
 
 	ofstream fGraphViz("Graphviz.txt");
+
+		
+
 	fGraphViz<<"digraph{"<<endl;
+	
+	string outputFile=argv[4];
+	ofstream fStream(outputFile.c_str());
+	set<int> _heads; // where to start.
+	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
+		if(theGraph[contigNumber].size()!=2)
+			_heads.insert(contigNumber);
+	}
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
 		set<int> links=theGraph[contigNumber];
 		fGraphViz<<"c"<<contigNumber<<endl;
 		for(set<int>::iterator i=links.begin();i!=links.end();i++){
 			fGraphViz<<"c"<<contigNumber<<" -> c"<<*i<<endl;
 		}
-		if(theParents[contigNumber].size()<=1){
+		if(_heads.count(contigNumber)>0){
 			cout<<"Building new Contig"<<endl;
-			bool canChangeStrand=true;
+			ostringstream contigName;
+			contigName<<">SuperContig_";
 			int currentContig=contigNumber;
+			ostringstream contigSequence;
 			char contigStrand='F';
 			while(currentContig!=-1){
 				// show the contig
@@ -312,12 +326,7 @@ int main(int argc,char*argv[]){
 					for(set<int>::iterator k=theGraph[currentContig].begin();k!=theGraph[currentContig].end();k++){
 						int nextContig=*k;
 						HitPair aHitPair=edgeAnnotations[currentContig][nextContig];
-/*
-						if(aHitPair.getLeft()->getContigStrand()!=contigStrand&&canChangeStrand){
-							contigStrand=aHitPair.getLeft()->getContigStrand();
-							canChangeStrand=false;
-						}
-*/
+						
 						if(aHitPair.getLeft()->getContigStrand()==contigStrand){
 							nextContigToGet=aHitPair.getRight()->getContigNumber();
 							nextStrandToGet=aHitPair.getRight()->getContigStrand();
@@ -326,11 +335,29 @@ int main(int argc,char*argv[]){
 					}
 				}
 				cout<<"Contig: "<<currentContig<<" "<<contigStrand<<endl;
+				contigName<<"_"<<contigs[currentContig]->getId();
+				string sequence=contigs[currentContig]->getSeq();
+				if(contigStrand=='R')
+					sequence=reverseComplement(sequence);
+
+				contigSequence<<sequence;
+				contigSequence<<"NNNNNNNNNNNNNN";
 				currentContig=nextContigToGet;
 				contigStrand=nextStrandToGet;
+				if(_heads.count(currentContig)>0)
+					currentContig=-1;
+			}
+			fStream<<contigName.str()<<endl;
+			int pp=0;
+			int columns=60;
+			string superContigSequence=contigSequence.str();
+			while(pp<superContigSequence.length()){
+				fStream<<superContigSequence.substr(pp,columns);
+				pp+=columns;
 			}
 		}
 	}
+	fStream.close();
 	fGraphViz<<"}"<<endl;
 	fGraphViz.close();
 	return 0;
