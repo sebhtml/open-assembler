@@ -39,6 +39,7 @@ int main(int argc,char*argv[]){
 	string rightReadsFile=argv[2];
 	string contigsFile=argv[3];
 	int wordSize=21;
+	int minimumHits=1;
 	vector<Read*> contigs;
 	Loader loader;
 	loader.load(contigsFile,&contigs);
@@ -179,7 +180,7 @@ int main(int argc,char*argv[]){
 					break;
 				}
 			}
-			if(leftContig!=-1&&rightContig!=-1&&leftContig!=rightContig){
+			if(leftContig!=-1&&rightContig!=-1&&leftContig!=rightContig&&leftHits.size()>=minimumHits&&rightHits.size()>=minimumHits){
 				bothSidesNotSame++;
 				HitPair aPair(&(allHits[leftHits[0]]),&(allHits[rightHits[0]]));
 				hitPairs.push_back(aPair);
@@ -193,6 +194,9 @@ int main(int argc,char*argv[]){
 	
 	int edges=0;
 	map<int,map<int,HitPair> > theGraph;
+	for(int i=0;i<contigs.size();i++)
+		theGraph[i];
+
 	for(vector<HitPair>::iterator kk=hitPairs.begin();kk!=hitPairs.end();kk++){
 		HitPair aPair=*kk;
 		int leftContig=aPair.getLeft()->getContigNumber();
@@ -207,7 +211,9 @@ int main(int argc,char*argv[]){
 	
 	ofstream graphFile("graph.txt");
 	graphFile<<"digraph{"<<endl;
+	map<int,int> distribution;
 	for(map<int,map<int,HitPair> >::iterator i=theGraph.begin();i!=theGraph.end();i++){
+		distribution[i->second.size()]++;
 		for(map<int,HitPair>::iterator j=i->second.begin();j!=i->second.end();j++){
 			HitPair pair=j->second;
 			int leftContig=i->first;
@@ -218,6 +224,10 @@ int main(int argc,char*argv[]){
 	graphFile<<"}"<<endl;
 	graphFile.close();
 	
+	cout<<"Distribution"<<endl;
+	for(map<int,int>::iterator i=distribution.begin();i!=distribution.end();i++){
+		cout<<i->first<<" "<<i->second<<endl;
+	}
 	cout<<"Scaffolding now!"<<endl;
 
 	return 0;
