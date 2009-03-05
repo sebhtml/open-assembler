@@ -144,7 +144,7 @@ int main(int argc,char*argv[]){
 
 	if(argc!=5){
 		cout<<"Usage"<<endl;
-		cout<<"module_join <wordSize> <contigs> <reads> <superContigs>"<<endl;
+		cout<<argv[0]<<" <wordSize> <contigs> <reads> <superContigs>"<<endl;
 		return 0;
 	}
 
