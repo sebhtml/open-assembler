@@ -59,6 +59,7 @@ char Hit::getContigStrand(){
 
 Hit::Hit(int contigNumber,int contigPosition,char contigStrand,
 		int readNumber,int readPosition,char readStrand){
+	cout<<"Adding a Hit"<<endl;
 	m_contigNumber=contigNumber;
 	m_contigPosition=contigPosition;
 	m_contigStrand=contigStrand;
@@ -147,11 +148,9 @@ int main(int argc,char*argv[]){
 	loader.load(contigsFile,&contigs);
 
 	map<int,set<int> > theGraph;
-	map<int,set<int> > theParents;
 	map<int,map<int,HitPair> > edgeAnnotations;
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
 		set<int> a;
-		theParents[contigNumber]=a;
 		theGraph[contigNumber]=a;
 		string contigSequence=contigs[contigNumber]->getSeq();
 		string f_start=contigSequence.substr(0,wordSize);
@@ -173,12 +172,14 @@ int main(int argc,char*argv[]){
 	vector<Read*> theReads;
 	string readsFile=argv[3];
 	readsLoader.load(readsFile,&theReads);
+
+	//system("sleep 100");
 	//string outputRead=argv[4];
 	//ofstream outputStream(outputRead.c_str());
 	for(int readNumber=0;readNumber<theReads.size();readNumber++){
-		if(readNumber%10000==0){
+		//if(readNumber%10000==0){
 			cout<<readNumber<<" / "<<theReads.size()<<endl;
-		}
+		//}
 		string readSequence=theReads[readNumber]->getSeq();
 		vector<Hit> forwardHits;
 		for(int readPosition=0;readPosition<readSequence.length();readPosition++){
@@ -187,36 +188,47 @@ int main(int argc,char*argv[]){
 				continue;
 			}
 			// f_end
-			for(vector<int>::iterator i=f_end_index[wordId(wordAtPosition.c_str())].begin();i!=f_end_index[wordId(wordAtPosition.c_str())].end();i++){
-				int contigNumber=*i;
-				string contigSequence=contigs[contigNumber]->getSeq();
-				Hit myHit(contigNumber,contigSequence.length()-wordSize,'F',
-					readNumber,readPosition,'F');
-				forwardHits.push_back(myHit);
+			if(f_end_index.count(wordId(wordAtPosition.c_str()))>0){
+				uint64_t keyValue=wordId(wordAtPosition.c_str());
+				vector<int> f_end_vector=f_end_index[keyValue];
+				for(vector<int>::iterator i=f_end_vector.begin();i!=f_end_vector.end();i++){
+					int contigNumber=*i;
+					string contigSequence=contigs[contigNumber]->getSeq();
+					Hit myHit(contigNumber,contigSequence.length()-wordSize,'F',
+						readNumber,readPosition,'F');
+					forwardHits.push_back(myHit);
+				}
 			}
+
 			// f_start
-			for(vector<int>::iterator i=f_start_index[wordId(wordAtPosition.c_str())].begin();i!=f_start_index[wordId(wordAtPosition.c_str())].end();i++){
-				int contigNumber=*i;
-				string contigSequence=contigs[contigNumber]->getSeq();
-				Hit myHit(contigNumber,0,'F',
-					readNumber,readPosition,'F');
-				forwardHits.push_back(myHit);
+			if(f_start_index.count(wordId(wordAtPosition.c_str()))>0){
+				for(vector<int>::iterator i=f_start_index[wordId(wordAtPosition.c_str())].begin();i!=f_start_index[wordId(wordAtPosition.c_str())].end();i++){
+					int contigNumber=*i;
+					string contigSequence=contigs[contigNumber]->getSeq();
+					Hit myHit(contigNumber,0,'F',
+						readNumber,readPosition,'F');
+					forwardHits.push_back(myHit);
+				}
 			}
 			// r_end
-			for(vector<int>::iterator i=r_end_index[wordId(wordAtPosition.c_str())].begin();i!=r_end_index[wordId(wordAtPosition.c_str())].end();i++){
-				int contigNumber=*i;
-				string contigSequence=contigs[contigNumber]->getSeq();
-				Hit myHit(contigNumber,contigSequence.length()-wordSize,'R',
-					readNumber,readPosition,'F');
-				forwardHits.push_back(myHit);
+			if(r_end_index.count(wordId(wordAtPosition.c_str()))>0){
+				for(vector<int>::iterator i=r_end_index[wordId(wordAtPosition.c_str())].begin();i!=r_end_index[wordId(wordAtPosition.c_str())].end();i++){
+					int contigNumber=*i;
+					string contigSequence=contigs[contigNumber]->getSeq();
+					Hit myHit(contigNumber,contigSequence.length()-wordSize,'R',
+						readNumber,readPosition,'F');
+					forwardHits.push_back(myHit);
+				}
 			}
 			// r_start
-			for(vector<int>::iterator i=r_start_index[wordId(wordAtPosition.c_str())].begin();i!=r_start_index[wordId(wordAtPosition.c_str())].end();i++){
-				int contigNumber=*i;
-				string contigSequence=contigs[contigNumber]->getSeq();
-				Hit myHit(contigNumber,0,'R',
-					readNumber,readPosition,'F');
-				forwardHits.push_back(myHit);
+			if(r_start_index.count(wordId(wordAtPosition.c_str()))>0){
+				for(vector<int>::iterator i=r_start_index[wordId(wordAtPosition.c_str())].begin();i!=r_start_index[wordId(wordAtPosition.c_str())].end();i++){
+					int contigNumber=*i;
+					string contigSequence=contigs[contigNumber]->getSeq();
+					Hit myHit(contigNumber,0,'R',
+						readNumber,readPosition,'F');
+					forwardHits.push_back(myHit);
+				}
 			}
 		}
 		if(forwardHits.size()==2&&forwardHits[0].getContigNumber()!=forwardHits[1].getContigNumber()){
@@ -234,7 +246,6 @@ int main(int argc,char*argv[]){
 				}
 				hitPair.show();
 				theGraph[leftContig].insert(rightContig);
-				theParents[rightContig].insert(leftContig);
 				edgeAnnotations[leftContig][rightContig]=hitPair;
 				//outputStream<<">"<<theReads[readNumber]->getId()<<endl;
 				//outputStream<<theReads[readNumber]->getSeq()<<endl;
@@ -251,36 +262,44 @@ int main(int argc,char*argv[]){
 				continue;
 			}
 			// f_end
-			for(vector<int>::iterator i=f_end_index[wordId(wordAtPosition.c_str())].begin();i!=f_end_index[wordId(wordAtPosition.c_str())].end();i++){
-				int contigNumber=*i;
-				string contigSequence=contigs[contigNumber]->getSeq();
-				Hit myHit(contigNumber,contigSequence.length()-wordSize,'F',
-					readNumber,readPosition,'R');
-				reverseHits.push_back(myHit);
+			if(f_end_index.count(wordId(wordAtPosition.c_str()))>0){
+				for(vector<int>::iterator i=f_end_index[wordId(wordAtPosition.c_str())].begin();i!=f_end_index[wordId(wordAtPosition.c_str())].end();i++){
+					int contigNumber=*i;
+					string contigSequence=contigs[contigNumber]->getSeq();
+					Hit myHit(contigNumber,contigSequence.length()-wordSize,'F',
+						readNumber,readPosition,'R');
+					reverseHits.push_back(myHit);
+				}
 			}
 			// f_start
-			for(vector<int>::iterator i=f_start_index[wordId(wordAtPosition.c_str())].begin();i!=f_start_index[wordId(wordAtPosition.c_str())].end();i++){
-				int contigNumber=*i;
-				string contigSequence=contigs[contigNumber]->getSeq();
-				Hit myHit(contigNumber,0,'F',
-					readNumber,readPosition,'R');
-				reverseHits.push_back(myHit);
+			if(f_start_index.count(wordId(wordAtPosition.c_str()))>0){
+				for(vector<int>::iterator i=f_start_index[wordId(wordAtPosition.c_str())].begin();i!=f_start_index[wordId(wordAtPosition.c_str())].end();i++){
+					int contigNumber=*i;
+					string contigSequence=contigs[contigNumber]->getSeq();
+					Hit myHit(contigNumber,0,'F',
+						readNumber,readPosition,'R');
+					reverseHits.push_back(myHit);
+				}
 			}
 			// r_end
-			for(vector<int>::iterator i=r_end_index[wordId(wordAtPosition.c_str())].begin();i!=r_end_index[wordId(wordAtPosition.c_str())].end();i++){
-				int contigNumber=*i;
-				string contigSequence=contigs[contigNumber]->getSeq();
-				Hit myHit(contigNumber,contigSequence.length()-wordSize,'R',
-					readNumber,readPosition,'R');
-				reverseHits.push_back(myHit);
+			if(r_end_index.count(wordId(wordAtPosition.c_str()))>0){
+				for(vector<int>::iterator i=r_end_index[wordId(wordAtPosition.c_str())].begin();i!=r_end_index[wordId(wordAtPosition.c_str())].end();i++){
+					int contigNumber=*i;
+					string contigSequence=contigs[contigNumber]->getSeq();
+					Hit myHit(contigNumber,contigSequence.length()-wordSize,'R',
+						readNumber,readPosition,'R');
+					reverseHits.push_back(myHit);
+				}
 			}
 			// r_start
-			for(vector<int>::iterator i=r_start_index[wordId(wordAtPosition.c_str())].begin();i!=r_start_index[wordId(wordAtPosition.c_str())].end();i++){
-				int contigNumber=*i;
-				string contigSequence=contigs[contigNumber]->getSeq();
-				Hit myHit(contigNumber,0,'R',
-					readNumber,readPosition,'R');
-				reverseHits.push_back(myHit);
+			if(r_start_index.count(wordId(wordAtPosition.c_str()))>0){
+				for(vector<int>::iterator i=r_start_index[wordId(wordAtPosition.c_str())].begin();i!=r_start_index[wordId(wordAtPosition.c_str())].end();i++){
+					int contigNumber=*i;
+					string contigSequence=contigs[contigNumber]->getSeq();
+					Hit myHit(contigNumber,0,'R',
+						readNumber,readPosition,'R');
+					reverseHits.push_back(myHit);
+				}
 			}
 		}
 		if(reverseHits.size()==2&&reverseHits[0].getContigNumber()!=reverseHits[1].getContigNumber()){
@@ -298,7 +317,6 @@ int main(int argc,char*argv[]){
 				}
 				hitPair.show();
 				theGraph[leftContig].insert(rightContig);
-				theParents[rightContig].insert(leftContig);
 				edgeAnnotations[leftContig][rightContig]=hitPair;
 				//outputStream<<">"<<theReads[readNumber]->getId()<<endl;
 				//outputStream<<theReads[readNumber]->getSeq()<<endl;
