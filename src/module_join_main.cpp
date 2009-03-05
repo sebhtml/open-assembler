@@ -177,9 +177,9 @@ int main(int argc,char*argv[]){
 	//string outputRead=argv[4];
 	//ofstream outputStream(outputRead.c_str());
 	for(int readNumber=0;readNumber<theReads.size();readNumber++){
-		//if(readNumber%10000==0){
+		if(readNumber%10000==0){
 			cout<<readNumber<<" / "<<theReads.size()<<endl;
-		//}
+		}
 		string readSequence=theReads[readNumber]->getSeq();
 		vector<Hit> forwardHits;
 		for(int readPosition=0;readPosition<readSequence.length();readPosition++){
