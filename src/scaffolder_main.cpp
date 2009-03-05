@@ -20,6 +20,7 @@
 #include"Loader.h"
 #include"Hit.h"
 #include<iostream>
+#include"HitPair.h"
 #include<stack>
 #include"Read.h"
 #include<stdlib.h>
@@ -142,6 +143,63 @@ int main(int argc,char*argv[]){
 	cout<<"Done with contigs"<<endl;
 	cout<<"Analyzing hits ("<<allHits.size()<<")"<<endl;
 
+	map<int,map<char,vector<int> > > readHits;
+	for(int hitId=0;hitId<allHits.size();hitId++){
+		readHits[allHits[hitId].getReadNumber()][allHits[hitId].side()].push_back(hitId);
+	}
+
+	cout<<readHits.size()<<" paired reads with hits"<<endl;
+
+	vector<HitPair> hitPairs;
+	int bothSidesNotSame=0;
+	int bothMapped=0;
+	for(map<int,map<char,vector<int> > >::iterator i=readHits.begin();i!=readHits.end();i++){
+		int readNumber=i->first;
+		vector<int> leftHits;
+		if(i->second.count('L')>0)
+			leftHits=i->second['L'];
+		
+		vector<int> rightHits;
+		if(i->second.count('R')>0)
+			rightHits=i->second['R'];
+		if(leftHits.size()>0&&rightHits.size()>0){
+			bothMapped++;
+			int leftContig=allHits[leftHits[0]].getContigNumber();
+			for(int hh=0;hh<leftHits.size();hh++){
+				if(leftContig!=allHits[leftHits[hh]].getContigNumber()){
+					leftContig=-1;
+					break;
+				}
+			}
+			// TODO accept mixed hit pools
+			int rightContig=allHits[rightHits[0]].getContigNumber();
+			for(int hh=0;hh<rightHits.size();hh++){
+				if(rightContig!=allHits[rightHits[hh]].getContigNumber()){
+					rightContig=-1;
+					break;
+				}
+			}
+			if(leftContig!=-1&&rightContig!=-1&&leftContig!=rightContig){
+				bothSidesNotSame++;
+				HitPair aPair(&(allHits[leftHits[0]]),&(allHits[rightHits[0]]));
+				hitPairs.push_back(aPair);
+			}
+		}
+	}
+
+	cout<<"Total read pairs: "<<leftReads.size()<<endl;
+	cout<<"Total read pairs with both mapped parts: "<<bothMapped<<endl;
+	cout<<"Total read pairs with both mapped parts on different contigs: "<<bothSidesNotSame<<endl;
+
+	ofstream graphFile("graph.txt");
+	graphFile<<"digraph{"<<endl;
+	for(vector<HitPair>::iterator i=hitPairs.begin();i!=hitPairs.end();i++){
+		HitPair pair=*i;
+		graphFile<<"c"<<pair.getLeft()->getContigNumber()<<" -> c"<<pair.getRight()->getContigNumber()<<" [ label=\"("<<pair.getLeft()->getContigStrand()<<","<<pair.getRight()->getContigStrand()<<")\" ]"<<endl;
+	}
+	graphFile<<"}"<<endl;
+	graphFile.close();
+	
 	cout<<"Scaffolding now!"<<endl;
 
 	return 0;

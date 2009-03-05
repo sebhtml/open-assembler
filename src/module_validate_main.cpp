@@ -1,7 +1,7 @@
 /*
 	dna: De Novo Assembler
     Copyright (C) 2008, 2009 Sébastien Boisvert
-	$Id: BinarySearch.cpp 215 2009-02-27 17:53:47Z boiseb01 $
+	$Id$
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
