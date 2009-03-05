@@ -1,0 +1,44 @@
+DNA.rb is the main script.
+
+It calls these modules:
+
+
+
+dna_ConvertSffToFasta  
+
+dna_BuildGraph         
+
+dna_ExtractContigs     
+
+dna_MergeContigs       
+
+dna_KeepLargeContigs
+
+dna_JoinContigs
+
+dna_ScaffoldContigs   
+
+dna_ConvertFastaToAfg  
+
+dna_ValidateContigs    
+
+
+
+454 example:
+
+DNA.rb file.sff
+
+
+Solexa example:
+
+DNA.rb file.fastq
+
+
+Sanger example:
+
+DNA.rb file.fasta
+
+
+Mixed example:
+
+DNA.rb file.sff file.fastq file.fasta
