@@ -59,7 +59,7 @@ char Hit::getContigStrand(){
 
 Hit::Hit(int contigNumber,int contigPosition,char contigStrand,
 		int readNumber,int readPosition,char readStrand){
-	cout<<"Adding a Hit"<<endl;
+	//cout<<"Adding a Hit"<<endl;
 	m_contigNumber=contigNumber;
 	m_contigPosition=contigPosition;
 	m_contigStrand=contigStrand;
