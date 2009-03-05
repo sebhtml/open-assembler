@@ -317,6 +317,7 @@ int main(int argc,char*argv[]){
 	ofstream fStream(outputFile.c_str());
 	set<int> _heads; // where to start.
 	set<int> _mixed; // mixed vertices
+	set<int> _doneContig;
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
 		if(theGraph[contigNumber].size()>2)
 			_mixed.insert(contigNumber);
@@ -336,6 +337,8 @@ int main(int argc,char*argv[]){
 	}
 
 	for(int contigNumber=0;contigNumber<contigs.size();contigNumber++){
+		if(_doneContig.count(contigNumber)>0)
+			continue;
 		set<int> links=theGraph[contigNumber];
 		fGraphViz<<"c"<<contigNumber<<endl;
 		for(set<int>::iterator i=links.begin();i!=links.end();i++){
@@ -349,7 +352,9 @@ int main(int argc,char*argv[]){
 			int contigStartToPrintAtPosition=0;
 			ostringstream contigSequence;
 			char contigStrand='F';
-			while(currentContig!=-1){
+			bool canChange=true;
+			while(currentContig!=-1&&_doneContig.count(currentContig)==0){
+				_doneContig.insert(currentContig);
 				// show the contig
 				int nextContigToGet=-1;
 				char nextStrandToGet='F';
@@ -360,7 +365,10 @@ int main(int argc,char*argv[]){
 					for(set<int>::iterator k=theGraph[currentContig].begin();k!=theGraph[currentContig].end();k++){
 						int nextContig=*k;
 						HitPair aHitPair=edgeAnnotations[currentContig][nextContig];
-						
+						if(aHitPair.getLeft()->getContigStrand()!=contigStrand&&canChange){
+							canChange=false;
+							contigStrand=aHitPair.getLeft()->getContigStrand();
+						}
 						if(aHitPair.getLeft()->getContigStrand()==contigStrand){//found it yes
 							nextContigToGet=aHitPair.getRight()->getContigNumber();
 							nextStrandToGet=aHitPair.getRight()->getContigStrand();
