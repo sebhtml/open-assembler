@@ -190,12 +190,30 @@ int main(int argc,char*argv[]){
 	cout<<"Total read pairs: "<<leftReads.size()<<endl;
 	cout<<"Total read pairs with both mapped parts: "<<bothMapped<<endl;
 	cout<<"Total read pairs with both mapped parts on different contigs: "<<bothSidesNotSame<<endl;
-
+	
+	int edges=0;
+	map<int,map<int,HitPair> > theGraph;
+	for(vector<HitPair>::iterator kk=hitPairs.begin();kk!=hitPairs.end();kk++){
+		HitPair aPair=*kk;
+		int leftContig=aPair.getLeft()->getContigNumber();
+		int rightContig=aPair.getRight()->getContigNumber();
+		if(theGraph.count(leftContig)==0||theGraph[leftContig].count(rightContig)==0){
+			theGraph[leftContig][rightContig]=aPair;
+			edges++;
+		}
+	}
+	cout<<"Total read pairs with both mapped parts on different contigs, unique: "<<edges<<endl;
+	
+	
 	ofstream graphFile("graph.txt");
 	graphFile<<"digraph{"<<endl;
-	for(vector<HitPair>::iterator i=hitPairs.begin();i!=hitPairs.end();i++){
-		HitPair pair=*i;
-		graphFile<<"c"<<pair.getLeft()->getContigNumber()<<" -> c"<<pair.getRight()->getContigNumber()<<" [ label=\"("<<pair.getLeft()->getContigStrand()<<","<<pair.getRight()->getContigStrand()<<")\" ]"<<endl;
+	for(map<int,map<int,HitPair> >::iterator i=theGraph.begin();i!=theGraph.end();i++){
+		for(map<int,HitPair>::iterator j=i->second.begin();j!=i->second.end();j++){
+			HitPair pair=j->second;
+			int leftContig=i->first;
+			int rightContig=j->first;
+			graphFile<<"c"<<pair.getLeft()->getContigNumber()<<" -> c"<<pair.getRight()->getContigNumber()<<" [ label=\"("<<pair.getLeft()->getContigStrand()<<","<<pair.getRight()->getContigStrand()<<")\" ]"<<endl;
+		 }
 	}
 	graphFile<<"}"<<endl;
 	graphFile.close();
