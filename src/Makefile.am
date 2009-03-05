@@ -1,5 +1,5 @@
 bin_PROGRAMS =   dna_ConvertSffToFasta dna_MergeContigs dna_BuildGraph dna_ScaffoldContigs  dna_ExtractContigs  dna_KeepLargeContigs \
-	dna_ConvertFastaToAfg dna_JoinContigs # dna_SplitReads dna_ConvertFastaToSql
+	dna_ValidateContigs dna_ConvertFastaToAfg dna_JoinContigs # dna_SplitReads dna_ConvertFastaToSql
 
 # dna_ConvertFastaToSql_SOURCES =  dump_sql_main.cpp  common_functions.h common_functions.cpp
 
@@ -44,4 +44,5 @@ DeBruijnAssembler.cpp                               Read.h Loader.cpp Loader.h  
 VertexData.h VertexData.cpp  SequenceDataFull.h SequenceDataFull.cpp CoverageDistribution.h CoverageDistribution.cpp \
 SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp Merger.h Merger.cpp   common_functions.h common_functions.cpp
 
+dna_ValidateContigs_SOURCES = module_validate_main.cpp
 
