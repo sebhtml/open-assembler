@@ -27,117 +27,13 @@
 #include"Read.h"
 #include<iostream>
 #include<sstream>
+#include"HitPair.h"
+#include"Hit.h"
 using namespace std;
 
 
-class Hit{
-	int m_contigNumber;
-	int m_contigPosition;
-	char m_contigStrand;
-	
-	int m_readNumber;
-	int m_readPosition;
-	char m_readStrand;
-public:
-	Hit(int contigNumber,int contigPosition,char contigStrand,
-		int readNumber,int readPosition,char readStrand);
-	Hit();
-	void show();
-	int getContigNumber();
-	int getContigPosition();
-	char getContigStrand();
-	int getReadPosition();
-	int getReadNumber();
-	char getReadStrand();
-};
-
-char Hit::getReadStrand(){
-	return m_readStrand;
-}
-
-int Hit::getReadNumber(){
-	return m_readNumber;
-}
-
-int Hit::getReadPosition(){
-	return m_readPosition;
-}
-
-Hit::Hit(){
-}
-
-int Hit::getContigPosition(){
-	return m_contigPosition;
-}
-
-int Hit::getContigNumber(){
-	return m_contigNumber;
-}
-
-char Hit::getContigStrand(){
-	return m_contigStrand;
-}
-
-Hit::Hit(int contigNumber,int contigPosition,char contigStrand,
-		int readNumber,int readPosition,char readStrand){
-	//cout<<"Adding a Hit"<<endl;
-	m_contigNumber=contigNumber;
-	m_contigPosition=contigPosition;
-	m_contigStrand=contigStrand;
-	m_readNumber=readNumber;
-	m_readPosition=readPosition;
-	m_readStrand=readStrand;
-}
-
-void Hit::show(){
-	cout<<m_contigNumber<<" "<<m_contigStrand<<" "<<m_contigPosition<<" ~ "<<m_readNumber<<" "<<m_readStrand<<" "<<m_readPosition<<endl;
-}
 
 
-class HitPair{
-	Hit m_left;
-	Hit m_right;
-public:
-	HitPair(Hit*left,Hit*right);
-	HitPair();
-	bool valid();
-	void show();
-	Hit*getLeft();
-	Hit*getRight();
-};
-
-Hit*HitPair::getLeft(){
-	return &m_left;
-}
-
-Hit*HitPair::getRight(){
-	return &m_right;
-}
-
-HitPair::HitPair(Hit*left,Hit*right){
-	m_left=*left;
-	m_right=*right;
-}
-
-HitPair::HitPair(){
-}
-
-bool HitPair::valid(){
-	if(m_left.getContigPosition()==0&&m_right.getContigPosition()==0)
-		return false;
-	if(//m_left.getContigStrand()==m_right.getContigStrand()&&
-		((m_left.getContigPosition()==0&&m_right.getContigPosition()==0)||
-		(m_left.getContigPosition()!=0&&m_right.getContigPosition()!=0)))
-		return false;
-
-	return true;
-}
-
-void HitPair::show(){
-	cout<<"Hitpair"<<endl;
-	m_left.show();
-	m_right.show();
-}
 
 int main(int argc,char*argv[]){
 	CommonHeader(&cout);
