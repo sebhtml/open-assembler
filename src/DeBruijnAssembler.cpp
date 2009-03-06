@@ -1029,9 +1029,11 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 			//cout<<readNumber<<" last seen at "<<lastPositionInPath<<endl;
 	
 			int lastPositionInRead=(*currentReadPositions)[lastPositionInPath][readNumber][readStrand];
+/*
 			string sequence=m_sequenceData->at(readNumber)->getSeq();
 			if((*readStrands)[readNumber]=='R')
 				sequence=reverseComplement(sequence);
+*/
 			int delta=path->size()-lastPositionInPath;
 			int deltaOffset=delta+lastPositionInRead;
 			if(deltaOffset+m_wordSize-1<m_sequenceData->at(readNumber)->length()){
