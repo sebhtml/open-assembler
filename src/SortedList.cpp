@@ -74,6 +74,7 @@ map<int,int> SortedList::getDistributionOfCoverage(){
 
 void SortedList::sort(){
 	cout<<"Sorting "<<m_list->size()<<" elements"<<endl;
+	int total=0;
 	SortableElement e(0,0);
 	std::sort(m_list->begin(),m_list->end(),e);
 	vector<SortableElement>*newList=new vector<SortableElement>;
@@ -88,9 +89,10 @@ void SortedList::sort(){
 			i++;
 		}
 		SortableElement newElement(currentValue,currentCount);
+		total+=currentCount;
 		newList->push_back(newElement);
 	}
-	cout<<"Transformation: "<<m_list->size()<<" -> "<<newList->size()<<endl;
+	cout<<"Total: "<<total<<" Transformation: "<<m_list->size()<<" -> "<<newList->size()<<endl;
 	delete m_list;
 	m_list=newList;
 }
