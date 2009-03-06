@@ -861,7 +861,9 @@ void DeBruijnAssembler::contig_From_SINGLE(vector<map<int,map<char,int> > >*curr
 		newSources->push_back(children[j]);
 	}
 	*/
-	if(!debug_print){
+
+
+	if(!debug_print&&true){
 		return;
 	}
 	//return;
@@ -1023,16 +1025,13 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 			char readStrand=(*readStrands)[readNumber];
 /*
 			cout<<"Read <- "<<readNumber<<endl;
-			
-			cout<<readNumber<<" last seen at "<<lastPositionInPath<<endl;
+			*/
+			//cout<<readNumber<<" last seen at "<<lastPositionInPath<<endl;
 	
-*/
 			int lastPositionInRead=(*currentReadPositions)[lastPositionInPath][readNumber][readStrand];
-/*
 			string sequence=m_sequenceData->at(readNumber)->getSeq();
 			if((*readStrands)[readNumber]=='R')
 				sequence=reverseComplement(sequence);
-*/
 			int delta=path->size()-lastPositionInPath;
 			int deltaOffset=delta+lastPositionInRead;
 			if(deltaOffset+m_wordSize-1<m_sequenceData->at(readNumber)->length()){
@@ -1056,6 +1055,9 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 				//if(subWord==theChildrenSequence){
 				if(theNucleotidePresent==theNucleotideToMatch){
 					scoresSum[*i]+=deltaOffset;
+					if(deltaOffset>scoresMax[*i])
+						scoresMax[*i]=deltaOffset;
+					numbers[*i]++;
 				}
 			}else{
 				toRemoveFromRelevantReads.push_back(*j);
