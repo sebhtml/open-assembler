@@ -38,9 +38,9 @@ using namespace std;
 int main(int argc,char*argv[]){
 	CommonHeader(&cout);
 
-	if(argc!=5){
+	if(argc<5){
 		cout<<"Usage"<<endl;
-		cout<<argv[0]<<" <wordSize> <contigs> <reads> <superContigs>"<<endl;
+		cout<<argv[0]<<" <wordSize> <contigs> <superContigs> <sequence files>"<<endl;
 		return 0;
 	}
 
@@ -87,8 +87,10 @@ int main(int argc,char*argv[]){
 
 	Loader readsLoader;
 	vector<Read*> theReads;
-	string readsFile=argv[3];
-	readsLoader.load(readsFile,&theReads);
+	for(int i=4;i<argc;i++){
+		string readsFile=argv[i];
+		readsLoader.load(readsFile,&theReads);
+	}
 
 	//system("sleep 100");
 	//string outputRead=argv[4];
@@ -248,7 +250,7 @@ int main(int argc,char*argv[]){
 
 	fGraphViz<<"digraph{"<<endl;
 	
-	string outputFile=argv[4];
+	string outputFile=argv[3];
 	ofstream fStream(outputFile.c_str());
 	set<int> _heads; // where to start.
 	set<int> _mixed; // mixed vertices

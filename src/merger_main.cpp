@@ -30,10 +30,9 @@ using namespace std;
 
 int main(int argc,char*argv[]){
 	CommonHeader(&cout);
-	cout<<"This is dna_Merger."<<endl;
 	if(argc!=3){
 		cout<<"usage"<<endl;
-		cout<<"dna_Merger contigs.fa mergedContig.fa"<<endl;
+		cout<<argv[0]<<" contigs.fa mergedContig.fa"<<endl;
 		return 0;
 	}
 	int minimumContigSize=500;

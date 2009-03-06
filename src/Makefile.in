@@ -37,8 +37,7 @@ POST_UNINSTALL = :
 bin_PROGRAMS = dna_ConvertSffToFasta$(EXEEXT) \
 	dna_MergeContigs$(EXEEXT) dna_BuildGraph$(EXEEXT) \
 	dna_ScaffoldContigs$(EXEEXT) dna_ExtractContigs$(EXEEXT) \
-	dna_KeepLargeContigs$(EXEEXT) dna_ValidateContigs$(EXEEXT) \
-	dna_ConvertFastaToAfg$(EXEEXT) dna_JoinContigs$(EXEEXT)
+	dna_KeepLargeContigs$(EXEEXT) dna_JoinContigs$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in TODO
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -60,14 +59,6 @@ am_dna_BuildGraph_OBJECTS =  \
 	common_functions.$(OBJEXT)
 dna_BuildGraph_OBJECTS = $(am_dna_BuildGraph_OBJECTS)
 dna_BuildGraph_LDADD = $(LDADD)
-am_dna_ConvertFastaToAfg_OBJECTS = fasta_to_afg_main.$(OBJEXT) \
-	Read.$(OBJEXT) DeBruijnAssembler.$(OBJEXT) Loader.$(OBJEXT) \
-	SffLoader.$(OBJEXT) VertexData.$(OBJEXT) \
-	SequenceDataFull.$(OBJEXT) CoverageDistribution.$(OBJEXT) \
-	SortedList.$(OBJEXT) GraphData.$(OBJEXT) \
-	BinarySearch.$(OBJEXT) common_functions.$(OBJEXT)
-dna_ConvertFastaToAfg_OBJECTS = $(am_dna_ConvertFastaToAfg_OBJECTS)
-dna_ConvertFastaToAfg_LDADD = $(LDADD)
 am_dna_ConvertSffToFasta_OBJECTS = SffLoader.$(OBJEXT) Read.$(OBJEXT) \
 	DeBruijnAssembler.$(OBJEXT) sffPairedToFasta_main.$(OBJEXT) \
 	Loader.$(OBJEXT) SequenceDataFull.$(OBJEXT) \
@@ -117,9 +108,6 @@ am_dna_ScaffoldContigs_OBJECTS = CoverageDistribution.$(OBJEXT) \
 	Hit.$(OBJEXT) HitPair.$(OBJEXT)
 dna_ScaffoldContigs_OBJECTS = $(am_dna_ScaffoldContigs_OBJECTS)
 dna_ScaffoldContigs_LDADD = $(LDADD)
-am_dna_ValidateContigs_OBJECTS = module_validate_main.$(OBJEXT)
-dna_ValidateContigs_OBJECTS = $(am_dna_ValidateContigs_OBJECTS)
-dna_ValidateContigs_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -132,17 +120,14 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(dna_BuildGraph_SOURCES) $(dna_ConvertFastaToAfg_SOURCES) \
-	$(dna_ConvertSffToFasta_SOURCES) $(dna_ExtractContigs_SOURCES) \
-	$(dna_JoinContigs_SOURCES) $(dna_KeepLargeContigs_SOURCES) \
-	$(dna_MergeContigs_SOURCES) $(dna_ScaffoldContigs_SOURCES) \
-	$(dna_ValidateContigs_SOURCES)
+SOURCES = $(dna_BuildGraph_SOURCES) $(dna_ConvertSffToFasta_SOURCES) \
+	$(dna_ExtractContigs_SOURCES) $(dna_JoinContigs_SOURCES) \
+	$(dna_KeepLargeContigs_SOURCES) $(dna_MergeContigs_SOURCES) \
+	$(dna_ScaffoldContigs_SOURCES)
 DIST_SOURCES = $(dna_BuildGraph_SOURCES) \
-	$(dna_ConvertFastaToAfg_SOURCES) \
 	$(dna_ConvertSffToFasta_SOURCES) $(dna_ExtractContigs_SOURCES) \
 	$(dna_JoinContigs_SOURCES) $(dna_KeepLargeContigs_SOURCES) \
-	$(dna_MergeContigs_SOURCES) $(dna_ScaffoldContigs_SOURCES) \
-	$(dna_ValidateContigs_SOURCES)
+	$(dna_MergeContigs_SOURCES) $(dna_ScaffoldContigs_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -252,16 +237,12 @@ dna_ConvertSffToFasta_SOURCES = SffLoader.cpp SffLoader.h Read.h Read.cpp DeBrui
 CustomMap.hpp  Loader.cpp Loader.h SequenceDataFull.h SequenceDataFull.cpp  CoverageDistribution.h CoverageDistribution.cpp \
 SortedList.h SortedList.cpp VertexData.cpp VertexData.h  GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp   common_functions.h common_functions.cpp
 
-dna_ConvertFastaToAfg_SOURCES = fasta_to_afg_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp  CoverageDistribution.h CoverageDistribution.cpp \
-SortedList.h SortedList.cpp  GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp   common_functions.h common_functions.cpp
-
 dna_JoinContigs_SOURCES = DeBruijnAssembler.h  Read.cpp module_join_main.cpp \
 DeBruijnAssembler.cpp                               Read.h Loader.cpp Loader.h  SffLoader.h SffLoader.cpp \
 VertexData.h VertexData.cpp  SequenceDataFull.h SequenceDataFull.cpp CoverageDistribution.h CoverageDistribution.cpp \
 SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp Merger.h Merger.cpp   common_functions.h common_functions.cpp Hit.h Hit.cpp \
 HitPair.h HitPair.cpp
 
-dna_ValidateContigs_SOURCES = module_validate_main.cpp
 all: all-am
 
 .SUFFIXES:
@@ -321,9 +302,6 @@ clean-binPROGRAMS:
 dna_BuildGraph$(EXEEXT): $(dna_BuildGraph_OBJECTS) $(dna_BuildGraph_DEPENDENCIES) 
 	@rm -f dna_BuildGraph$(EXEEXT)
 	$(CXXLINK) $(dna_BuildGraph_LDFLAGS) $(dna_BuildGraph_OBJECTS) $(dna_BuildGraph_LDADD) $(LIBS)
-dna_ConvertFastaToAfg$(EXEEXT): $(dna_ConvertFastaToAfg_OBJECTS) $(dna_ConvertFastaToAfg_DEPENDENCIES) 
-	@rm -f dna_ConvertFastaToAfg$(EXEEXT)
-	$(CXXLINK) $(dna_ConvertFastaToAfg_LDFLAGS) $(dna_ConvertFastaToAfg_OBJECTS) $(dna_ConvertFastaToAfg_LDADD) $(LIBS)
 dna_ConvertSffToFasta$(EXEEXT): $(dna_ConvertSffToFasta_OBJECTS) $(dna_ConvertSffToFasta_DEPENDENCIES) 
 	@rm -f dna_ConvertSffToFasta$(EXEEXT)
 	$(CXXLINK) $(dna_ConvertSffToFasta_LDFLAGS) $(dna_ConvertSffToFasta_OBJECTS) $(dna_ConvertSffToFasta_LDADD) $(LIBS)
@@ -342,9 +320,6 @@ dna_MergeContigs$(EXEEXT): $(dna_MergeContigs_OBJECTS) $(dna_MergeContigs_DEPEND
 dna_ScaffoldContigs$(EXEEXT): $(dna_ScaffoldContigs_OBJECTS) $(dna_ScaffoldContigs_DEPENDENCIES) 
 	@rm -f dna_ScaffoldContigs$(EXEEXT)
 	$(CXXLINK) $(dna_ScaffoldContigs_LDFLAGS) $(dna_ScaffoldContigs_OBJECTS) $(dna_ScaffoldContigs_LDADD) $(LIBS)
-dna_ValidateContigs$(EXEEXT): $(dna_ValidateContigs_OBJECTS) $(dna_ValidateContigs_DEPENDENCIES) 
-	@rm -f dna_ValidateContigs$(EXEEXT)
-	$(CXXLINK) $(dna_ValidateContigs_LDFLAGS) $(dna_ValidateContigs_OBJECTS) $(dna_ValidateContigs_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -368,11 +343,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/VertexData.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_functions.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extract_contigs_main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fasta_to_afg_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/keepLargeContigs_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/merger_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module_join_main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module_validate_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scaffolder_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sffPairedToFasta_main.Po@am__quote@
 

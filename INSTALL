@@ -1,11 +1,14 @@
+You basically need ruby, g++, and a POSIX operating  system  (GNU/Linux, or any UNIX).
+
+You can build the assembler using the './configure;make' command.
+
+
 == Compile the software with gcc on GNU/Linux ==
 
-export CXXFLAGS="-O6 -Wall -std=c++98 -fomit-frame-pointer -static  "
+export CXXFLAGS="-O3 -Wall "
 export LDFLAGS=$CXXFLAGS
 ./configure CXXFLAGS="$CXXFLAGS" LDFLAGS="$LDFLAGS" 
 make
-
-
 
 
 
