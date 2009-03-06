@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 
+
 puts "Welcome to DNA, the de novo assembler"
 puts "DNA.rb is an assembler that calls the c++ modules"
 puts "usage:"
