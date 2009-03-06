@@ -3,24 +3,20 @@ DNA.rb is the main script.
 It calls these modules:
 
 
+dna_BuildGraph         
+dna_ExtractContigs
+dna_KeepLargeContigs   
+dna_MergeContigs
+dna_JoinContigs        
+
+These modules are  not built-in  DNA.rb, but  they are necessary to scaffold
+contigs
 
 dna_ConvertSffToFasta  
+dna_ScaffoldContigs
 
-dna_BuildGraph         
-
-dna_ExtractContigs     
-
-dna_MergeContigs       
-
-dna_KeepLargeContigs
-
-dna_JoinContigs
-
-dna_ScaffoldContigs   
-
-dna_ConvertFastaToAfg  
-
-dna_ValidateContigs    
+Using DNA.rb is very easy. You  basically just  write DNA.rb followed by a
+list of  files, which can be encoded in fasta, fastq, or sff.
 
 
 
