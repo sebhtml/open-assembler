@@ -39,7 +39,7 @@ int main(int argc,char*argv[]){
 	string rightReadsFile=argv[2];
 	string contigsFile=argv[3];
 	int wordSize=21;
-	int minimumHits=1;
+	int minimumHits=30;
 	vector<Read*> contigs;
 	Loader loader;
 	loader.load(contigsFile,&contigs);
