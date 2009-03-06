@@ -78,6 +78,8 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		if(i%100000==0){
 			m_cout<<"Reads: "<<i<<" / "<<sequenceData->size()<<endl;
 		}
+		if(i%1000000==0)
+			myList.sort();
 		vector<VERTEX_TYPE> highQualityMers=sequenceData->at(i)->getHighQualityMers(m_wordSize,'F');
 		for(vector<VERTEX_TYPE>::iterator iteratorMer=highQualityMers.begin();iteratorMer!=highQualityMers.end();iteratorMer++){
 			myList.add(*iteratorMer);
@@ -940,9 +942,10 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 			cout<<"Position in read at this position: "<<(*currentReadPositions)[i->second][i->first][(*readStrands)[i->first]]<<endl;
 		}
 	}
-
+*/
 	if(children.size()==1)
 		return children;
+
 	// start when nothing is done yet
 	//(*m_cout)<<currentReadPositions->size()<<" "<<path->size()<<endl;
 	if(currentReadPositions->size()==0){//||currentReadPositions->size()<path->size())
@@ -963,7 +966,6 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 			return children;
 		}
 	}
-*/
 
 /*
 	if(children.size()>1&&m_DEBUG){
@@ -1100,7 +1102,6 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 		}
 	}
 
-/*
 	// best max
 	for(map<VERTEX_TYPE,int>::iterator i=scoresMax.begin();i!=scoresMax.end();i++){
 		if(foundBest==true)
@@ -1118,7 +1119,6 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 			best=i->first;
 		}
 	}
-
 	// best number
 	for(map<VERTEX_TYPE,int>::iterator i=numbers.begin();i!=numbers.end();i++){
 		if(foundBest==true)
@@ -1136,8 +1136,6 @@ vector<VERTEX_TYPE> DeBruijnAssembler::nextVertices(vector<VERTEX_TYPE>*path,vec
 			best=i->first;
 		}
 	}
-
-*/
 	if(children.size()==2&&
 		foundBest==false){
 		// attempt to detect homopolymer...

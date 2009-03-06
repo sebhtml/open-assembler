@@ -28,8 +28,21 @@
 #include<map>
 using namespace std;
 
+class SortableElement{
+	uint64_t m_kmer;
+	uint16_t m_count;
+public:
+	uint64_t getKMer();
+	uint16_t getCount();
+	SortableElement(uint64_t m_kmer,uint16_t m_count);
+	bool operator()(const SortableElement&a,const SortableElement&b);
+};
+
+
+
+
 class SortedList{
-	vector<VERTEX_TYPE> *m_list;
+	vector<SortableElement> *m_list;
 public:
 	void add(VERTEX_TYPE a);
 	vector<VERTEX_TYPE> elementsWithALeastCCoverage(int c);

@@ -27,23 +27,24 @@ using namespace std;
 
 
 SortedList::SortedList(){
-	m_list=new vector<VERTEX_TYPE>;
+	m_list=new vector<SortableElement>;
 }
 
 void SortedList::add(VERTEX_TYPE a){
-	m_list->push_back(a);
+	SortableElement element(a,1);
+	m_list->push_back(element);
 }
 
 
 vector<VERTEX_TYPE> SortedList::elementsWithALeastCCoverage(int c){
 	vector<VERTEX_TYPE> output;
-	vector<VERTEX_TYPE>::iterator i=m_list->begin();
+	vector<SortableElement>::iterator i=m_list->begin();
 	while(i!=m_list->end()){
-		int currentCount=1;
-		VERTEX_TYPE currentValue=*i;
+		int currentCount=(*i).getCount();
+		VERTEX_TYPE currentValue=(*i).getKMer();
 		i++;
-		while(i!=m_list->end()&&*i==currentValue){
-			currentCount++;
+		while(i!=m_list->end()&&(*i).getKMer()==currentValue){
+			currentCount+=(*i).getCount();
 			i++;
 		}
 		if(currentCount>=c)
@@ -56,13 +57,13 @@ vector<VERTEX_TYPE> SortedList::elementsWithALeastCCoverage(int c){
 
 map<int,int> SortedList::getDistributionOfCoverage(){
 	map<int,int> m_coverageDistribution;
-	vector<VERTEX_TYPE>::iterator i=m_list->begin();
+	vector<SortableElement>::iterator i=m_list->begin();
 	while(i!=m_list->end()){
-		VERTEX_TYPE currentValue=*i;
-		int currentCount=1;
+		VERTEX_TYPE currentValue=(*i).getKMer();
+		int currentCount=(*i).getCount();
 		i++;
-		while(i!=m_list->end()&&*i==currentValue){
-			currentCount++;
+		while(i!=m_list->end()&&(*i).getKMer()==currentValue){
+			currentCount+=(*i).getCount();
 			i++;
 		}
 		m_coverageDistribution[currentCount]++;
@@ -73,7 +74,25 @@ map<int,int> SortedList::getDistributionOfCoverage(){
 
 void SortedList::sort(){
 	cout<<"Sorting "<<m_list->size()<<" elements"<<endl;
-	std::sort(m_list->begin(),m_list->end());
+	SortableElement e(0,0);
+	std::sort(m_list->begin(),m_list->end(),e);
+	vector<SortableElement>*newList=new vector<SortableElement>;
+	
+	vector<SortableElement>::iterator i=m_list->begin();
+	while(i!=m_list->end()){
+		int currentCount=1;
+		VERTEX_TYPE currentValue=(*i).getKMer();
+		i++;
+		while(i!=m_list->end()&&(*i).getKMer()==currentValue){
+			currentCount+=(*i).getCount();
+			i++;
+		}
+		SortableElement newElement(currentValue,currentCount);
+		newList->push_back(newElement);
+	}
+	cout<<"Transformation: "<<m_list->size()<<" -> "<<newList->size()<<endl;
+	delete m_list;
+	m_list=newList;
 }
 
 void SortedList::clear(){
@@ -82,3 +101,20 @@ void SortedList::clear(){
 	m_list=NULL;
 }
 
+
+bool SortableElement::operator()(const SortableElement&a,const SortableElement&b){
+	return a.m_kmer<b.m_kmer;
+}
+
+uint64_t SortableElement::getKMer(){
+	return m_kmer;
+}
+
+uint16_t SortableElement::getCount(){
+	return m_count;
+}
+
+SortableElement::SortableElement(uint64_t kmer,uint16_t count){
+	m_kmer=kmer;
+	m_count=count;
+}
