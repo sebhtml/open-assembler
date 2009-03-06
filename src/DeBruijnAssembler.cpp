@@ -1281,8 +1281,8 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 				if(theChildren.size()>1)
 					hasMixedParents=true;
 			}
-			if(m_data.get(wordInBits)->NotTrivial(wordInBits,m_wordSize)||(strand=='F'&&readPosition==sequenceData->at(readId)->getStartForward())||
-			(strand=='R'&&readPosition==sequenceData->at(readId)->getStartForward())||false)
+			//if(m_data.get(wordInBits)->NotTrivial(wordInBits,m_wordSize)||(strand=='F'&&readPosition==sequenceData->at(readId)->getStartForward())||
+			//(strand=='R'&&readPosition==sequenceData->at(readId)->getStartForward())||false)
 				m_data.get(wordInBits)->addAnnotation(readId,readPosition,strand);
 		}
 	}
