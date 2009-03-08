@@ -45,7 +45,6 @@ using namespace std;
 
 class DeBruijnAssembler{
 	int m_coverage_mean;
-	int m_carry_forward_offset;
 	string m_graphFile;
 	string m_minimumCoverageParameter;
 	string m_onlyFirstMer;
@@ -62,31 +61,15 @@ class DeBruijnAssembler{
 
 
 	// minimu contig size
-	ostream*m_cout;
 	string m_assemblyDirectory;
-
-
-
-	bool is_d_Threading(AnnotationElement*annotation,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,map<int,int>*usedReads,bool beforeAdding);
 
 	void build_From_Scratch(SequenceDataFull*sequenceData);
 	void writeGraph();
 
-	void contig_From_SINGLE(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,vector<VERTEX_TYPE>*newSources,vector<int>*repeatAnnotations,VERTEX_TYPE source);
-	vector<VERTEX_TYPE> getWalk(VERTEX_TYPE prefix,vector<VERTEX_TYPE>*path,int length,vector<map<int,map<char,int > > >*currentReadPositions);
-
 	string pathToDNA(vector<VERTEX_TYPE>*path);
 
-	vector<VERTEX_TYPE> nextVertices(vector<VERTEX_TYPE>*path,vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*newSources,map<int,int>*usedReads,map<int,char>*readStrands,
-		set<int>*theReadsThatAreRelevant);
-	bool DETECT_BUBBLE(vector<VERTEX_TYPE>*path,VERTEX_TYPE a,VERTEX_TYPE b);
-
-	VERTEX_TYPE reverseComplement_VERTEX(VERTEX_TYPE a);
-
-	//bool addNewContig(vector<vector<VERTEX_TYPE> >*newContigs,vector<VERTEX_TYPE>*newContig,int currentContigId,int otherContigId,set<int>*contigsProcessed);
-
+	void version2_Walker(uint64_t  a);
 	void Walk_In_GRAPH();
-
 
 	void indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData);
 
@@ -101,7 +84,7 @@ class DeBruijnAssembler{
 
 	int visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int maxDepth,bool parents);
 public:
-	DeBruijnAssembler(ostream*m_cout);
+	DeBruijnAssembler();
 	void setWordSize(int k);
 	void setSequenceData(SequenceDataFull*sequenceData);
 	void buildGraph();
@@ -115,8 +98,6 @@ public:
 	~DeBruijnAssembler();
 	void Algorithm_Assembler_20090121();
 	void setMinimumCoverage(string coverage);
-
-	static int m_WordSize;
 };
 
 #endif

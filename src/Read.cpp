@@ -55,8 +55,10 @@ vector<VERTEX_TYPE>Read::getHighQualityMers(int wordSize,char strand){
 
 	string sequence=m_sequence;
 
-	for(int j=0;j<(int)sequence.length()-(wordSize);j++){
+	for(int j=0;j<(int)sequence.length();j++){
 		string wordFoward=sequence.substr(j,wordSize+1);
+		if(wordFoward.length()!=wordSize+1)
+			continue;
 		string wordReverse;
 		if(!isValidDNA(wordFoward.c_str()))
 			continue;

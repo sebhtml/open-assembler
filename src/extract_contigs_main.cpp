@@ -36,7 +36,7 @@ int main(int argc,char*argv[]){
 	string directory=argv[2];
 	string filesFile=directory+"/InputFiles.txt";
 	string parametersFile=directory+"/Parameters.txt";
-	DeBruijnAssembler assembler(&cout);
+	DeBruijnAssembler assembler;
 	assembler.setAssemblyDirectory(directory);
 	assembler.loadParameters();
 	assembler.load_graphFrom_file();

@@ -149,7 +149,7 @@ int main(int argc,char*argv[]){
 
 	// starting the assembler
 	//cout<<"Starting  De Bruijn assembler!."<<endl;
-	DeBruijnAssembler assembler(&cout);
+	DeBruijnAssembler assembler;
 	// word size must be odd (2k+1)
 	// to avoid palindromes
 	//assembler.setBuckets(buckets);

@@ -24,9 +24,11 @@
 
 #include<list>
 #include<vector>
+#include<hash_map>
 #include"Read.h"
 #include<map>
 using namespace std;
+using namespace  __gnu_cxx;
 
 class SortableElement{
 	uint64_t m_kmer;
@@ -43,6 +45,8 @@ public:
 
 class SortedList{
 	vector<SortableElement> *m_list;
+	int m_total;
+	hash_map<uint64_t,int,hash<uint64_t> > m_hash;
 public:
 	void add(VERTEX_TYPE a);
 	vector<VERTEX_TYPE> elementsWithALeastCCoverage(int c);
