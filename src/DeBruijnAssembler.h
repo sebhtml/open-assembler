@@ -68,7 +68,7 @@ class DeBruijnAssembler{
 
 	string pathToDNA(vector<VERTEX_TYPE>*path);
 
-	void version2_Walker(uint64_t  a);
+	void version2_Walker(uint64_t  a,vector<uint64_t>*b);
 	void Walk_In_GRAPH();
 
 	void indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData);

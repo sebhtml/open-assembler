@@ -565,27 +565,14 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			vector<map<int,map<char,int> > > currentReadPositions;
 			vector<int> repeatAnnotations;
 			vector<VERTEX_TYPE> localNewSources;
-			//contig_From_SINGLE_2(&currentReadPositions,&path,prefix);
-			//contig_From_SINGLE(&currentReadPositions,&path,&localNewSources,&repeatAnnotations,prefix);
-			version2_Walker(prefix);
+			version2_Walker(prefix,&path);
 			cout<<path.size()<<" vertices"<<endl;
-/*
-			int validSources=0;
-			for(vector<VERTEX_TYPE>::iterator k=localNewSources.begin();k!=localNewSources.end();k++){
-				if(m_data.get(*k)->IsAssembled())
-					continue;
-				// assemble vertices cannot be sources..
-				validSources++;
-				newSources.push_back(*k);
-			}
-			cout<<localNewSources.size()<<" new sources, "<<validSources<<" valid."<<endl;a
-*/
 			if(path.size()<=2)
 				continue;
-			writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
+			//writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
 			writeContig_fasta(&path,&contigsFileStream,contigId);
-			writeContig_Coverage(&currentReadPositions,&path,&coverageStream,contigId);
-			writeContig_RepeatAnnotation(&repeatAnnotations,contigId,&repeatAnnotation,&path);
+			//writeContig_Coverage(&currentReadPositions,&path,&coverageStream,contigId);
+			//writeContig_RepeatAnnotation(&repeatAnnotations,contigId,&repeatAnnotation,&path);
 			//m_contig_paths.push_back(path);
 			cout<<"Contig"<<contigId<<endl;
 			contigId++;
@@ -615,7 +602,7 @@ void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 
 
 
-void DeBruijnAssembler::version2_Walker(uint64_t  a){
+void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 	cout<<"Starting from "<<a<<endl;
 	vector<uint64_t>contig;
 	vector<uint64_t>  children;
@@ -661,7 +648,6 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a){
 			map<uint64_t,int> heuristic_Score;
 			map<uint64_t,vector<int> > annotationsForEach;
 			for(vector<uint64_t>::iterator i=children.begin();i!=children.end();i++){
-				int numberOfThreads=0;
 				uint64_t childVertex=*i;
 				string childSequence=idToWord(childVertex,m_wordSize);
 				char lastNucleotideOfChildSequence=childSequence[m_wordSize-1];
@@ -716,8 +702,10 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a){
 				}
 				if(isBest){
 					children.clear();
+					if(heuristic_Score[currentVertex]==0&&contig.size()>500)
+						break;
 					children.push_back(currentVertex);
-					cout<<"GOT BEST "<<currentVertex<<endl;
+					cout<<"GOT BEST "<<idToWord(currentVertex,m_wordSize)<<endl;
 					break;
 				}
 			}
@@ -727,6 +715,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a){
 	}
 	cout<<"STOP <<CHILDREN="<<children.size()<<endl;
 	cout<<"CONTIG LENGTH [FINAL] "<<contig.size()<<endl;
+	*path=contig;
 }
 
 
