@@ -660,21 +660,21 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 					char readStrand=readsReadStrands[readId];
 					int distanceInContig=currentContigPosition-lastContigPosition;
 					int inferedReadPosition=lastReadPosition+distanceInContig;
-					int nucleotidePositionInRead=inferedReadPosition+m_wordSize-1;
+					int nucleotidePositionInRead=inferedReadPosition;
 					if(nucleotidePositionInRead>=m_sequenceData->at(readId)->length()){
 						//cout<<"OUT OF RANGE"<<endl;
 						readNotInRangeAnymore.push_back(readId);
 						continue;
 					}
-					char nucleotide=m_sequenceData->at(readId)->nucleotideAt(nucleotidePositionInRead,readStrand);
 					//ccut<<endl;
 					//cout<<"CHILD IS "<<childSequence<<endl;
 					string readSequence=m_sequenceData->at(readId)->getSeq();
 					if(readStrand=='R')
 						readSequence=reverseComplement(readSequence);
 		
+					string aWord=readSequence.substr(inferedReadPosition,m_wordSize);
 					//cout<<"READ IS  "<<readSequence.substr(inferedReadPosition,m_wordSize)<<endl;
-					if(nucleotide==lastNucleotideOfChildSequence){
+					if(aWord==childSequence){
 						//cout<<"match..."<<endl;
 						heuristic_Score[childVertex]+=nucleotidePositionInRead;
 						annotationsForEach[childVertex].push_back(nucleotidePositionInRead);
