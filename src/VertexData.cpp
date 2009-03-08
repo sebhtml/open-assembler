@@ -30,10 +30,8 @@ using namespace std;
 vector<AnnotationElement> VertexData::m_empty_vector;
 
 VertexData::VertexData(){
-	//m_isEliminated=false;
 	m_parents=0;
 	m_children=0;
-	//m_color=-1;
 	m_annotations=NULL;
 	m_assembled=false;
 }
@@ -135,12 +133,9 @@ vector<VERTEX_TYPE> VertexData::getChildren(VERTEX_TYPE prefix,int m_WordSize){
 	return output;
 }
 
-vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix,GraphData*m_data,int m_WordSize){
+vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix,int m_WordSize){
 	string a=idToWord(prefix,m_WordSize);
 	vector<VERTEX_TYPE> output;
-	//cout<<a<<endl;
-	//cout<<(int)m_parents<<endl;
-	//cout<<"parents " <<m_parents<<endl;
 	for(int i=0;i<4;i++){
 		uint8_t toCheck=m_parents;
 		//00001000
@@ -164,13 +159,7 @@ vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix,GraphData*m_data,i
 			output.push_back(dataNode);
 		}
 	}
-	vector<VERTEX_TYPE> eliminated;
-	for(vector<VERTEX_TYPE>::iterator i=output.begin();i!=output.end();i++){
-		if(m_data!=NULL&&m_data->get(*i)->IsEliminated())
-			continue;
-		eliminated.push_back(*i);
-	}
-	return eliminated;
+	return output;
 }
 
 
@@ -183,52 +172,13 @@ VertexData::~VertexData(){
 	}
 }
 
-void VertexData::eliminateNow(){
-	//m_isEliminated=true;
-}
-
-bool VertexData::IsEliminated(){
-	//return m_isEliminated;
-	return false;
-}
-
 bool VertexData::IsAssembled(){
 	//return m_positionInContig.size()>0;
 	return m_assembled;
 }
 
-uint32_t VertexData::getColor(){
-	//return m_color;
-	return 0;
-}
-
-void VertexData::setColor(uint32_t c){
-	//m_color=c;
-}
 
 bool VertexData::NotTrivial(VERTEX_TYPE a,int m_wordSize){
-	return getParents(a,NULL,m_wordSize).size()>1||getChildren(a,m_wordSize).size()>1;
+	return getParents(a,m_wordSize).size()>1||getChildren(a,m_wordSize).size()>1;
 }
 
-bool VertexData::hasManyChildren(VERTEX_TYPE a,int w){
-	return getChildren(a,w).size()>1;
-}
-
-/*
-void VertexData::addPositionInContig(VERTEX_TYPE a,int b){
-	//m_positionInContig[a].push_back(b);
-}
-
-
-map<VERTEX_TYPE,vector<int> >*VertexData::getPositions(){
-	return &m_positionInContig;
-}
-
-void VertexData::printPositions(){
-	for(map<VERTEX_TYPE,vector<int> >::iterator i=m_positionInContig.begin();i!=m_positionInContig.end();i++){
-		for(vector<int>::iterator j=i->second.begin();j!=i->second.end();j++){
-			cout<<i->first<<" "<<*j<<endl;
-		}
-	}
-}
-*/

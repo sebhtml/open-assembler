@@ -52,9 +52,8 @@ class VertexData{
 	
 public:
 
-	map<VERTEX_TYPE,vector<int> >*getPositions();
 	vector<VERTEX_TYPE> getChildren(VERTEX_TYPE prefix,int w);
-	vector<VERTEX_TYPE> getParents(VERTEX_TYPE prefix,GraphData*m_data,int w);
+	vector<VERTEX_TYPE> getParents(VERTEX_TYPE prefix,int w);
 	vector<AnnotationElement>*getAnnotations();
 	void addAnnotation(uint32_t read,POSITION_TYPE position,uint8_t strand);
 	void addParent(VERTEX_TYPE a,int w);
@@ -62,15 +61,9 @@ public:
 	bool hasChild(VERTEX_TYPE suffix);
 	VertexData();
 	~VertexData();
-	bool IsEliminated();
-	void eliminateNow();
-	uint32_t getColor();
-	void setColor(uint32_t c);
 	bool IsAssembled();
-	void printPositions();
 	void assemble();
 	bool NotTrivial(VERTEX_TYPE a,int w);
-	void addPositionInContig(VERTEX_TYPE a,int b);
 	bool hasManyChildren(VERTEX_TYPE a,int w);
 };
 

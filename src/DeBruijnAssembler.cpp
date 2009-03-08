@@ -52,6 +52,8 @@ int abs_f(int a){
 
 DeBruijnAssembler::DeBruijnAssembler(){
 	m_DEBUG=false;
+	m_alpha=1.05;
+	cout<<"ALPHA_PARAMETER_VALUE <- "<<m_alpha<<endl;
 }
 
 void DeBruijnAssembler::setWordSize(int k){
@@ -386,41 +388,6 @@ void DeBruijnAssembler::setAssemblyDirectory(string assemblyDirectory){
 }
 
 
-int DeBruijnAssembler::DFS_watch(VERTEX_TYPE a,int color){
-	stack<VERTEX_TYPE> theQueue;
-	theQueue.push(a);
-	m_data.get(a)->setColor(color);
-	int numberOfVertices=1;
-	while(theQueue.size()>0){
-		//cout<<theQueue.size()<<endl;
-		VERTEX_TYPE b=theQueue.top();
-		theQueue.pop();
-		vector<VERTEX_TYPE> parents=m_data.get(b)->getParents(b,NULL,m_wordSize);
-		if(parents.size()==1){
-			VERTEX_TYPE parent=parents[0];
-			VertexData*vData=m_data.get(parent);
-			if(vData->getColor()==-1&&vData->getParents(parent,NULL,m_wordSize).size()<=1&&vData->getChildren(parent,m_wordSize).size()<=1){
-				vData->setColor(color);
-				numberOfVertices++;
-				theQueue.push(parent);
-			}
-		}
-
-
-		vector<VERTEX_TYPE> children=m_data.get(b)->getChildren(b,m_wordSize);
-		if(children.size()==1){
-			VERTEX_TYPE child=children[0];
-			VertexData*vData=m_data.get(child);
-			if(vData->getColor()==-1&&vData->getParents(child,NULL,m_wordSize).size()<=1&&vData->getChildren(child,m_wordSize).size()<=1){
-				vData->setColor(color);
-				numberOfVertices++;
-				theQueue.push(child);
-			}
-		}
-	}
-	return numberOfVertices;
-}
-
 
 void DeBruijnAssembler::Walk_In_GRAPH(){
 	cout<<endl;
@@ -455,7 +422,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		}
 		VERTEX_TYPE vertex=(*theNodes)[i];
 		VertexData*dataNode=m_data.get(vertex);
-		int parents=dataNode->getParents(vertex,NULL,m_wordSize).size();
+		int parents=dataNode->getParents(vertex,m_wordSize).size();
 		int children=dataNode->getChildren(vertex,m_wordSize).size();
 		stats_parents_children[parents][children]++;
 		if(parents==1&&children==1)
@@ -478,44 +445,6 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	vector<VERTEX_TYPE>*nodes=m_data.getNodes();
 	VertexData*nodeData=m_data.getNodeData();
 	(cout)<<endl;
-	(cout)<<"********** Removing spurious edges"<<endl;
-	bool removing=true;
-	int spuriousRemoval=0;
-	int id=0;
-	cout<<endl;
-	for(int myDataIterator=0;myDataIterator<m_data.size();myDataIterator++){
-		break;
-	//for(CustomMap<VertexData>::iterator i=m_data->begin();i!=m_data->end();i++){
-		VERTEX_TYPE prefix=(*nodes)[(myDataIterator)];
-		VertexData*nodeDataInstance=&(nodeData[myDataIterator]);
-		if(nodeDataInstance->IsEliminated())
-			continue;
-		if(id%100000==0){
-			cout<<id+1<<" / "<<m_data.size()<<endl;
-		}
-		vector<VERTEX_TYPE> theParents=nodeDataInstance->getParents(prefix,NULL,m_wordSize);
-		//(cout)<<theParents.size()<<endl;
-		if(theParents.size()>1){
-			//(cout)<<theParents.size()<<endl;
-			for(vector<VERTEX_TYPE>::iterator j=theParents.begin();j!=theParents.end();j++){
-				if(m_data.get(*j)->IsEliminated())
-					continue;
-				int MaxDepth=30; // changed from 50 to 30 here
-				VERTEX_TYPE currentNode=*j;
-				set<VERTEX_TYPE> stuffVisited;
-				int reachedDepth=visitVertices(currentNode,&stuffVisited,MaxDepth,true);
-				if(reachedDepth<MaxDepth){
-					//cout<<"Depth: "<<reachedDepth<<", "<<stuffVisited.size()<<" nodes"<<endl;
-					//m_data.get(*j)->eliminateNow();
-					removing=true;
-					spuriousRemoval++;
-				}
-			}
-		}
-		id++;
-	}
-	cout<<id+1<<" / "<<m_data.size()<<endl;
-	(cout)<<"Removed "<<spuriousRemoval<<" edges"<<endl;
 	cout<<endl;
 
 /*
@@ -604,6 +533,7 @@ void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 
 void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 	cout<<"Starting from "<<a<<endl;
+	bool fromAPureParent=m_data.get(a)->getParents(a,m_wordSize).size()==0;
 	vector<uint64_t>contig;
 	vector<uint64_t>  children;
 	children.push_back(a);
@@ -622,7 +552,13 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 		if(contig.size()%1000==0)
 			cout<<"CONTIG LENGTH "<<contig.size()<<endl;
 		uint64_t  currentVertex=children[0];
+		if(m_data.get(currentVertex)->IsAssembled()&&contig.size()<200&&fromAPureParent){
+			cout<<"Skipping spurious vertex"<<endl;
+			return;
+		}
 		contig.push_back(currentVertex);
+		m_data.get(currentVertex)->assemble();
+
 		// process annotations
 		vector<AnnotationElement>*annotations=m_data.get(currentVertex)->getAnnotations();
 		if(annotations->size()<m_REPEAT_DETECTION){
@@ -695,7 +631,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 				for(map<uint64_t,int>::iterator j=heuristic_Score.begin();j!=heuristic_Score.end();j++){
 					uint64_t otherVertex=j->first;
 					int otherScore=j->second;
-					if(currentVertex!=otherVertex && currentScore < 1.0*otherScore){
+					if(currentVertex!=otherVertex && currentScore < m_alpha*otherScore){
 						isBest=false;
 						break;
 					}
@@ -766,7 +702,7 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 			// TODO only annotate the  first
 			VertexData*aVertexData=m_data.get(wordInBits);
 			bool hasMixedParents=false;
-			vector<VERTEX_TYPE> theParents=m_data.get(wordInBits)->getParents(wordInBits,NULL,m_wordSize);
+			vector<VERTEX_TYPE> theParents=m_data.get(wordInBits)->getParents(wordInBits,m_wordSize);
 			for(vector<VERTEX_TYPE>::iterator ii=theParents.begin();ii!=theParents.end();ii++){
 				vector<VERTEX_TYPE> theChildren=m_data.get(*ii)->getChildren(*ii,m_wordSize);
 				if(theChildren.size()>1)
