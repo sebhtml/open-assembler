@@ -35,8 +35,6 @@
 using namespace std;
 
 
-
-
 int min(int a,int b){
 	if(a<b)
 		return a;
@@ -52,7 +50,7 @@ int abs_f(int a){
 
 DeBruijnAssembler::DeBruijnAssembler(){
 	m_DEBUG=false;
-	m_alpha=1.1;
+	m_alpha=1.03;
 	cout<<"ALPHA_PARAMETER_VALUE <- "<<m_alpha<<endl;
 }
 
@@ -579,11 +577,11 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 			}
 		}
 		children=m_data.get(currentVertex)->getChildren(currentVertex,m_wordSize);
+
+		map<uint64_t,int> sumScores;
+		map<uint64_t,vector<int> > annotationsForEach;
 		if(children.size()>1){  // reduce it...
 			cout<<"MORE THAN 1"<<endl;
-			map<uint64_t,int> heuristic_Score;
-			
-			map<uint64_t,vector<int> > annotationsForEach;
 			for(vector<uint64_t>::iterator i=children.begin();i!=children.end();i++){
 				uint64_t childVertex=*i;
 				string childSequence=idToWord(childVertex,m_wordSize);
@@ -612,50 +610,101 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 					string aWord=readSequence.substr(inferedReadPosition,m_wordSize);
 					//cout<<"READ IS  "<<readSequence.substr(inferedReadPosition,m_wordSize)<<endl;
 					if(aWord==childSequence){
-						//cout<<"match..."<<endl;
-						heuristic_Score[childVertex]+=nucleotidePositionInRead;
 						annotationsForEach[childVertex].push_back(nucleotidePositionInRead);
+						sumScores[childVertex]+=nucleotidePositionInRead;
 					}
 				}
 				for(int i=0;i<readNotInRangeAnymore.size();i++)
 					readsInRange.erase(readNotInRangeAnymore[i]);
-				int theScore=0;
-				if(annotationsForEach[childVertex].size()>0)
-					theScore=heuristic_Score[childVertex]/(annotationsForEach[childVertex].size()+1);
+				int theScore=annotationsForEach[childVertex].size();
 
-				cout<<"Score: "<<idToWord(childVertex,m_wordSize)<<" SCORE="<<theScore<<endl;
+				cout<<"Vertex: "<<idToWord(childVertex,m_wordSize)<<endl;
+				cout<<"SUM="<<sumScores[childVertex]<<endl;
+				cout<<"n="<<annotationsForEach[childVertex].size()<<endl;
 				cout<<"LIST ";
+		
 				for(int i=0;i<annotationsForEach[childVertex].size();i++)
 					cout<<" "<<annotationsForEach[childVertex][i];
 				cout<<endl;
 			}
-			for(map<uint64_t,int>::iterator i=heuristic_Score.begin();i!=heuristic_Score.end();i++){
+			for(map<uint64_t,vector<int> >::iterator i=annotationsForEach.begin();i!=annotationsForEach.end();i++){
 				uint64_t currentVertex=i->first;
-				int currentScore=0;
-				if(annotationsForEach[currentVertex].size()>0)
-					currentScore=i->second/(1+annotationsForEach[currentVertex].size());// mean
+				int currentScore=sumScores[currentVertex];
+
+				// try with sum
 				bool isBest=true;
-				for(map<uint64_t,int>::iterator j=heuristic_Score.begin();j!=heuristic_Score.end();j++){
+				for(map<uint64_t,vector<int> >::iterator j=annotationsForEach.begin();j!=annotationsForEach.end();j++){
 					uint64_t otherVertex=j->first;
-					int otherScore=0;
-					if(annotationsForEach[otherVertex].size()>0)
-						otherScore=j->second/(annotationsForEach[otherVertex].size());//mean
-					if(currentVertex!=otherVertex && currentScore < m_alpha*otherScore){
+					int otherScore=sumScores[otherVertex];
+					if(currentVertex!=otherVertex && currentScore < 1.1*otherScore){
 						isBest=false;
 						break;
 					}
 				}
 				if(isBest){
 					children.clear();
-					if(heuristic_Score[currentVertex]==0&&contig.size()>500)
+					if(annotationsForEach[currentVertex].size()==0&&contig.size()>500)
 						break;
 					children.push_back(currentVertex);
-					cout<<"GOT BEST "<<idToWord(currentVertex,m_wordSize)<<endl;
+					cout<<"GOT BEST USING SUM "<<idToWord(currentVertex,m_wordSize)<<endl;
 					break;
 				}
+
+				// try with number
+				isBest=true;
+				currentScore=annotationsForEach[currentVertex].size();
+				for(map<uint64_t,vector<int> >::iterator j=annotationsForEach.begin();j!=annotationsForEach.end();j++){
+					uint64_t otherVertex=j->first;
+					int otherScore=annotationsForEach[otherVertex].size();
+					if(currentVertex!=otherVertex && currentScore < 1.5*otherScore){
+						isBest=false;
+						break;
+					}
+				}
+				if(isBest){
+					children.clear();
+					if(annotationsForEach[currentVertex].size()==0&&contig.size()>500)
+						break;
+					children.push_back(currentVertex);
+					cout<<"GOT BEST USING NUMBER"<<idToWord(currentVertex,m_wordSize)<<endl;
+					break;
+				}
+
 			}
 		}
 		
+		// detect homopolymer?
+		if(children.size()==2){
+			string first=idToWord(children[0],m_wordSize);
+			string second=idToWord(children[1],m_wordSize);
+			int iii=0;
+			char theNuc='E';
+			if(first[m_wordSize-2]==first[m_wordSize-1]){
+				theNuc=first[m_wordSize-1];
+			}else if(second[m_wordSize-2]==second[m_wordSize-1]){
+				theNuc=second[m_wordSize-1];	
+			}
+			while(m_wordSize-1-iii>=0&&first[m_wordSize-2-iii]==second[m_wordSize-2-iii]&&
+			first[m_wordSize-2-iii]==theNuc){
+				if(theNuc=='E')
+					break;
+				iii++;
+			}
+			if(iii>=6){
+				if(first[m_wordSize-1]==first[m_wordSize-2]||
+				second[m_wordSize-1]==second[m_wordSize-2]){
+					cout<<"HOMOPOLYMER, n="<<iii<<endl;
+					if(annotationsForEach[children[0]]>annotationsForEach[children[1]]){
+						children.clear();
+						children.push_back(children[0]);
+					}else{
+						children.clear();
+						children.push_back(children[1]);
+					}
+				}
+			}
+		}
+
 
 	}
 	cout<<"STOP <<CHILDREN="<<children.size()<<endl;
