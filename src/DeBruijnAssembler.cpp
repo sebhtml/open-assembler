@@ -580,53 +580,62 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 
 		map<uint64_t,int> sumScores;
 		map<uint64_t,vector<int> > annotationsForEach;
-		if(children.size()>1){  // reduce it...
-			cout<<"MORE THAN 1"<<endl;
-			for(vector<uint64_t>::iterator i=children.begin();i!=children.end();i++){
-				uint64_t childVertex=*i;
-				string childSequence=idToWord(childVertex,m_wordSize);
-				char lastNucleotideOfChildSequence=childSequence[m_wordSize-1];
-				vector<int>  readNotInRangeAnymore;
-				for(set<int>::iterator i=readsInRange.begin();i!=readsInRange.end();i++){
-					int readId=*i;
-					int currentContigPosition=contig.size()-1+1;
-					int lastContigPosition=readsContigPositions[readId];
-					int lastReadPosition=readsReadPosition[readId];
-					char readStrand=readsReadStrands[readId];
-					int distanceInContig=currentContigPosition-lastContigPosition;
-					int inferedReadPosition=lastReadPosition+distanceInContig;
-					int nucleotidePositionInRead=inferedReadPosition;
-					if(nucleotidePositionInRead>=m_sequenceData->at(readId)->length()){
-						//cout<<"OUT OF RANGE"<<endl;
-						readNotInRangeAnymore.push_back(readId);
-						continue;
-					}
-					//ccut<<endl;
-					//cout<<"CHILD IS "<<childSequence<<endl;
-					string readSequence=m_sequenceData->at(readId)->getSeq();
-					if(readStrand=='R')
-						readSequence=reverseComplement(readSequence);
-		
-					string aWord=readSequence.substr(inferedReadPosition,m_wordSize);
-					//cout<<"READ IS  "<<readSequence.substr(inferedReadPosition,m_wordSize)<<endl;
-					if(aWord==childSequence){
-						annotationsForEach[childVertex].push_back(nucleotidePositionInRead);
-						sumScores[childVertex]+=nucleotidePositionInRead;
-					}
-				}
-				for(int i=0;i<readNotInRangeAnymore.size();i++)
-					readsInRange.erase(readNotInRangeAnymore[i]);
-				int theScore=annotationsForEach[childVertex].size();
 
+		// annotate children
+		if(children.size()>1){
+			cout<<endl;
+		}
+		for(vector<uint64_t>::iterator i=children.begin();i!=children.end();i++){
+			uint64_t childVertex=*i;
+			string childSequence=idToWord(childVertex,m_wordSize);
+			char lastNucleotideOfChildSequence=childSequence[m_wordSize-1];
+			vector<int>  readNotInRangeAnymore;
+			for(set<int>::iterator i=readsInRange.begin();i!=readsInRange.end();i++){
+				int readId=*i;
+				int currentContigPosition=contig.size()-1+1;
+				int lastContigPosition=readsContigPositions[readId];
+				int lastReadPosition=readsReadPosition[readId];
+				char readStrand=readsReadStrands[readId];
+				int distanceInContig=currentContigPosition-lastContigPosition;
+				int inferedReadPosition=lastReadPosition+distanceInContig;
+				int nucleotidePositionInRead=inferedReadPosition;
+				if(nucleotidePositionInRead>=m_sequenceData->at(readId)->length()){
+					//cout<<"OUT OF RANGE"<<endl;
+					readNotInRangeAnymore.push_back(readId);
+					continue;
+				}
+				//ccut<<endl;
+				//cout<<"CHILD IS "<<childSequence<<endl;
+				string readSequence=m_sequenceData->at(readId)->getSeq();
+				if(readStrand=='R')
+					readSequence=reverseComplement(readSequence);
+	
+				string aWord=readSequence.substr(inferedReadPosition,m_wordSize);
+				//cout<<"READ IS  "<<readSequence.substr(inferedReadPosition,m_wordSize)<<endl;
+				if(aWord==childSequence){
+					annotationsForEach[childVertex].push_back(nucleotidePositionInRead);
+					sumScores[childVertex]+=nucleotidePositionInRead;
+				}
+			}
+			for(int i=0;i<readNotInRangeAnymore.size();i++)
+				readsInRange.erase(readNotInRangeAnymore[i]);
+			int theScore=annotationsForEach[childVertex].size();
+	
+			if(children.size()>1){
 				cout<<"Vertex: "<<idToWord(childVertex,m_wordSize)<<endl;
 				cout<<"SUM="<<sumScores[childVertex]<<endl;
 				cout<<"n="<<annotationsForEach[childVertex].size()<<endl;
 				cout<<"LIST ";
-		
+	
 				for(int i=0;i<annotationsForEach[childVertex].size();i++)
 					cout<<" "<<annotationsForEach[childVertex][i];
 				cout<<endl;
 			}
+		}
+
+
+		if(children.size()>1){  // reduce it...
+			//cout<<"MORE THAN 1"<<endl;
 			for(map<uint64_t,vector<int> >::iterator i=annotationsForEach.begin();i!=annotationsForEach.end();i++){
 				uint64_t currentVertex=i->first;
 				int currentScore=sumScores[currentVertex];
@@ -643,8 +652,6 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 				}
 				if(isBest){
 					children.clear();
-					if(annotationsForEach[currentVertex].size()==0&&contig.size()>500)
-						break;
 					children.push_back(currentVertex);
 					cout<<"GOT BEST USING SUM "<<idToWord(currentVertex,m_wordSize)<<endl;
 					break;
@@ -663,8 +670,6 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 				}
 				if(isBest){
 					children.clear();
-					if(annotationsForEach[currentVertex].size()==0&&contig.size()>500)
-						break;
 					children.push_back(currentVertex);
 					cout<<"GOT BEST USING NUMBER"<<idToWord(currentVertex,m_wordSize)<<endl;
 					break;
@@ -702,6 +707,14 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 						children.push_back(children[1]);
 					}
 				}
+			}
+		}
+
+		if(children.size()==1){ // check if it is ok
+			uint64_t currentVertex=children[0];
+			if(annotationsForEach[currentVertex].size()==0&&contig.size()>500){
+				cout<<"No annotation found for "<<idToWord(currentVertex,m_wordSize)<<"."<<endl;
+				break;
 			}
 		}
 

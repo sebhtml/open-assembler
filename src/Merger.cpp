@@ -673,6 +673,7 @@ vector<Read*> Merger::reverseMerge(vector<Read*> contigSequences){
 		color++;
 	}
 
+/*
 	ofstream graphFile("graph.graphviz");
 	graphFile<<"digraph G{"<<endl;
 	for(map<int,int>::iterator i=contigToColor.begin();i!=contigToColor.end();i++){
@@ -685,6 +686,7 @@ vector<Read*> Merger::reverseMerge(vector<Read*> contigSequences){
 	}
 	graphFile<<"}"<<endl;
 	graphFile.close();
+*/
 
 	map<int,vector<int> > colorToContigs;
 	for(int i=0;i<contigSequences.size();i++){
