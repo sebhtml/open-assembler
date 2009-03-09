@@ -619,7 +619,11 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 				}
 				for(int i=0;i<readNotInRangeAnymore.size();i++)
 					readsInRange.erase(readNotInRangeAnymore[i]);
-				cout<<"Score: "<<idToWord(childVertex,m_wordSize)<<" SCORE="<<heuristic_Score[childVertex]/(annotationsForEach[childVertex].size()+1)<<endl;
+				int theScore=0;
+				if(annotationsForEach[childVertex].size()>0)
+					theScore=heuristic_Score[childVertex]/(annotationsForEach[childVertex].size()+1);
+
+				cout<<"Score: "<<idToWord(childVertex,m_wordSize)<<" SCORE="<<theScore<<endl;
 				cout<<"LIST ";
 				for(int i=0;i<annotationsForEach[childVertex].size();i++)
 					cout<<" "<<annotationsForEach[childVertex][i];
@@ -627,11 +631,15 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 			}
 			for(map<uint64_t,int>::iterator i=heuristic_Score.begin();i!=heuristic_Score.end();i++){
 				uint64_t currentVertex=i->first;
-				int currentScore=i->second/(1+annotationsForEach[currentVertex].size());// mean
+				int currentScore=0;
+				if(annotationsForEach[currentVertex].size()>0)
+					currentScore=i->second/(1+annotationsForEach[currentVertex].size());// mean
 				bool isBest=true;
 				for(map<uint64_t,int>::iterator j=heuristic_Score.begin();j!=heuristic_Score.end();j++){
 					uint64_t otherVertex=j->first;
-					int otherScore=j->second/(annotationsForEach[otherVertex].size()+1);//mean
+					int otherScore=0;
+					if(annotationsForEach[otherVertex].size()>0)
+						otherScore=j->second/(annotationsForEach[otherVertex].size());//mean
 					if(currentVertex!=otherVertex && currentScore < m_alpha*otherScore){
 						isBest=false;
 						break;
