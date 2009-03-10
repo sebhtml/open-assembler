@@ -44,12 +44,15 @@ puts "-directory #{directory}"
 puts "files #{files.join(',')}"
 
 puts "Starting now."
-system "mkdir -p #{directory}"
-system  "date > #{directory}/START"
-system "dna_BuildGraph -directory #{directory} -minimumCoverage #{c} -wordSize #{k} #{files.join ' '} > #{directory}-dna_BuildGraph.log"
-system "mv #{directory}-dna_BuildGraph.log #{directory}"
-system "dna_ExtractContigs -directory #{directory} > #{directory}/#{directory}-dna_ExtractContigs.log"
-system "dna_KeepLargeContigs #{directory}/contigs.fasta 500 #{directory}/2LargeContigs.fasta > #{directory}/#{directory}-dna_KeepLargeContigs.log"
-system "dna_MergeContigs  #{directory}/2LargeContigs.fasta  #{directory}/3MergedContigs.fasta > #{directory}/#{directory}-dna_MergeContigs.log"
-system "dna_JoinContigs #{k}  #{directory}/3MergedContigs.fasta #{directory}/4JoinedContigs.fasta #{files.join ' '} > #{directory}/#{directory}-dna_JoinContigs.log"
-system "date > #{directory}/END"
+
+system "
+mkdir -p #{directory}
+date > #{directory}/START
+dna_BuildGraph -directory #{directory} -minimumCoverage #{c} -wordSize #{k} #{files.join ' '} > #{directory}/dna_BuildGraph.log
+dna_ExtractContigs -directory #{directory} > #{directory}/dna_ExtractContigs.log
+dna_KeepLargeContigs #{directory}/contigs.fasta 500 #{directory}/2LargeContigs.fasta > #{directory}/dna_KeepLargeContigs.log
+dna_MergeContigs  #{directory}/2LargeContigs.fasta  #{directory}/3MergedContigs.fasta > #{directory}/dna_MergeContigs.log
+dna_JoinContigs #{k}  #{directory}/3MergedContigs.fasta #{directory}/4JoinedContigs.fasta #{files.join ' '} > #{directory}/dna_JoinContigs.log
+date > #{directory}/END
+"
+
