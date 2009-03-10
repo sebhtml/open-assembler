@@ -20,7 +20,7 @@ while i<ARGV.size
 	if ARGV[i]=="-wordSize"&&i<ARGV.size-1
 		i+=1
 		k=ARGV[i].to_i
-	elsif ARGV[i]=="-minimimCoverage"&&i<ARGV.size-1
+	elsif ARGV[i]=="-minimumCoverage"&&i<ARGV.size-1
 		i+=1
 		c=ARGV[i].to_i
 	elsif ARGV[i]=="-directory"&&i<ARGV.size-1
