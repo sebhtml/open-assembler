@@ -6,6 +6,7 @@ puts "DNA.rb is an assembler that calls the c++ modules"
 puts "usage:"
 puts "DNA.rb [-wordSize 21] [-minimumCoverage 2] -directory output <sequence files (fasta or sff or fastq)"
 puts "Note: if your sff files contain  read pairs,  you must utilize dna_ConvertSffToFasta to extract paired information."
+puts "DNA.rb will detect fastq or 454 paired information, provided files are named the same except a '_1.*' and '_2.*' suffixes."
 puts ""
 files=[]
 directory="unamed-assembly"
