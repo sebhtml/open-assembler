@@ -32,14 +32,16 @@
 #include<set>
 #include"GraphData.h"
 #include<cstring>
+#include<hash_map>
 #include<vector>
+#include<PairedRead.h>
 #include<sstream>
+using namespace __gnu_cxx;
 using namespace std;
 
 #define AMOS_FILE_NAME "contigs-amos.afg"
 #define FASTA_FILE_NAME "contigs.fasta"
 #define COVERAGE_FILE_NAME "contigs-coverage.txt"
-
 
 
 
@@ -50,6 +52,7 @@ class DeBruijnAssembler{
 	string m_onlyFirstMer;
 	string m_onlyOneStrand;
 	int m_minimumCoverage;
+	hash_map<uint32_t,PairedRead,hash<uint32_t> > m_paired_reads;
 	int m_REPEAT_DETECTION;
 	int m_wordSize;
 	bool m_DEBUG;
@@ -95,6 +98,7 @@ public:
 	void debug();
 	void loadParameters();
 	void load_graphFrom_file();
+	void loadPairedInformation();
 	~DeBruijnAssembler();
 	void Algorithm_Assembler_20090121();
 	void setMinimumCoverage(string coverage);

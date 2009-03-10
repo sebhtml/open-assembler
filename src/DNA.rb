@@ -45,8 +45,12 @@ puts "files #{files.join(',')}"
 
 puts "Starting now."
 
+
+mkdir "-p #{directory}"
+
+system "dna_GetPairedInformation.rb -directory #{directory} #{files.join ' '}"
+
 system "
-mkdir -p #{directory}
 date > #{directory}/START
 dna_BuildGraph -directory #{directory} -minimumCoverage #{c} -wordSize #{k} #{files.join ' '} > #{directory}/dna_BuildGraph.log
 dna_ExtractContigs -directory #{directory} > #{directory}/dna_ExtractContigs.log

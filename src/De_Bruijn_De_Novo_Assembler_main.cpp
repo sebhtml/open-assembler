@@ -115,6 +115,7 @@ int main(int argc,char*argv[]){
 
 	string filesFile=assemblyDirectory+"/InputFiles.txt";
 	ofstream aFilesStream(filesFile.c_str());
+	aFilesStream<<inputFiles.size()<<endl;
 	for(int i=0;i<(int)inputFiles.size();i++){
 		cout<<" "<<inputFiles[i]<<endl;
 		aFilesStream<<inputFiles[i]<<endl;

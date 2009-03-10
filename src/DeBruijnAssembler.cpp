@@ -712,7 +712,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 
 		if(children.size()==1){ // check if it is ok
 			uint64_t currentVertex=children[0];
-			if(annotationsForEach[currentVertex].size()==0&&contig.size()>500){
+			if(annotationsForEach[currentVertex].size()==0&&contig.size()>400){
 				cout<<"No annotation found for "<<idToWord(currentVertex,m_wordSize)<<"."<<endl;
 				break;
 			}
@@ -965,3 +965,39 @@ void DeBruijnAssembler::setMerUsage(string a){
 	m_onlyFirstMer=a;
 }
 
+void DeBruijnAssembler::loadPairedInformation(){
+	string pairedFile=m_assemblyDirectory+"/PairedReads.txt";
+	int groups;
+
+	ifstream f( pairedFile.c_str());
+
+	if(!f){
+		f.close();
+		return;
+	}
+	f>>groups;
+	string file1;
+	string file2;
+	int distance;
+	for(int i=0;i<groups;i++){
+		f>>file1>>file2>>distance;
+		int file_1_start=m_sequenceData->getFirst(file1);
+		int file_1_end=m_sequenceData->getLast(file1);
+		int file_2_start=m_sequenceData->getFirst(file2);
+		int file_2_end=m_sequenceData->getLast(file2);
+		int amount=file_1_end-file_1_start+1;
+		for(int j=0;j<amount;j++){
+			int read1=file_1_start+j;
+			int read2=file_2_start+j;
+			PairedRead aPairedRead1;
+			aPairedRead1.m_readNumber=read1;
+			aPairedRead1.m_distance=distance;
+			PairedRead aPairedRead2;
+			aPairedRead2.m_readNumber=read2;
+			aPairedRead2.m_distance=distance;
+			m_paired_reads[read1]=aPairedRead2;
+			m_paired_reads[read2]=aPairedRead1;
+		}
+	}
+	f.close();
+}

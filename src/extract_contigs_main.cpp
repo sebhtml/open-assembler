@@ -48,7 +48,9 @@ int main(int argc,char*argv[]){
 		cout<<"InputFiles.txt is not present.."<<endl;	
 		return 0;
 	}
-	while(!input.eof()){
+	int numberOfFiles;
+	input>>numberOfFiles;
+	for(int i=0;i<numberOfFiles;i++){
 		aFile="";
 		input>>aFile;
 		cout<<aFile<<endl;
@@ -58,6 +60,7 @@ int main(int argc,char*argv[]){
 	input.close();
 	SequenceDataFull sequenceData(&files,&cout);
 	assembler.setSequenceData(&sequenceData);
+	assembler.loadPairedInformation();
 	assembler.Algorithm_Assembler_20090121();
 	return 0;
 }
