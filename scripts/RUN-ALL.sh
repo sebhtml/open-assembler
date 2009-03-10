@@ -29,7 +29,7 @@ DNA.rb ./SRA003611/Solexa/sdata/* -directory ./SRA003611/Solexa/sdata/../DNA-ASS
 DNA.rb ./SRA000408/sdata/* -directory ./SRA000408/sdata/../DNA-ASSEMBLY -minimumCoverage 2 -wordSize 21 > ./SRA000408/sdata/../DNA-ASSEMBLY.log 
 DNA.rb ./SRA000211/sdata/* -directory ./SRA000211/sdata/../DNA-ASSEMBLY -minimumCoverage 2 -wordSize 21 > ./SRA000211/sdata/../DNA-ASSEMBLY.log 
 DNA.rb ./Antarctic/sdata/* -directory ./Antarctic/sdata/../DNA-ASSEMBLY -minimumCoverage 2 -wordSize 21 > ./Antarctic/sdata/../DNA-ASSEMBLY.log 
-DNA.rb ./tetraodon-ncbi/sdata/* -directory  ./tetraodon-ncbi/sdata/sdata/../DNA-ASSEMBLY  -minimumCoverage 2  -wordSize 21  > ./tetraodon-ncbi/sdata/sdata/../DNA-ASSEMBLY.log
+DNA.rb ./tetraodon-ncbi/sdata/* -directory  ./tetraodon-ncbi/sdata/../DNA-ASSEMBLY  -minimumCoverage 2  -wordSize 21  > ./tetraodon-ncbi/sdata/../DNA-ASSEMBLY.log
 )&
 (
 DNA.rb ./SRA001020/sdata/* -directory ./SRA001020/sdata/../DNA-ASSEMBLY -minimumCoverage 2 -wordSize 21 > ./SRA001020/sdata/../DNA-ASSEMBLY.log 

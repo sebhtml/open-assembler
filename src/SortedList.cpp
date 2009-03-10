@@ -32,8 +32,10 @@ SortedList::SortedList(){
 }
 
 void SortedList::add(VERTEX_TYPE a){
+/*
 	m_hash[a]++;
 	return;
+*/
 	SortableElement element(a,1);
 	m_list->push_back(element);
 	m_total++;
@@ -42,12 +44,14 @@ void SortedList::add(VERTEX_TYPE a){
 
 vector<VERTEX_TYPE> SortedList::elementsWithALeastCCoverage(int c){
 	vector<VERTEX_TYPE> output;
+/*
 	for(hash_map<uint64_t,int>::iterator i=m_hash.begin();i!=m_hash.end();i++)
 		if(i->second>=c)
 			output.push_back(i->first);
 
 	std::sort(output.begin(),output.end());
 	return output;
+*/
 	vector<SortableElement>::iterator i=m_list->begin();
 	while(i!=m_list->end()){
 		int currentCount=(*i).getCount();
@@ -67,11 +71,11 @@ vector<VERTEX_TYPE> SortedList::elementsWithALeastCCoverage(int c){
 
 map<int,int> SortedList::getDistributionOfCoverage(){
 	map<int,int> m_coverageDistribution;
-
+/*
 	for(hash_map<uint64_t,int>::iterator i=m_hash.begin();i!=m_hash.end();i++)
 		m_coverageDistribution[i->second]++;
 	return m_coverageDistribution;
-
+*/
 
 	vector<SortableElement>::iterator i=m_list->begin();
 	while(i!=m_list->end()){
@@ -89,7 +93,7 @@ map<int,int> SortedList::getDistributionOfCoverage(){
 }
 
 void SortedList::sort(){
-	return;
+	//return;
 	cout<<"Sorting "<<m_list->size()<<" elements"<<endl;
 	int total=0;
 	SortableElement e(0,0);
