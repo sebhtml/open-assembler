@@ -555,6 +555,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 			return;
 		}
 		contig.push_back(currentVertex);
+		//cout<<idToWord(currentVertex,m_wordSize)<<endl;
 		m_data.get(currentVertex)->assemble();
 
 		// process annotations
@@ -615,6 +616,24 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 				if(aWord==childSequence){
 					annotationsForEach[childVertex].push_back(nucleotidePositionInRead);
 					sumScores[childVertex]+=nucleotidePositionInRead;
+					// check paired information
+					if(m_paired_reads.count(readId)>0){
+						PairedRead pairedInformation=m_paired_reads[readId];
+						int otherReadNumber=pairedInformation.m_readNumber;
+						if(readsContigPositions.count(otherReadNumber)>0){
+							int lastContigPositionForPairedMate=readsContigPositions[otherReadNumber];
+							int distance=pairedInformation.m_distance;
+							int windowSemiSize=0.20*distance;
+							int distanceInContig=contig.size()-lastContigPositionForPairedMate;
+							if(distance-windowSemiSize<=distanceInContig&&
+								distanceInContig<=distance+windowSemiSize){
+								//cout<<"distance for mates "<<distanceInContig<<endl;
+								//cout<<childSequence<<endl;
+								annotationsForEach[childVertex].push_back(distanceInContig);
+								sumScores[childVertex]+=distanceInContig;
+							}
+						}
+					}
 				}
 			}
 			for(int i=0;i<readNotInRangeAnymore.size();i++)
@@ -999,5 +1018,6 @@ void DeBruijnAssembler::loadPairedInformation(){
 			m_paired_reads[read2]=aPairedRead1;
 		}
 	}
+	cout<<m_paired_reads.size()<<" paired reads"<<endl;
 	f.close();
 }

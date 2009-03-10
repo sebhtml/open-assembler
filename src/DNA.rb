@@ -46,9 +46,9 @@ puts "files #{files.join(',')}"
 puts "Starting now."
 
 
-mkdir "-p #{directory}"
+system "mkdir -p #{directory}"
 
-system "dna_GetPairedInformation.rb -directory #{directory} #{files.join ' '}"
+system "dna_GetPairedInformation.rb -directory #{directory} #{files.join ' '} > #{directory}/dna_GetPairedInformation.rb.log"
 
 system "
 date > #{directory}/START
