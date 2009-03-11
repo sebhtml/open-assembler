@@ -5,6 +5,7 @@ DNA.rb ./SRA000168/sdata/* -directory ./SRA000168/sdata/../DNA-mercredi -minimum
 DNA.rb ./SRA001029/sdata/* -directory ./SRA001029/sdata/../DNA-mercredi -minimumCoverage 2 -wordSize 21 > ./SRA001029/sdata/../DNA-mercredi.log 
 DNA.rb ./Solexa-major/sdata/* -directory ./Solexa-major/sdata/../DNA-mercredi -minimumCoverage 2 -wordSize 21 > ./Solexa-major/sdata/../DNA-mercredi.log 
 DNA.rb ./SRA003611/454/sdata/* -directory ./SRA003611/454/sdata/../DNA-mercredi -minimumCoverage 2 -wordSize 21 > ./SRA003611/454/sdata/../DNA-mercredi.log 
+DNA.rb ./SRP000220/sdata/* -directory ./SRP000220/sdata/../DNA-mercredi -minimumCoverage 25 -wordSize 21 > ./SRP000220/sdata/../DNA-mercredi.log
 )&
 (
 DNA.rb ./SRA000156/sdata/* -directory ./SRA000156/sdata/../DNA-mercredi -minimumCoverage 2 -wordSize 21 > ./SRA000156/sdata/../DNA-mercredi.log 
@@ -16,7 +17,7 @@ DNA.rb ./SRA000247/sdata/* -directory ./SRA000247/sdata/../DNA-mercredi -minimum
 DNA.rb ./SRA000262/sdata/* -directory ./SRA000262/sdata/../DNA-mercredi -minimumCoverage 2 -wordSize 21 > ./SRA000262/sdata/../DNA-mercredi.log 
 DNA.rb ./SRA001124/sdata/* -directory ./SRA001124/sdata/../DNA-mercredi -minimumCoverage 2 -wordSize 21 > ./SRA001124/sdata/../DNA-mercredi.log 
 DNA.rb ./SRA000162/sdata/* -directory ./SRA000162/sdata/../DNA-mercredi -minimumCoverage 2 -wordSize 21 > ./SRA000162/sdata/../DNA-mercredi.log 
-DNA.rb ./MarkChaisson/mixed/sdata/* -directory ./MarkChaisson/mixed/sdata/../DNA-mercredi -minimumCoverage 2 -wordSize 21 > ./MarkChaisson/mixed/sdata/../DNA-mercredi.log 
+DNA.rb ./MarkChaisson/mixed/sdata/* -directory ./MarkChaisson/mixed/sdata/../DNA-mercredi -minimumCoverage 50 -wordSize 21 > ./MarkChaisson/mixed/sdata/../DNA-mercredi.log 
 )&
 (
 DNA.rb ./MarkChaisson/454/sdata/* -directory ./MarkChaisson/454/sdata/../DNA-mercredi -minimumCoverage 2 -wordSize 21 > ./MarkChaisson/454/sdata/../DNA-mercredi.log 

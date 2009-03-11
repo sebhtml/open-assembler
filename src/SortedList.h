@@ -45,7 +45,7 @@ public:
 
 class SortedList{
 	vector<SortableElement> *m_list;
-	int m_total;
+	uint64_t m_total;
 	hash_map<uint64_t,int,hash<uint64_t> > m_hash;
 public:
 	void add(VERTEX_TYPE a);

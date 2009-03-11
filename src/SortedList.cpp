@@ -95,7 +95,7 @@ map<int,int> SortedList::getDistributionOfCoverage(){
 void SortedList::sort(){
 	//return;
 	cout<<"Sorting "<<m_list->size()<<" elements"<<endl;
-	int total=0;
+	uint64_t total=0;
 	SortableElement e(0,0);
 	std::sort(m_list->begin(),m_list->end(),e);
 	vector<SortableElement>*newList=new vector<SortableElement>;
