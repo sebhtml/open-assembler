@@ -89,7 +89,7 @@ chromosomes.each do |genome|
 			rightFile.puts sequence[(sequence.length-sequencedLength)..(sequence.length-1)]
 			readID+=1
 		end
-		position+=1
+		position+=sequencedLength/2
 	end
 end
 

@@ -102,7 +102,7 @@ void SortedList::sort(){
 	
 	vector<SortableElement>::iterator i=m_list->begin();
 	while(i!=m_list->end()){
-		int currentCount=1;
+		int currentCount=(*i).getCount();
 		VERTEX_TYPE currentValue=(*i).getKMer();
 		i++;
 		while(i!=m_list->end()&&(*i).getKMer()==currentValue){

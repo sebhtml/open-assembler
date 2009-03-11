@@ -20,3 +20,5 @@ start at a source:
 
 
 change alpha now...
+
+sources += vertices with a parent that a non trivial parent
