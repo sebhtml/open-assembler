@@ -98,28 +98,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 
 	cout<<"Reads: "<<sequenceData->size()<<" / "<<sequenceData->size()<<endl;
 	myList.sort();
-	//cout<<"Mers: "<<words.size()<<endl;
 
-/*
-	cout<<"********** Buckets analysis"<<endl;
-	cout<<"Buckets: "<<words.buckets()<<endl;
-	cout<<"Elements: "<<words.size()<<endl;
-	map<int,int> bucketsDistribution;
-	for(int i=0;i<words.buckets();i++){
-		Entry<int>*pointer=words.bucketAt(i);
-		int count=0;
-		while(pointer!=NULL){
-			count++;
-			pointer=pointer->m_next;
-		}
-		bucketsDistribution[count]++;
-	}
-
-	cout<<"Distribution of buckets, count, density"<<endl;
-	for(map<int,int>::iterator i=bucketsDistribution.begin();i!=bucketsDistribution.end();i++){
-		cout<<i->first<<" "<<i->second<<endl;
-	}
-*/
 	int processed=0;
 	int solid=0;
 
@@ -203,11 +182,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 
 	cout<<"********** Indexing solid mers in reads..."<<endl; // <-------
 	cout<<endl;
-/*
-	VERTEX_TYPE*solidMersPTR=new VERTEX_TYPE[solidMers.size()];
-	for(int i=0;i<solidMers.size();i++)
-		solidMersPTR[i]=solidMers[i];
-*/
+
 	for(int readId=0;readId<(int)sequenceData->size();readId++){
 		if(readId%10000==0)
 			cout<<"Reads: "<<readId<<" / "<<sequenceData->size()<<endl;
@@ -218,7 +193,6 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	cout<<"Reads: "<<sequenceData->size()<<" / "<<sequenceData->size()<<endl;
 	cout<<endl;
 
-	// paired information
 }
 
 
@@ -252,15 +226,9 @@ void DeBruijnAssembler::load_graphFrom_file(){
 	ifstream f(m_graphFile.c_str());
 	string version;
 	string buffer;
-	//f>>version>>buffer>>m_minimumCoverage>>buffer>>m_coverage_mean>>buffer>>m_REPEAT_DETECTION>>buffer;
 	f>>buffer;
 	int n;
-	//cout<<"Version: "<<version<<endl;
-/*
-	cout<<"MinimumCoverage: "<<m_minimumCoverage<<endl;
-	cout<<"PeakCoverage: "<<m_coverage_mean<<endl;
-	cout<<"RepeatDetectionCoverage: "<<m_REPEAT_DETECTION<<endl;
-*/
+	
 	f>>n;
 	for(int i=0;i<n;i++){
 		if(i%1000000==0){
@@ -313,16 +281,10 @@ void DeBruijnAssembler::writeGraph(){
 	cout<<"********** Writing graph file."<<endl;
 
 	ofstream f(m_graphFile.c_str());
-	/*
-	f<<"GraphFormatVersion1"<<"\n";
-	f<<"MinimumCoverage "<<m_minimumCoverage<<"\n";
-	f<<"PeakCoverage "<<m_coverage_mean<<"\n";
-	f<<"RepeatDetectionCoverage "<<m_REPEAT_DETECTION<<"\n";
-	*/
+	
 	vector<VERTEX_TYPE>*nodes=m_data.getNodes();
 	f<<"Vertices: "<<m_data.size()<<"\n";
 	int k=0;
-	//for(vector<VERTEX_TYPE>::iterator i=nodes->begin();i!=nodes->end();i++){
 	for(int i=0;i<m_data.size();i++){
 		if(k%100000==0){
 			cout<<"Vertices: "<<k<<" / "<<m_data.size()<<"\n";
@@ -390,25 +352,7 @@ void DeBruijnAssembler::setAssemblyDirectory(string assemblyDirectory){
 void DeBruijnAssembler::Walk_In_GRAPH(){
 	cout<<endl;
 	vector<VERTEX_TYPE>*theNodes=m_data.getNodes();
-/*
-	(cout)<<"********* Simplifying the graph"<<endl;
-	cout<<endl;
-	int color=0;
-	for(int i=0;i<m_data.size();i++){
-		if(i%100000==0){
-			cout<<"Simplifying: "<<i<<" / "<<m_data.size()<<endl;
-		}
-		if(m_data.get((*theNodes)[i])->getColor()==-1){
-			color++;
-			int count=DFS_watch((*theNodes)[i],color);
-			if(count>=100){
-				//cout<<color<<" : "<<count<<endl;
-			}
-		}
-	}
 
-	cout<<"Simplifying: "<<m_data.size()<<" / "<<m_data.size()<<endl;
-*/
 	cout<<endl;
 	vector<VERTEX_TYPE> withoutParents;
 	(cout)<<"********* Inspecting the graph"<<endl;
@@ -420,10 +364,12 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		}
 		VERTEX_TYPE vertex=(*theNodes)[i];
 		VertexData*dataNode=m_data.get(vertex);
-		int parents=dataNode->getParents(vertex,m_wordSize).size();
+		vector<uint64_t> theParents=dataNode->getParents(vertex,m_wordSize);
+
+		int parents=theParents.size();
 		int children=dataNode->getChildren(vertex,m_wordSize).size();
 		stats_parents_children[parents][children]++;
-		if(parents==1&&children==1)
+		if(parents==1&&children==1&&m_data.get(theParents[0])->getChildren(theParents[0],m_wordSize).size()<2)
 			continue;
 		if(children==0)
 			continue;
@@ -445,21 +391,6 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	(cout)<<endl;
 	cout<<endl;
 
-/*
-	(cout)<<"********** Collecting sources..."<<endl;
-	cout<<endl;
-	//for(MAP_TYPE<VERTEX_TYPE,MAP_TYPE<VERTEX_TYPE,vector<int> > >::iterator i=m_graph.begin();i!=m_graph.end();i++){
-	for(int myDataIterator=0;myDataIterator<m_data.size();myDataIterator++){
-		VERTEX_TYPE prefix=nodes[(myDataIterator)];
-		
-		if(nodeData[(myDataIterator)].IsEliminated())
-			continue;
-		vector<VERTEX_TYPE> theParents=nodeData[(myDataIterator)].getParents(prefix,&m_data);
-		if(theParents.size()==0){
-			withoutParents.push_back(prefix);
-		}
-	}
-*/
 	(cout)<<"Done..., "<<withoutParents.size()<<" sources."<<endl;
 	
 	(cout)<<endl;
