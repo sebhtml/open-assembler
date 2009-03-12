@@ -60,7 +60,7 @@ end
 pairedFile.puts "#{fileHash.size}"
 fileHash.each do |group,files|
 	if files.size==2
-		distance=150
+		distance=200-36
 		if files[0].include? 'sff'
 			distance=2500
 		end
