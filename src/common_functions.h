@@ -43,6 +43,7 @@ string idToWord(VERTEX_TYPE i,int wordSize);
 char complement(char a);
 void CommonHeader(ostream*out);
 
+bool isValidDNA(const char*x);
 
 char getLastSymbol(VERTEX_TYPE i,int w);
 

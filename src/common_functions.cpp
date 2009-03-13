@@ -136,3 +136,15 @@ char getLastSymbol(VERTEX_TYPE i,int m_wordSize){
                 return 'G';
         return 'E';
 }
+
+bool isValidDNA(const char*x){
+	int len=strlen(x);
+	for(int i=0;i<len;i++){
+		char a=x[i];
+		if(!(a=='A'||a=='T'||a=='C'||a=='G'))
+			return false;
+	}
+	return true;
+}
+
+

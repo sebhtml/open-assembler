@@ -61,14 +61,14 @@ int main(int argc,char*argv[]){
 		string sequenceRight=rightReads[i]->getSeq();
 		for(int j=0;j<sequenceLeft.length();j++){
 			string word=sequenceLeft.substr(j,wordSize);
-			if(word.length()!=wordSize||!leftReads[i]->isValidDNA(word.c_str()))
+			if(word.length()!=wordSize||isValidDNA(word.c_str()))
 				continue;
 			VERTEX_TYPE leftWord=wordId(word.c_str());
 			leftIndex[leftWord][i]=j;
 		}
 		for(int j=0;j<sequenceRight.length();j++){
 			string word=sequenceRight.substr(j,wordSize);
-			if(word.length()!=wordSize||!rightReads[i]->isValidDNA(word.c_str()))
+			if(word.length()!=wordSize||!isValidDNA(word.c_str()))
 				continue;
 			VERTEX_TYPE rightWord=wordId(word.c_str());
 			rightIndex[rightWord][i]=j;
@@ -90,7 +90,7 @@ int main(int argc,char*argv[]){
 		string sequence=contigs[contigNumber]->getSeq();
 		for(int sequencePosition=0;sequencePosition<sequence.length();sequencePosition++){
 			string word=sequence.substr(sequencePosition,wordSize);
-			if(word.length()!=wordSize||!leftReads[0]->isValidDNA(word.c_str()))
+			if(word.length()!=wordSize||isValidDNA(word.c_str()))
 				continue;
 			VERTEX_TYPE forwardWord=wordId(word.c_str());
 			if(leftIndex.count(forwardWord)>0){
@@ -115,7 +115,7 @@ int main(int argc,char*argv[]){
 		sequence=reverseComplement(sequence);
 		for(int sequencePosition=0;sequencePosition<sequence.length();sequencePosition++){
 			string word=sequence.substr(sequencePosition,wordSize);
-			if(word.length()!=wordSize||!leftReads[0]->isValidDNA(word.c_str()))
+			if(word.length()!=wordSize||isValidDNA(word.c_str()))
 				continue;
 			VERTEX_TYPE forwardWord=wordId(word.c_str());
 			if(leftIndex.count(forwardWord)>0){

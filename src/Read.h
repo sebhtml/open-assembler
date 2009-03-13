@@ -35,13 +35,10 @@ public:
 	char*getId();
 	~Read();
 	char*getSeq();
-	vector<VERTEX_TYPE>getHighQualityMers(int wordSize,char strand);
-	bool isValidDNA(const char*x);
 	int getStartForward();
 	int getStartReverse();
 	void setStartForward(int i);
 	int length();
-	char nucleotideAt(int pos,char strand);
 	void setStartReverse(int i);
 };
 

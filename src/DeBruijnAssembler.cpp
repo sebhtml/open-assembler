@@ -78,21 +78,13 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		}
 		if(i%1000000==0)
 			myList.sort();
-		vector<VERTEX_TYPE> highQualityMers=sequenceData->at(i)->getHighQualityMers(m_wordSize,'F');
-		for(vector<VERTEX_TYPE>::iterator iteratorMer=highQualityMers.begin();iteratorMer!=highQualityMers.end();iteratorMer++){
-			myList.add(*iteratorMer);
-			if(m_onlyFirstMer!="no")// only use the first one..
-				break;
-		}
-
-		if(m_onlyOneStrand!="no") // only sample the F strand.
-			continue;
-	
-		highQualityMers=sequenceData->at(i)->getHighQualityMers(m_wordSize,'R');
-		for(vector<VERTEX_TYPE>::iterator iteratorMer=highQualityMers.begin();iteratorMer!=highQualityMers.end();iteratorMer++){
-			myList.add(*iteratorMer);
-			if(m_onlyFirstMer!="no")// only use the first one..
-				break;
+		string readSequence=sequenceData->at(i)->getSeq();
+		for(int p=0;p<readSequence.length();p++){
+			string word=readSequence.substr(p,m_wordSize+1);
+			if(word.length()==m_wordSize+1&&isValidDNA(word.c_str())){
+				myList.add(wordId(word.c_str()));
+				myList.add(wordId(reverseComplement(word).c_str()));
+			}
 		}
 	}	
 
@@ -703,7 +695,7 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 		if(myWord.length()!=m_wordSize)
 			continue;
 		VERTEX_TYPE wordInBits=wordId(myWord.c_str());
-		if(read->isValidDNA(myWord.c_str())
+		if(isValidDNA(myWord.c_str())
 		&&m_data.hasNode(wordInBits)){
 			bool thisIsTheFirst=false;
 			if(foundGoodHit==false){

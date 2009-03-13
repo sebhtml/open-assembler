@@ -37,6 +37,8 @@ Read::Read(const char*id,const char*sequence){
 }
 
 Read::~Read(){
+	free(m_id);
+	m_id=NULL;
 	free(m_sequence);
 	m_sequence=NULL;
 }
@@ -47,40 +49,6 @@ char*Read::getId(){
 
 char*Read::getSeq(){
 	return m_sequence;
-}
-
-// return (k+1)-mers from read, without Ns
-vector<VERTEX_TYPE>Read::getHighQualityMers(int wordSize,char strand){
-	vector<VERTEX_TYPE> highQualityMers;
-
-	string sequence=m_sequence;
-
-	for(int j=0;j<(int)sequence.length();j++){
-		string wordFoward=sequence.substr(j,wordSize+1);
-		if(wordFoward.length()!=wordSize+1)
-			continue;
-		string wordReverse;
-		if(!isValidDNA(wordFoward.c_str()))
-			continue;
-		wordReverse=reverseComplement(wordFoward);
-		if(strand=='F'){
-			highQualityMers.push_back(wordId(wordFoward.c_str()));
-		}else{
-			highQualityMers.push_back(wordId(wordReverse.c_str()));
-		}
-	}
-
-	return highQualityMers;
-}
-
-bool Read::isValidDNA(const char*x){
-	int len=strlen(x);
-	for(int i=0;i<len;i++){
-		char a=x[i];
-		if(!(a=='A'||a=='T'||a=='C'||a=='G'))
-			return false;
-	}
-	return true;
 }
 
 int Read::getStartForward(){
@@ -103,27 +71,3 @@ int Read::length(){
 	return strlen(m_sequence);
 }
 
-/*	
-		0	1	2	3
-		3	2	1	0
-
-			p
-	-------------------------------------->
-	<--------------------------------------
-
-*/
-char Read::nucleotideAt(int pos,char strand){
-	if(strand=='F'){
-		return m_sequence[pos];
-	}
-	pos=length()-pos-1;
-	char aSymbol=m_sequence[pos];
-	if(aSymbol=='A')
-		return 'T';
-	if(aSymbol=='T')
-		return 'A';
-	if(aSymbol=='C')
-		return 'G';
-	if(aSymbol=='G')
-		return 'C';
-}
