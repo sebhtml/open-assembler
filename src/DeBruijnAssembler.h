@@ -85,6 +85,13 @@ class DeBruijnAssembler{
 
 
 	int visitVertices(VERTEX_TYPE a,set<VERTEX_TYPE>*nodes,int maxDepth,bool parents);
+
+
+	bool getDebug();
+	void removeDebug();
+	void addDebug();
+	void updateDebug();
+
 public:
 	DeBruijnAssembler();
 	void setWordSize(int k);

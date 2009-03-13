@@ -402,6 +402,9 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		cout<<endl;
 		vector<VERTEX_TYPE> newSources;
 		for(int i=0;i<(int)sources.size();i++){
+			if(i%1000==0){
+				updateDebug();
+			}
 			VERTEX_TYPE prefix=sources[i];
 			if(m_data.get(prefix)->IsAssembled())
 				continue;
@@ -451,7 +454,7 @@ void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 
 
 void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
-	cout<<"Starting from "<<a<<endl;
+	//cout<<"Starting from "<<a<<endl;
 	bool fromAPureParent=m_data.get(a)->getParents(a,m_wordSize).size()==0;
 	vector<uint64_t>contig;
 	vector<uint64_t>  children;
@@ -468,7 +471,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 	// read, read strand
 	map<int,char>  readsReadStrands;
 	while(children.size()==1){
-		if(contig.size()%1000==0)
+		if(contig.size()%1000==0&&getDebug())
 			cout<<"CONTIG LENGTH "<<contig.size()<<endl;
 		uint64_t  currentVertex=children[0];
 		if(m_data.get(currentVertex)->IsAssembled()&&contig.size()<200&&fromAPureParent){
@@ -505,7 +508,9 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 
 		// annotate children
 		if(children.size()>1){
-			cout<<endl;
+			if(getDebug()){
+				cout<<endl;
+			}
 		}
 		for(vector<uint64_t>::iterator i=children.begin();i!=children.end();i++){
 			uint64_t childVertex=*i;
@@ -561,7 +566,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 				readsInRange.erase(readNotInRangeAnymore[i]);
 			int theScore=annotationsForEach[childVertex].size();
 	
-			if(children.size()>1){
+			if(children.size()>1&&getDebug()){
 				cout<<"Vertex: "<<idToWord(childVertex,m_wordSize)<<endl;
 				cout<<"SUM="<<sumScores[childVertex]<<endl;
 				cout<<"n="<<annotationsForEach[childVertex].size()<<endl;
@@ -593,7 +598,8 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 				if(isBest){
 					children.clear();
 					children.push_back(currentVertex);
-					cout<<"GOT BEST USING SUM "<<idToWord(currentVertex,m_wordSize)<<endl;
+					if(getDebug())
+						cout<<"GOT BEST USING SUM "<<idToWord(currentVertex,m_wordSize)<<endl;
 					break;
 				}
 
@@ -611,7 +617,9 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 				if(isBest){
 					children.clear();
 					children.push_back(currentVertex);
-					cout<<"GOT BEST USING NUMBER"<<idToWord(currentVertex,m_wordSize)<<endl;
+		
+					if(getDebug())
+						cout<<"GOT BEST USING NUMBER"<<idToWord(currentVertex,m_wordSize)<<endl;
 					break;
 				}
 
@@ -638,7 +646,8 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 			if(iii>=6){
 				if(first[m_wordSize-1]==first[m_wordSize-2]||
 				second[m_wordSize-1]==second[m_wordSize-2]){
-					cout<<"HOMOPOLYMER, n="<<iii<<endl;
+					if(getDebug())
+						cout<<"HOMOPOLYMER, n="<<iii<<endl;
 					if(annotationsForEach[children[0]]>annotationsForEach[children[1]]){
 						children.clear();
 						children.push_back(children[0]);
@@ -653,7 +662,8 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 		if(children.size()==1){ // check if it is ok
 			uint64_t currentVertex=children[0];
 			if(annotationsForEach[currentVertex].size()==0&&contig.size()>400){
-				cout<<"No annotation found for "<<idToWord(currentVertex,m_wordSize)<<"."<<endl;
+				if(getDebug())
+					cout<<"No annotation found for "<<idToWord(currentVertex,m_wordSize)<<"."<<endl;
 				break;
 			}
 		}
@@ -940,5 +950,28 @@ void DeBruijnAssembler::loadPairedInformation(){
 		}
 	}
 	cout<<m_paired_reads.size()<<" paired reads"<<endl;
+	f.close();
+}
+
+void DeBruijnAssembler::addDebug(){
+	m_DEBUG=true;
+}
+
+void DeBruijnAssembler::removeDebug(){
+	m_DEBUG=false;
+}
+
+bool DeBruijnAssembler::getDebug(){
+	return m_DEBUG;
+}
+
+void DeBruijnAssembler::updateDebug(){
+	string file=m_assemblyDirectory+"/DEBUG";
+	ifstream f(file.c_str());
+	if(!f){
+		removeDebug();
+	}else{
+		addDebug();
+	}
 	f.close();
 }
