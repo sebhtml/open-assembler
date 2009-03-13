@@ -47,17 +47,28 @@ puts "files #{files.join(',')}"
 puts "Starting now."
 
 
-system "mkdir -p #{directory}"
-
-system "dna_GetPairedInformation.rb -directory #{directory} #{files.join ' '} > #{directory}/dna_GetPairedInformation.rb.log"
-
 system "
+mkdir -p #{directory}
 date > #{directory}/START
+
+date > #{directory}/dna_GetPairedInformation.START
+dna_GetPairedInformation.rb -directory #{directory} #{files.join ' '} > #{directory}/dna_GetPairedInformation.rb.log
+
+date > #{directory}/dna_BuildGraph.START
 dna_BuildGraph -directory #{directory} -minimumCoverage #{c} -wordSize #{k} #{files.join ' '} > #{directory}/dna_BuildGraph.log
+
+date > #{directory}/dna_ExtractContigs.START
 dna_ExtractContigs -directory #{directory} > #{directory}/dna_ExtractContigs.log
+
+date > #{directory} > dna_KeepLargeContigs.START
 dna_KeepLargeContigs #{directory}/contigs.fasta 500 #{directory}/2LargeContigs.fasta > #{directory}/dna_KeepLargeContigs.log
+
+date > #{directory} > dna_MergeContigs.START
 dna_MergeContigs  #{directory}/2LargeContigs.fasta  #{directory}/3MergedContigs.fasta > #{directory}/dna_MergeContigs.log
+
+date > #{directory} > dna_JoinContigs.START
 dna_JoinContigs #{k}  #{directory}/3MergedContigs.fasta #{directory}/4JoinedContigs.fasta #{files.join ' '} > #{directory}/dna_JoinContigs.log
+
 date > #{directory}/END
 "
 
