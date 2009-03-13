@@ -550,7 +550,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 							int lastContigPositionForPairedMate=readsContigPositions[otherReadNumber];
 							int distance=pairedInformation.m_distance;
 							int windowSemiSize=0.20*distance;
-							int distanceInContig=contig.size()-lastContigPositionForPairedMate+nucleotidePositionInRead;
+							int distanceInContig=contig.size()-lastContigPositionForPairedMate-nucleotidePositionInRead;
 							if(distance-windowSemiSize<=distanceInContig&&
 								distanceInContig<=distance+windowSemiSize){
 								//cout<<"distance for mates "<<distanceInContig<<endl;
