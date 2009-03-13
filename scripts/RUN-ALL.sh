@@ -9,7 +9,7 @@ DNA.rb ./SRA001027/sdata/* -directory ./SRA001027/sdata/../jeudi -minimumCoverag
 DNA.rb ./SRA000247/sdata/* -directory ./SRA000247/sdata/../jeudi -minimumCoverage 2  > ./SRA000247/sdata/../jeudi.log  &
 DNA.rb ./SRA000262/sdata/* -directory ./SRA000262/sdata/../jeudi -minimumCoverage 2  > ./SRA000262/sdata/../jeudi.log  &
 DNA.rb ./SRA001124/sdata/* -directory ./SRA001124/sdata/../jeudi -minimumCoverage 2  > ./SRA001124/sdata/../jeudi.log  &
-DNA.rb ./SRA000162/sdata/* -directory ./SRA000162/sdata/../jeudi -minimumCoverage 2  > ./SRA000162/sdata/../jeudi.log  &
+#DNA.rb ./SRA000162/sdata/* -directory ./SRA000162/sdata/../jeudi -minimumCoverage 2  > ./SRA000162/sdata/../jeudi.log  &
 DNA.rb ./SRA000266/sdata/* -directory ./SRA000266/sdata/../jeudi -minimumCoverage 2  > ./SRA000266/sdata/../jeudi.log  &
 
 DNA.rb ./MarkChaisson/Solexa/sdata/* -directory ./MarkChaisson/Solexa/sdata/../jeudi -minimumCoverage 40  > ./MarkChaisson/Solexa/sdata/../jeudi.log  &

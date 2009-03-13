@@ -50,8 +50,6 @@ int abs_f(int a){
 
 DeBruijnAssembler::DeBruijnAssembler(){
 	m_DEBUG=false;
-	m_alpha=1.03;
-	cout<<"ALPHA_PARAMETER_VALUE <- "<<m_alpha<<endl;
 }
 
 void DeBruijnAssembler::setWordSize(int k){

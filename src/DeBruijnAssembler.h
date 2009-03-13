@@ -56,7 +56,6 @@ class DeBruijnAssembler{
 	int m_REPEAT_DETECTION;
 	int m_wordSize;
 	bool m_DEBUG;
-	double m_alpha;
 	//CustomMap<VertexData>*m_data;
 	GraphData m_data;
 
