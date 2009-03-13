@@ -44,14 +44,16 @@ class VertexData{
 	
 	//bool m_isEliminated;
 	//map<VERTEX_TYPE,vector<int> > m_positionInContig;
-	bool m_assembled;
-	uint8_t m_parents;
 	//uint32_t m_color;
-	uint8_t m_children;
 	vector<AnnotationElement>*m_annotations;
+	bool m_assembled;
+	bool m_trivial;
+	uint8_t m_children;
+	uint8_t m_parents;
 	
 public:
-
+	void set_topology_1_1();
+	bool Is_1_1();
 	vector<VERTEX_TYPE> getChildren(VERTEX_TYPE prefix,int w);
 	vector<VERTEX_TYPE> getParents(VERTEX_TYPE prefix,int w);
 	vector<AnnotationElement>*getAnnotations();
@@ -63,7 +65,6 @@ public:
 	~VertexData();
 	bool IsAssembled();
 	void assemble();
-	bool NotTrivial(VERTEX_TYPE a,int w);
 	bool hasManyChildren(VERTEX_TYPE a,int w);
 };
 

@@ -34,6 +34,7 @@ VertexData::VertexData(){
 	m_children=0;
 	m_annotations=NULL;
 	m_assembled=false;
+	m_trivial=false;
 }
 
 void VertexData::assemble(){
@@ -177,8 +178,10 @@ bool VertexData::IsAssembled(){
 	return m_assembled;
 }
 
-
-bool VertexData::NotTrivial(VERTEX_TYPE a,int m_wordSize){
-	return getParents(a,m_wordSize).size()>1||getChildren(a,m_wordSize).size()>1;
+void VertexData::set_topology_1_1(){
+	m_trivial=true;
 }
 
+bool VertexData::Is_1_1(){
+	return m_trivial;
+}

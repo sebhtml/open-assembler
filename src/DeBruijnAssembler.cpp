@@ -359,6 +359,9 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		int parents=theParents.size();
 		int children=dataNode->getChildren(vertex,m_wordSize).size();
 		stats_parents_children[parents][children]++;
+		if(parents==1&&children==1){
+			dataNode->set_topology_1_1();
+		}
 		if(parents==1&&children==1&&m_data.get(theParents[0])->getChildren(theParents[0],m_wordSize).size()<2)
 			continue;
 		if(children==0)
@@ -471,19 +474,20 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 	// read, read strand
 	map<int,char>  readsReadStrands;
 	while(children.size()==1){
-		if(contig.size()%1000==0&&getDebug())
+		if(contig.size()%1000==0)
 			cout<<"CONTIG LENGTH "<<contig.size()<<endl;
 		uint64_t  currentVertex=children[0];
-		if(m_data.get(currentVertex)->IsAssembled()&&contig.size()<200&&fromAPureParent){
+		VertexData*aData=m_data.get(currentVertex);
+		if(aData->IsAssembled()&&contig.size()<200/*&&fromAPureParent*/){
 			cout<<"Skipping spurious vertex"<<endl;
 			return;
 		}
 		contig.push_back(currentVertex);
 		//cout<<idToWord(currentVertex,m_wordSize)<<endl;
-		m_data.get(currentVertex)->assemble();
+		aData->assemble();
 
 		// process annotations
-		vector<AnnotationElement>*annotations=m_data.get(currentVertex)->getAnnotations();
+		vector<AnnotationElement>*annotations=aData->getAnnotations();
 		if(annotations->size()<m_REPEAT_DETECTION){
 			for(int i=0;i<annotations->size();i++){
 				int readId=annotations->at(i).readId;
@@ -501,7 +505,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 				}
 			}
 		}
-		children=m_data.get(currentVertex)->getChildren(currentVertex,m_wordSize);
+		children=aData->getChildren(currentVertex,m_wordSize);
 
 		map<uint64_t,int> sumScores;
 		map<uint64_t,vector<int> > annotationsForEach;
@@ -513,6 +517,8 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 			}
 		}
 		for(vector<uint64_t>::iterator i=children.begin();i!=children.end();i++){
+			if(aData->Is_1_1())
+				break;
 			uint64_t childVertex=*i;
 			string childSequence=idToWord(childVertex,m_wordSize);
 			char lastNucleotideOfChildSequence=childSequence[m_wordSize-1];
@@ -659,7 +665,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 			}
 		}
 
-		if(children.size()==1){ // check if it is ok
+		if(children.size()==1&&false){ // check if it is ok
 			uint64_t currentVertex=children[0];
 			if(annotationsForEach[currentVertex].size()==0&&contig.size()>400){
 				if(getDebug())
@@ -671,7 +677,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 
 	}
 	cout<<"STOP <<CHILDREN="<<children.size()<<endl;
-	cout<<"CONTIG LENGTH [FINAL] "<<contig.size()<<endl;
+	//cout<<"CONTIG LENGTH [FINAL] "<<contig.size()<<endl;
 	*path=contig;
 }
 
@@ -729,7 +735,7 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 				if(theChildren.size()>1)
 					hasMixedParents=true;
 			}
-			if(m_data.get(wordInBits)->NotTrivial(wordInBits,m_wordSize)||(strand=='F'&&readPosition==sequenceData->at(readId)->getStartForward())||
+			if(/*m_data.get(wordInBits)->NotTrivial(wordInBits,m_wordSize)||*/(strand=='F'&&readPosition==sequenceData->at(readId)->getStartForward())||
 			(strand=='R'&&readPosition==sequenceData->at(readId)->getStartForward())||false)
 				m_data.get(wordInBits)->addAnnotation(readId,readPosition,strand);
 		}

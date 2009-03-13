@@ -56,10 +56,12 @@ int main(int argc,char*argv[]){
 	string m_minimumCoverageParameter="2";
 	cout<<" -minimumCoverage     default: "<<m_minimumCoverageParameter<<""<<endl;
 	cout<<"    auto if you want to use the distribution curve"<<endl;
+/*
 	cout<<" -onlyOneStrand       default: no"<<endl;
 	cout<<"                      description: set to yes to use only the forward strand of reads"<<endl;
 	cout<<" -onlyFirstMer        default: no"<<endl;
 	cout<<"                      description: set to yes to use only the first (k+1)-mer of reads to build the graph"<<endl;
+*/
 	string onlyOneStrand="no";
 	string onlyFirstMer="no";
 	bool DEBUGMODE=false;
