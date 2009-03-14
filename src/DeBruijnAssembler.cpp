@@ -665,11 +665,11 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 			}
 		}
 
-		if(children.size()==1&&false){ // check if it is ok
+		if(children.size()==1&&m_data.get(children[0])->Is_1_1()==false){ // check if it is ok
 			uint64_t currentVertex=children[0];
 			if(annotationsForEach[currentVertex].size()==0&&contig.size()>400){
-				if(getDebug())
-					cout<<"No annotation found for "<<idToWord(currentVertex,m_wordSize)<<"."<<endl;
+				//if(getDebug())
+				cout<<"No annotation found for "<<idToWord(currentVertex,m_wordSize)<<"."<<endl;
 				break;
 			}
 		}
