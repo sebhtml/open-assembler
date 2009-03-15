@@ -459,7 +459,6 @@ void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 
 void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 	//cout<<"Starting from "<<a<<endl;
-	bool fromAPureParent=m_data.get(a)->getParents(a,m_wordSize).size()==0;
 	vector<uint64_t>contig;
 	vector<uint64_t>  children;
 	children.push_back(a);
@@ -467,16 +466,20 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 	set<int> usedReads;
 	set<int>  readsInRange;
 
+	// read, readposition
 	map<int,int> readsReadPosition;
 
 	// read, position in contig
 	map<int,int> readsContigPositions;
 
 	// read, read strand
-	map<int,char>  readsReadStrands;
+	map<int,char> readsReadStrands;
+
 	while(children.size()==1){
+/*
 		if(contig.size()%1000==0)
 			cout<<"CONTIG LENGTH "<<contig.size()<<endl;
+*/
 		uint64_t  currentVertex=children[0];
 		VertexData*aData=m_data.get(currentVertex);
 		if(aData->IsAssembled()&&contig.size()<200/*&&fromAPureParent*/){
@@ -494,10 +497,10 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 				int readId=annotations->at(i).readId;
 				char readStrand=annotations->at(i).readStrand;
 				int readPosition=annotations->at(i).readPosition;
-				int readFirstPosition=m_sequenceData->at(readId)->getStartForward();
-				if(readStrand=='R')
-					readFirstPosition=m_sequenceData->at(readId)->getStartReverse();
-				if(readPosition==readFirstPosition&&usedReads.count(readId)==0){
+				//int readFirstPosition=m_sequenceData->at(readId)->getStartForward();
+				//if(readStrand=='R')
+					//readFirstPosition=m_sequenceData->at(readId)->getStartReverse();
+				if(/*readPosition==readFirstPosition&&*/usedReads.count(readId)==0){
 					usedReads.insert(readId);	
 					readsInRange.insert(readId);
 					readsReadPosition[readId]=readPosition;
@@ -512,18 +515,21 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 		map<uint64_t,vector<int> > annotationsForEach;
 
 		// annotate children
+	/*
 		if(children.size()>1){
 			if(getDebug()){
 				cout<<endl;
 			}
 		}
+*/
+		bool skipThoroughtCheck=false;
 		for(vector<uint64_t>::iterator i=children.begin();i!=children.end();i++){
-			if(aData->Is_1_1()&&false)
+			if(aData->Is_1_1()&&skipThoroughtCheck)
 				break;
 			uint64_t childVertex=*i;
 			string childSequence=idToWord(childVertex,m_wordSize);
-			char lastNucleotideOfChildSequence=childSequence[m_wordSize-1];
 			vector<int>  readNotInRangeAnymore;
+			//cout<<readsInRange.size()<<" reads in range"<<endl;
 			for(set<int>::iterator i=readsInRange.begin();i!=readsInRange.end();i++){
 				int readId=*i;
 				int currentContigPosition=contig.size()-1+1;
@@ -547,6 +553,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 				string aWord=readSequence.substr(inferedReadPosition,m_wordSize);
 				//cout<<"READ IS  "<<readSequence.substr(inferedReadPosition,m_wordSize)<<endl;
 				if(aWord==childSequence){
+					//cout<<"In range, threading"<<endl;
 					annotationsForEach[childVertex].push_back(nucleotidePositionInRead);
 					sumScores[childVertex]+=nucleotidePositionInRead;
 					// check paired information
@@ -585,6 +592,19 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 			}
 		}
 
+		double alpha=1.1;
+		if(children.size()==2){
+			int scoreA=sumScores[children[0]];
+			int scoreB=sumScores[children[1]];
+
+			if(scoreA >= alpha*scoreB){
+				children.clear();
+				children.push_back(children[0]);
+			}else if(scoreB >= alpha*scoreA){
+				children.clear();
+				children.push_back(children[1]);
+			}
+		}
 
 		if(children.size()>1){  // reduce it...
 			//cout<<"MORE THAN 1"<<endl;
@@ -597,7 +617,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 				for(map<uint64_t,vector<int> >::iterator j=annotationsForEach.begin();j!=annotationsForEach.end();j++){
 					uint64_t otherVertex=j->first;
 					int otherScore=sumScores[otherVertex];
-					if(currentVertex!=otherVertex && currentScore < 1.1*otherScore){
+					if(currentVertex!=otherVertex && currentScore < alpha*otherScore){
 						isBest=false;
 						break;
 					}
@@ -666,7 +686,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 			}
 		}
 
-		if(children.size()==1/*&&aData->Is_1_1()==false*/){ // check if it is ok
+		if(children.size()==1&&(aData->Is_1_1()==false||skipThoroughtCheck==false)){ // check if it is ok
 			uint64_t currentVertex=children[0];
 			if(annotationsForEach[currentVertex].size()==0&&contig.size()>400){
 				//if(getDebug())

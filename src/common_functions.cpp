@@ -101,19 +101,14 @@ void CommonHeader(ostream*out){
 }
 
 char getLastSymbol(VERTEX_TYPE i,int m_wordSize){
-        VERTEX_TYPE j=i;
-        for(int i=0;i<m_wordSize;i++){
-                j/=2;
-                j/=2;
-        }
-
-        if((int)j==m_NUCLEOTIDE_A)
+	i=(i<<64-2*m_wordSize)>>62;
+        if((int)i==0)
                 return 'A';
-        if((int)j==m_NUCLEOTIDE_T)
+        if((int)i==1)
                 return 'T';
-        if((int)j==m_NUCLEOTIDE_C)
+        if((int)i==2)
                 return 'C';
-        if((int)j==m_NUCLEOTIDE_G)
+        if((int)i==3)
                 return 'G';
         return 'E';
 }

@@ -40,6 +40,9 @@ int main(){
 	
 	{
 	string prefix="ATAGACTATCGATCAGCTAGA";
+	cout<<prefix<<" GET LAST "<<getLastSymbol(wordId(prefix.c_str()),21)<<endl;
+	string prefix2="ATAGACTATCGATCAGCTAGC";
+	cout<<prefix2<<" GET LAST "<<getLastSymbol(wordId(prefix2.c_str()),21)<<endl;
 	string suffix=  "TAGACTATCGATCAGCTAGAG";
 	VertexData gg;
 	gg.addChild(wordId(suffix.c_str()),21);
@@ -47,6 +50,8 @@ int main(){
 	vector<uint64_t> children=gg.getChildren(prefixInt,21);
 	cout<<idToWord(children[0],21)<<" "<<suffix<<endl;
 	}
+
+
 	return 0;
 }
 
