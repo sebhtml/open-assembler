@@ -727,6 +727,8 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 	bool foundGoodHit=false;
 	for(int readPosition=0;readPosition<(int)sequence.length();readPosition++){
 		string myWord=sequence.substr(readPosition,m_wordSize);
+		if(foundGoodHit)
+			break;
 		if(myWord.length()!=m_wordSize)
 			continue;
 		VERTEX_TYPE wordInBits=wordId(myWord.c_str());
