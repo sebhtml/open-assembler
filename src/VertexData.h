@@ -22,8 +22,8 @@
 
 #include<map>
 #include<vector>
-#include"Read.h"
 #include"AnnotationElement.h"
+#include"Read.h"
 #include<stdint.h>
 using namespace std;
 

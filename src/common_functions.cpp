@@ -20,6 +20,7 @@
 
 
 #include"common_functions.h"
+#include<iostream>
 #include<string>
 #include<cstring>
 #include<sstream>
@@ -54,45 +55,27 @@ string reverseComplement(string a){
 
 // convert k-mer to VERTEX_TYPE
 VERTEX_TYPE wordId(const char*a){
-	VERTEX_TYPE i=0;
+	uint64_t i=0;
 	for(int j=0;j<(int)strlen(a);j++){
 		VERTEX_TYPE k=0;
 		if(a[j]=='A'){
-			// binary=00
-			// dec = 0
-			k=m_NUCLEOTIDE_A;
+			k=0;
 		}else if(a[j]=='T'){
-			// binary=01
-			//  dec = 1
-			k=m_NUCLEOTIDE_T;
+			k=1;
 		}else if(a[j]=='C'){
-			// binary=10
-			// dec = 2
-			k=m_NUCLEOTIDE_C;
+			k=2;
 		}else if(a[j]=='G'){
-			// binary=11
-			// dec = 3
-			k=m_NUCLEOTIDE_G;
+			k=3;
 		}
-		for(int l=0;l<=j;l++){
-			k*=4; // right shift two times two positions
-		}
-		i+=k;
+		i=(i|(k<<(j<<1)));
 	}
 	return i;
 }
 
 string idToWord(VERTEX_TYPE i,int wordSize){
 	string a="";
-	int maxSize=sizeof(VERTEX_TYPE)*8/2; // 32
 	for(int p=0;p<wordSize;p++){
-		VERTEX_TYPE j=i;
-		for(int k=0;k<(maxSize-p-2);k++){
-			j*=4;
-		}
-		for(int k=0;k<(maxSize-1);k++){
-			j/=4;
-		}
+		VERTEX_TYPE j=(i<<(62-2*p))>>62;
 		if(j==0){
 			a+='A';
 		}else if(j==1){
@@ -103,8 +86,6 @@ string idToWord(VERTEX_TYPE i,int wordSize){
 			a+='G';
 		}else{
 		}
-		
-
 	}
 	return a;
 }
@@ -148,3 +129,16 @@ bool isValidDNA(const char*x){
 }
 
 
+/*
+ * 
+ *   63 62 ... 1 0
+ *
+ */
+
+void coutBIN(uint64_t a){
+	cout<<hex<<a<<dec<<endl;
+	for(int i=63;i>=0;i--){
+		cout<<(int)((a<<(63-i))>>63);
+	}
+	cout<<endl;
+}

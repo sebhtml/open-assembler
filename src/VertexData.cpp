@@ -18,9 +18,7 @@
 */
 
 #include "VertexData.h"
-#include"GraphData.h"
 #include<iostream>
-#include"DeBruijnAssembler.h"
 #include<stdint.h>
 #include<string>
 #include<stdlib.h>
@@ -51,20 +49,12 @@ void VertexData::addAnnotation(uint32_t read,POSITION_TYPE position,uint8_t stra
 	m_annotations->push_back(element);
 }
 
+/*
+ * 63 62 61 60 ... 1 0
+ *
+ */
 void VertexData::addChild(VERTEX_TYPE child,int m_wordSize){
-	//string a=DeBruijnAssembler::idToWord(child,m_wordSize);
-	//char symbol=a[m_WordSize-1];
-	//cout<<symbol<<endl;
-	//cout<<hex<<child<<endl;
-	child=child<<(62-m_wordSize-m_wordSize);
-	child=child>>62;
-	//cout<<hex<<child<<endl;
-	//cout<<dec;
-	int position=child;
-	uint8_t toAdd=1;
-	toAdd=toAdd<<position;
-	m_children=m_children|toAdd;
-	//cout<<"Children "<<(int)m_children<<endl;
+	m_children=m_children|(1<<(child<<(64-2*m_wordSize)>>62));
 }
 
 
@@ -74,7 +64,7 @@ void VertexData::addParent(VERTEX_TYPE parent,int m_WordSize){
 	//char symbol=a[0];
 	//cout<<"Parent "<<parent<<endl;
 	//cout<<hex<<parent<<endl;
-	parent=parent<<60;
+	parent=parent<<62;
 	//cout<<hex<<parent<<endl;
 	parent=parent>>62;
 	//cout<<hex<<parent<<endl;
@@ -100,63 +90,32 @@ vector<AnnotationElement>*VertexData::getAnnotations(){
 
 
 
-vector<VERTEX_TYPE> VertexData::getChildren(VERTEX_TYPE prefix,int m_WordSize){
-	string a=idToWord(prefix,m_WordSize);
-	//cout<<"Prefix "<<a<<endl;
+vector<VERTEX_TYPE> VertexData::getChildren(VERTEX_TYPE prefix,int m_wordSize){
 	vector<VERTEX_TYPE> output;
-	//cout<<a<<endl;
-	//cout<<(int)m_parents<<endl;
-	//cout<<"parents " <<m_parents<<endl;
-	for(int i=0;i<4;i++){
+	for(uint64_t i=0;i<4;i++){
 		uint8_t toCheck=m_children;
-		//00001000
-		//10000000
 		toCheck=(toCheck<<(7-i));
 		toCheck=toCheck>>7;
 		if(toCheck==1){
-			char symbol='A';
-			if(i==0){
-				symbol='A';
-			}else if(i==1){
-				symbol='T';
-			}else if(i==2){
-				symbol='C';
-			}else if(i==3){
-				symbol='G';
-			}
-			string sequence=a.substr(1,m_WordSize-1)+symbol;
-			//cout<<sequence<<endl;
-			VERTEX_TYPE dataNode=wordId(sequence.c_str());
+			VERTEX_TYPE dataNode=(prefix>>2)|(i<<(2*(m_wordSize-1)));
 			output.push_back(dataNode);
-			//cout<<sequence<<endl;
 		}
 	}
 	return output;
 }
 
 vector<VERTEX_TYPE> VertexData::getParents(VERTEX_TYPE prefix,int m_WordSize){
-	string a=idToWord(prefix,m_WordSize);
 	vector<VERTEX_TYPE> output;
-	for(int i=0;i<4;i++){
+	for(uint64_t i=0;i<4;i++){
 		uint8_t toCheck=m_parents;
-		//00001000
-		//10000000
 		toCheck=(toCheck<<(7-i));
 		toCheck=toCheck>>7;
 		if(toCheck==1){
-			char symbol='A';
-			if(i==0){
-				symbol='A';
-			}else if(i==1){
-				symbol='T';
-			}else if(i==2){
-				symbol='C';
-			}else if(i==3){
-				symbol='G';
-			}
-			string sequence=symbol+a.substr(0,m_WordSize-1);
-			//cout<<sequence<<endl;
-			VERTEX_TYPE dataNode=wordId(sequence.c_str());
+			/*
+ 				63 62 61 60 ... 5 4 3 2 1 0
+
+			*/
+			VERTEX_TYPE dataNode=((prefix<<(64-2*m_WordSize+2))>>(64-2*m_WordSize))|i;
 			output.push_back(dataNode);
 		}
 	}

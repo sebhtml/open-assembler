@@ -233,6 +233,7 @@ void DeBruijnAssembler::load_graphFrom_file(){
 	m_data.makeMemory();
 	VertexData*dataPointer=m_data.getNodeData();
 	f>>buffer>>buffer;
+	cout<<endl;
 	for(int i=0;i<n;i++){
 		if(i%1000000==0){
 			cout<<"Loading edges: "<<i<<" / "<<n<<endl;
@@ -496,7 +497,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 				int readFirstPosition=m_sequenceData->at(readId)->getStartForward();
 				if(readStrand=='R')
 					readFirstPosition=m_sequenceData->at(readId)->getStartReverse();
-				if(usedReads.count(readId)==0&&readPosition==readFirstPosition){
+				if(readPosition==readFirstPosition&&usedReads.count(readId)==0){
 					usedReads.insert(readId);	
 					readsInRange.insert(readId);
 					readsReadPosition[readId]=readPosition;
@@ -517,7 +518,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 			}
 		}
 		for(vector<uint64_t>::iterator i=children.begin();i!=children.end();i++){
-			if(aData->Is_1_1())
+			if(aData->Is_1_1()&&false)
 				break;
 			uint64_t childVertex=*i;
 			string childSequence=idToWord(childVertex,m_wordSize);
@@ -665,7 +666,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 			}
 		}
 
-		if(children.size()==1&&m_data.get(children[0])->Is_1_1()==false){ // check if it is ok
+		if(children.size()==1/*&&aData->Is_1_1()==false*/){ // check if it is ok
 			uint64_t currentVertex=children[0];
 			if(annotationsForEach[currentVertex].size()==0&&contig.size()>400){
 				//if(getDebug())

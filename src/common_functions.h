@@ -47,4 +47,6 @@ bool isValidDNA(const char*x);
 
 char getLastSymbol(VERTEX_TYPE i,int w);
 
+void coutBIN(uint64_t a);
+
 #endif

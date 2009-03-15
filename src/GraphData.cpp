@@ -27,6 +27,8 @@ VertexData*GraphData::get(VERTEX_TYPE a){
 	int index=BinarySearch(&m_nodes,a,m_size);
 	if(index==-1){
 		cout<<"Error, not found (should not happen...)"<<endl;
+		cout<<idToWord(a,21)<<endl;
+		cout<<a<<endl;
 		exit(0);
 	}
 	return &(m_node_data[index]);

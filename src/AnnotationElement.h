@@ -23,6 +23,8 @@
 //#define POSITION_TYPE uint32_t
 #define POSITION_TYPE uint16_t
 
+#include<stdint.h>
+
 class AnnotationElement{
 public:
 	uint32_t readId;

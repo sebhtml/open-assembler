@@ -42,6 +42,7 @@ int main(int argc,char*argv[]){
 	assembler.load_graphFrom_file();
 	vector<string> files;
 	ifstream input(filesFile.c_str());
+	cout<<endl;
 	cout<<"Loading files from "<<filesFile<<endl;
 	string aFile;
 	if(!input){
