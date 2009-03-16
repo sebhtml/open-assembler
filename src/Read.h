@@ -39,6 +39,7 @@ public:
 	int getStartReverse();
 	void setStartForward(int i);
 	int length();
+	uint64_t Vertex(int pos,int w,char strand);
 	void setStartReverse(int i);
 };
 

@@ -26,6 +26,7 @@
 
 #include"common_functions.h"
 #include"SequenceDataFull.h"
+#include<hash_set>
 #include"VertexData.h"
 #include"Read.h"
 #include<map>
@@ -78,6 +79,18 @@ class DeBruijnAssembler{
 
 	void writeContig_fasta(vector<VERTEX_TYPE>*path,ofstream*file,int i);
 	void writeContig_Amos(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);
+
+
+
+	void ThreadReads(VertexData*aData,hash_set<int>*usedReads,hash_set<int>*readsInRange,
+		hash_map<int,int>*readsReadPosition,hash_map<int,int>*readsContigPositions,hash_map<int,char>*readsReadStrands,
+		vector<uint64_t>*contig,
+		map<uint64_t,int>*sumScores,map<uint64_t,vector<int> >*annotationsForEach,
+		vector<uint64_t>*children,bool skipThoroughtCheck);
+
+	void addAnnotations(VertexData*aData,hash_set<int>*usedReads,hash_set<int>*readsInRange,
+		hash_map<int,int>*readsReadPosition,hash_map<int,int>*readsContigPositions,hash_map<int,char>*readsReadStrands,
+vector<uint64_t>*contig);
 
 	void writeContig_Coverage(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);
 

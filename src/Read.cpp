@@ -71,3 +71,44 @@ int Read::length(){
 	return strlen(m_sequence);
 }
 
+/*                      
+ *           -----------------------------------
+ *           -----------------------------------
+ *                     p p-1 p-2               0
+ */
+uint64_t Read::Vertex(int pos,int w,char strand){
+	uint64_t key=0;
+	if(strand=='F'){
+		for(int i=0;i<w;i++){
+			char a=m_sequence[pos+i];
+			uint64_t mask=0;
+			if(a=='A'){
+				mask=0;
+			}else if(a=='T'){
+				mask=1;
+			}else if(a=='C'){
+				mask=2;
+			}else if(a=='G'){
+				mask=3;
+			}
+			key=key|(mask<<(2*i));
+		}
+	}else{
+		for(int i=0;i<w;i++){
+			char a=m_sequence[strlen(m_sequence)-1-i-pos];
+			uint64_t mask=0;
+			if(a=='A'){
+				mask=1;
+			}else if(a=='T'){
+				mask=0;
+			}else if(a=='C'){
+				mask=3;
+			}else if(a=='G'){
+				mask=2;
+			}
+			key=key|(mask<<(2*i));
+		}
+	}
+
+	return key;
+}
