@@ -505,7 +505,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 
 
 
-		bool skipThoroughtCheck=false;
+		bool skipThoroughtCheck=true;
 
 		ThreadReads(aData,&usedReads,&readsInRange,
 			&readsReadPosition,&readsContigPositions,&readsReadStrands,
