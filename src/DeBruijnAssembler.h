@@ -72,7 +72,10 @@ class DeBruijnAssembler{
 
 	string pathToDNA(vector<VERTEX_TYPE>*path);
 
-	void version2_Walker(uint64_t  a,vector<uint64_t>*b);
+	void version2_Walker(uint64_t  a,vector<uint64_t>*b,
+			vector<map<int,map<char,int> > >* currentReadPositions,
+			vector<int>*repeatAnnotations);
+
 	void Walk_In_GRAPH();
 
 	void indexReadStrand(int readId,char strand,SequenceDataFull*sequenceData);
@@ -86,11 +89,13 @@ class DeBruijnAssembler{
 		hash_map<int,int>*readsReadPosition,hash_map<int,int>*readsContigPositions,hash_map<int,char>*readsReadStrands,
 		vector<uint64_t>*contig,
 		map<uint64_t,int>*sumScores,map<uint64_t,vector<int> >*annotationsForEach,
-		vector<uint64_t>*children,bool skipThoroughtCheck);
+		vector<uint64_t>*children,bool skipThoroughtCheck,
+		vector<map<int,map<char,int> > >* currentReadPositions);
 
 	void addAnnotations(VertexData*aData,hash_set<int>*usedReads,hash_set<int>*readsInRange,
 		hash_map<int,int>*readsReadPosition,hash_map<int,int>*readsContigPositions,hash_map<int,char>*readsReadStrands,
-vector<uint64_t>*contig);
+vector<uint64_t>*contig,
+		vector<map<int,map<char,int> > >* currentReadPositions);
 
 	void writeContig_Coverage(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);
 

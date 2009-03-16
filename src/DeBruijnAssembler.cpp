@@ -421,14 +421,14 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			vector<map<int,map<char,int> > > currentReadPositions;
 			vector<int> repeatAnnotations;
 			vector<VERTEX_TYPE> localNewSources;
-			version2_Walker(prefix,&path);
+			version2_Walker(prefix,&path,&currentReadPositions,&repeatAnnotations);
 			cout<<path.size()<<" vertices"<<endl;
 			if(path.size()<=2)
 				continue;
-			//writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
+			writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
 			writeContig_fasta(&path,&contigsFileStream,contigId);
-			//writeContig_Coverage(&currentReadPositions,&path,&coverageStream,contigId);
-			//writeContig_RepeatAnnotation(&repeatAnnotations,contigId,&repeatAnnotation,&path);
+			writeContig_Coverage(&currentReadPositions,&path,&coverageStream,contigId);
+			writeContig_RepeatAnnotation(&repeatAnnotations,contigId,&repeatAnnotation,&path);
 			//m_contig_paths.push_back(path);
 			cout<<"Contig"<<contigId<<endl;
 			contigId++;
@@ -458,7 +458,9 @@ void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 
 
 
-void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
+void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
+			vector<map<int,map<char,int> > >* currentReadPositions,
+			vector<int>*repeatAnnotations){
 	//cout<<"Starting from "<<a<<endl;
 	vector<uint64_t>contig;
 	vector<uint64_t>  children;
@@ -488,13 +490,16 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 			return;
 		}
 		contig.push_back(currentVertex);
+		repeatAnnotations->push_back(-1);
 		//cout<<idToWord(currentVertex,m_wordSize)<<endl;
 		aData->assemble();
-
+		
+		map<int,map<char,int> > readPositions;
+		currentReadPositions->push_back(readPositions);
 
 		addAnnotations(aData,&usedReads,&readsInRange,
 			&readsReadPosition,&readsContigPositions,&readsReadStrands,
-			&contig);
+			&contig,currentReadPositions);
 
 
 		// process annotations
@@ -505,12 +510,13 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path){
 
 
 
-		bool skipThoroughtCheck=true;
+		bool skipThoroughtCheck=false;
 
 		ThreadReads(aData,&usedReads,&readsInRange,
 			&readsReadPosition,&readsContigPositions,&readsReadStrands,
 			&contig,
-			&sumScores,&annotationsForEach,&children,skipThoroughtCheck);
+			&sumScores,&annotationsForEach,&children,skipThoroughtCheck,
+			currentReadPositions);
 
 		// annotate children
 	/*
@@ -725,7 +731,7 @@ void DeBruijnAssembler::writeContig_Coverage(vector<map<int,map<char,int> > >*cu
 				p++;
 			}
 		}else{
-			int edgeOffset=vertexOffset-1;
+			int edgeOffset=vertexOffset;
 			(*file)<<p<<" "<<currentReadPositions->at(edgeOffset).size()<<endl;
 			p++;
 		}
@@ -937,7 +943,8 @@ void DeBruijnAssembler::updateDebug(){
 
 void DeBruijnAssembler::addAnnotations(VertexData*aData,hash_set<int>*usedReads,hash_set<int>*readsInRange,
 	hash_map<int,int>*readsReadPosition,hash_map<int,int>*readsContigPositions,hash_map<int,char>*readsReadStrands,
-	vector<uint64_t>*contig){
+	vector<uint64_t>*contig,
+		vector<map<int,map<char,int> > >* currentReadPositions){
 	vector<AnnotationElement>*annotations=aData->getAnnotations();
 	if(annotations->size()<m_REPEAT_DETECTION){
 		for(int i=0;i<annotations->size();i++){
@@ -953,6 +960,7 @@ void DeBruijnAssembler::addAnnotations(VertexData*aData,hash_set<int>*usedReads,
 				(*readsReadPosition)[readId]=readPosition;
 				(*readsContigPositions)[readId]=contig->size()-1;
 				(*readsReadStrands)[readId]=readStrand;
+				(*currentReadPositions)[contig->size()-1][readId][readStrand]=readPosition;
 			}
 		}
 	}
@@ -961,7 +969,8 @@ void DeBruijnAssembler::addAnnotations(VertexData*aData,hash_set<int>*usedReads,
 void DeBruijnAssembler::ThreadReads(VertexData*aData,hash_set<int>*usedReads,hash_set<int>*readsInRange,
 	hash_map<int,int>*readsReadPosition,hash_map<int,int>*readsContigPositions,hash_map<int,char>*readsReadStrands,
 	vector<uint64_t>*contig,
-	map<uint64_t,int>*sumScores,map<uint64_t,vector<int> >*annotationsForEach,vector<uint64_t>*children,bool skipThoroughtCheck){
+	map<uint64_t,int>*sumScores,map<uint64_t,vector<int> >*annotationsForEach,vector<uint64_t>*children,bool skipThoroughtCheck,
+		vector<map<int,map<char,int> > >* currentReadPositions){
 	for(vector<uint64_t>::iterator i=children->begin();i!=children->end();i++){
 		if(aData->Is_1_1()&&skipThoroughtCheck)
 			break;
