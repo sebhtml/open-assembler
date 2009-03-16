@@ -1,6 +1,6 @@
 # mega script..
 
-DNA.rb ./SRA000168/sdata/* -directory ./SRA000168/sdata/../jeudi -minimumCoverage 4  > ./SRA000168/sdata/../jeudi.log  &
+DNA.rb ./SRA000168/sdata/* -directory ./SRA000168/sdata/../jeudi -minimumCoverage 2 > ./SRA000168/sdata/../jeudi.log  &
 DNA.rb ./SRA001029/sdata/* -directory ./SRA001029/sdata/../jeudi -minimumCoverage 2  > ./SRA001029/sdata/../jeudi.log  &
 #DNA.rb ./Solexa-major/sdata/* -directory ./Solexa-major/sdata/../jeudi -minimumCoverage 2  > ./Solexa-major/sdata/../jeudi.log  &
 DNA.rb ./SRA000156/sdata/* -directory ./SRA000156/sdata/../jeudi -minimumCoverage 2  > ./SRA000156/sdata/../jeudi.log  &
@@ -50,7 +50,7 @@ DNA.rb ./SRA000197/sdata/* -directory ./SRA000197/sdata/../jeudi -minimumCoverag
 DNA.rb ./SRA000211/sdata/* -directory ./SRA000211/sdata/../jeudi -minimumCoverage 2  > ./SRA000211/sdata/../jeudi.log  &
 
 # Solexa paired
-DNA.rb ./SRA001125/sdata/* -directory ./SRA001125/sdata/../jeudi -minimumCoverage 20  > ./SRA001125/sdata/../jeudi.log &
+DNA.rb ./SRA001125/sdata/* -directory ./SRA001125/sdata/../jeudi -minimumCoverage 30  > ./SRA001125/sdata/../jeudi.log &
 
 # Solexa not paired
 DNA.rb ./SRA001177/sdata/* -directory ./SRA001177/sdata/../jeudi -minimumCoverage 4  > ./SRA001177/sdata/../jeudi.log  &
