@@ -83,6 +83,8 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		if(readSequence.length()<50)
 			seq36++;
 		for(int p=0;p<readSequence.length();p++){
+			if(readSequence.length()<=40&&p>30) // avoid too much Solexa's errors
+				break;
 			string word=readSequence.substr(p,m_wordSize+1);
 			if(word.length()==m_wordSize+1&&isValidDNA(word.c_str())){
 				myList.add(wordId(word.c_str()));
@@ -344,23 +346,83 @@ void DeBruijnAssembler::setAssemblyDirectory(string assemblyDirectory){
 	m_graphFile=name.str();
 }
 
-
+int DeBruijnAssembler::DFS_VISIT(uint64_t a,int maxDepth){
+	stack<int> depths;
+	stack<uint64_t> toDo;
+	set<uint64_t> done;
+	toDo.push(a);
+	done.insert(a);
+	depths.push(0);
+	int maxDepthSoFar=0;
+	bool check=false;
+	while(toDo.size()>0&&maxDepthSoFar<maxDepth){
+		int aDepth=depths.top();
+		uint64_t aNode=toDo.top();
+		if(aDepth>maxDepthSoFar)
+			maxDepthSoFar=aDepth;
+		depths.pop();
+		toDo.pop();
+		int newDepth=aDepth+1;
+		vector<uint64_t> nextToDo=m_data.get(aNode)->getParents(aNode,m_wordSize);
+		for(int ll=0;ll<nextToDo.size();ll++){
+			uint64_t aCommonChild=nextToDo[ll];
+			if(done.count(aCommonChild)==0){
+				toDo.push(aCommonChild);
+				depths.push(newDepth);
+				done.insert(aCommonChild);
+			}
+		}
+	}
+	return maxDepthSoFar;
+}
 
 void DeBruijnAssembler::Walk_In_GRAPH(){
 	cout<<endl;
 	vector<VERTEX_TYPE>*theNodes=m_data.getNodes();
+
+
+	cout<<"********* Removing tips"<<endl;
+	
+
+	vector<uint64_t> removedSources;
+	for(int i=0;i<m_data.size();i++){
+		if(i%1000000==0){
+			cout<<"Removing tips: "<<i<<" / "<<m_data.size()<<endl;
+		}
+		int theLength=0;
+		int Threshold=2*m_wordSize;
+		Threshold=100;
+		VERTEX_TYPE vertex=(*theNodes)[i];
+		if(m_data.get(vertex)->getParents(vertex,m_wordSize).size()>1){
+			vector<uint64_t> parents=m_data.get(vertex)->getParents(vertex,m_wordSize);
+			for(int p=0;p<parents.size();p++){
+				uint64_t aVertexParent=parents[p];
+				if(DFS_VISIT(aVertexParent,Threshold)<Threshold){
+					m_data.get(aVertexParent)->Delete();
+					removedSources.push_back(aVertexParent);
+				}
+			}
+		}
+	}
+
+	cout<<"Removed "<<removedSources.size()<<" tips."<<endl;
+	cout<<endl;
 
 	cout<<endl;
 	vector<VERTEX_TYPE> withoutParents;
 	(cout)<<"********* Inspecting the graph"<<endl;
 	cout<<endl;
 	map<int,map<int,int> > stats_parents_children;
+
+	// add pure sources
 	for(int i=0;i<m_data.size();i++){
 		if(i%1000000==0){
 			cout<<"Inspecting: "<<i<<" / "<<m_data.size()<<endl;
 		}
 		VERTEX_TYPE vertex=(*theNodes)[i];
 		VertexData*dataNode=m_data.get(vertex);
+		if(dataNode->Deleted())
+			continue;
 		vector<uint64_t> theParents=dataNode->getParents(vertex,m_wordSize);
 
 		int parents=theParents.size();
@@ -369,12 +431,39 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 		if(parents==1&&children==1){
 			dataNode->set_topology_1_1();
 		}
+		if(parents!=0)
+			continue;
+		if(children==0)
+			continue;
+		
+		withoutParents.push_back(vertex);
+	}
+
+	cout<<"Inspecting: "<<m_data.size()<<" / "<<m_data.size()<<endl;
+
+
+	// add other vertices
+	for(int i=0;i<m_data.size();i++){
+		if(i%1000000==0){
+			cout<<"Inspecting: "<<i<<" / "<<m_data.size()<<endl;
+		}
+		VERTEX_TYPE vertex=(*theNodes)[i];
+		VertexData*dataNode=m_data.get(vertex);
+		if(dataNode->Deleted())
+			continue;
+		vector<uint64_t> theParents=dataNode->getParents(vertex,m_wordSize);
+
+		int parents=theParents.size();
+		int children=dataNode->getChildren(vertex,m_wordSize).size();
 		if(parents==1&&children==1&&m_data.get(theParents[0])->getChildren(theParents[0],m_wordSize).size()<2)
 			continue;
 		if(children==0)
 			continue;
+		if(parents==0)
+			continue;
 		withoutParents.push_back(vertex);
 	}
+
 
 	cout<<"Inspecting: "<<m_data.size()<<" / "<<m_data.size()<<endl;
 
@@ -386,6 +475,8 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	}
 	cout<<endl;
 
+
+
 	vector<VERTEX_TYPE>*nodes=m_data.getNodes();
 	VertexData*nodeData=m_data.getNodeData();
 	(cout)<<endl;
@@ -394,7 +485,6 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	(cout)<<"Done..., "<<withoutParents.size()<<" sources."<<endl;
 	
 	(cout)<<endl;
-	vector<VERTEX_TYPE> sources=withoutParents;
 	string assemblyAmos=m_assemblyDirectory+"/"+AMOS_FILE_NAME;
 	string contigsFile=m_assemblyDirectory+"/"+FASTA_FILE_NAME;
 	string coverageFile=m_assemblyDirectory+"/"+COVERAGE_FILE_NAME;
@@ -404,9 +494,12 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 	ofstream coverageStream(coverageFile.c_str());
 	ofstream repeatAnnotation(repeatAnnotationFile.c_str());
 	int contigId=1;
-	int round=1;
 
 	cout<<"********** Assembling contigs..."<<endl;
+
+	vector<VERTEX_TYPE> sources=withoutParents;
+
+	
 
 	while(sources.size()>0){
 		cout<<endl;
@@ -416,11 +509,18 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 				updateDebug();
 			}
 			VERTEX_TYPE prefix=sources[i];
+/*
+			if(prefix!=1137640978)
+				continue;
+*/
 			if(m_data.get(prefix)->IsAssembled())
 				continue;
 			cout<<endl;
 			cout<<"Source "<<i+1<<" / "<<sources.size()<<endl;//" REPEAT MODE"<<endl;
 			cout<<"From: "<<idToWord(prefix,m_wordSize)<<endl;
+			cout<<prefix<<endl;
+			cout<<"Parents: "<<m_data.get(prefix)->getParents(prefix,m_wordSize).size()<<endl;
+			cout<<"Children: "<<m_data.get(prefix)->getChildren(prefix,m_wordSize).size()<<endl;
 		//cout<<m_contig_paths.size()<<" contigs"<<endl;
 			vector<VERTEX_TYPE>path;
 			vector<map<int,map<char,int> > > currentReadPositions;
@@ -428,7 +528,7 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			vector<VERTEX_TYPE> localNewSources;
 			version2_Walker(prefix,&path,&currentReadPositions,&repeatAnnotations);
 			cout<<path.size()<<" vertices"<<endl;
-			if(path.size()<=2)
+			if(path.size()<500)
 				continue;
 			//writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
 			writeContig_fasta(&path,&contigsFileStream,contigId);
@@ -466,6 +566,9 @@ void DeBruijnAssembler::Algorithm_Assembler_20090121(){
 void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 			vector<map<int,map<char,int> > >* currentReadPositions,
 			vector<int>*repeatAnnotations){
+
+
+
 	//cout<<"Starting from "<<a<<endl;
 	vector<uint64_t>contig;
 	vector<uint64_t>  children;
@@ -490,10 +593,11 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 */
 		uint64_t  currentVertex=children[0];
 		VertexData*aData=m_data.get(currentVertex);
-		if(aData->IsAssembled()&&contig.size()<200/*&&fromAPureParent*/){
+		if(aData->Deleted()||(aData->IsAssembled()&&contig.size()<200)/*&&fromAPureParent*/){
 			cout<<"Skipping spurious vertex"<<endl;
 			return;
 		}
+
 		contig.push_back(currentVertex);
 		//repeatAnnotations->push_back(-1);
 		//cout<<idToWord(currentVertex,m_wordSize)<<endl;
@@ -510,7 +614,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 
 		// process annotations
 		children=aData->getChildren(currentVertex,m_wordSize);
-
+		
 		map<uint64_t,int> sumScores;
 		map<uint64_t,vector<int> > annotationsForEach;
 
@@ -979,13 +1083,20 @@ void DeBruijnAssembler::ThreadReads(VertexData*aData,hash_set<int>*usedReads,has
 	vector<uint64_t>*contig,
 	map<uint64_t,int>*sumScores,map<uint64_t,vector<int> >*annotationsForEach,vector<uint64_t>*children,bool skipThoroughtCheck,
 		vector<map<int,map<char,int> > >* currentReadPositions){
+
+
+	if(children->size()>1){
+		cout<<endl;
+		cout<<"Position: "<<contig->size()<<endl;
+	}
 	for(vector<uint64_t>::iterator i=children->begin();i!=children->end();i++){
 		if(aData->Is_1_1()&&skipThoroughtCheck)
 			break;
 		uint64_t childVertex=*i;
 		//string childSequence=idToWord(childVertex,m_wordSize);
+		//cout<<"  Child: "<<childSequence<<endl;
 		vector<int>  readNotInRangeAnymore;
-		//cout<<readsInRange.size()<<" reads in range"<<endl;
+		//cout<<readsInRangesize()<<" reads in range"<<endl;
 		for(hash_set<int>::iterator i=readsInRange->begin();i!=readsInRange->end();i++){
 			int readId=*i;
 			int currentContigPosition=contig->size()-1+1;
@@ -1011,7 +1122,7 @@ void DeBruijnAssembler::ThreadReads(VertexData*aData,hash_set<int>*usedReads,has
 			uint64_t readVertex=m_sequenceData->at(readId)->Vertex(inferedReadPosition,m_wordSize,readStrand);
 			//cout<<"READ IS  "<<readSequence.substr(inferedReadPosition,m_wordSize)<<endl;
 			//if(aWord==childSequence){
-			if(childVertex==readVertex){
+			if(childVertex==readVertex&&nucleotidePositionInRead>=20){
 				//cout<<"In range, threading"<<endl;
 				(*annotationsForEach)[childVertex].push_back(nucleotidePositionInRead);
 				(*sumScores)[childVertex]+=nucleotidePositionInRead;

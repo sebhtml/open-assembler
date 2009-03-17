@@ -23,7 +23,7 @@ while i<ARGV.size
 		k=ARGV[i].to_i
 	elsif ARGV[i]=="-minimumCoverage"&&i<ARGV.size-1
 		i+=1
-		c=ARGV[i].to_i
+		c=ARGV[i]
 	elsif ARGV[i]=="-directory"&&i<ARGV.size-1
 		i+=1
 		directory=ARGV[i]
@@ -67,7 +67,8 @@ date > #{directory} > dna_MergeContigs.START
 dna_MergeContigs  #{directory}/2LargeContigs.fasta  #{directory}/3MergedContigs.fasta > #{directory}/dna_MergeContigs.log
 
 date > #{directory} > dna_JoinContigs.START
-dna_JoinContigs #{k}  #{directory}/3MergedContigs.fasta #{directory}/4JoinedContigs.fasta #{files.join ' '} > #{directory}/dna_JoinContigs.log
+ln -s #{directory}/3MergedContigs.fasta #{directory}/4JoinedContigs.fasta
+#dna_JoinContigs #{k}  #{directory}/3MergedContigs.fasta #{directory}/4JoinedContigs.fasta #{files.join ' '} > #{directory}/dna_JoinContigs.log
 
 date > #{directory}/END
 "

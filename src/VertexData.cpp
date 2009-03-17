@@ -33,6 +33,7 @@ VertexData::VertexData(){
 	m_annotations=NULL;
 	m_assembled=false;
 	m_trivial=false;
+	m_deleted=false;
 }
 
 void VertexData::assemble(){
@@ -143,4 +144,12 @@ void VertexData::set_topology_1_1(){
 
 bool VertexData::Is_1_1(){
 	return m_trivial;
+}
+
+void VertexData::Delete(){
+	m_deleted=true;
+}
+
+bool VertexData::Deleted(){
+	return m_deleted;
 }

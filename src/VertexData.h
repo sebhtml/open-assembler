@@ -50,7 +50,8 @@ class VertexData{
 	bool m_trivial;
 	uint8_t m_children;
 	uint8_t m_parents;
-	
+	bool m_deleted;
+	uint16_t m_count;
 public:
 	void set_topology_1_1();
 	bool Is_1_1();
@@ -66,6 +67,8 @@ public:
 	bool IsAssembled();
 	void assemble();
 	bool hasManyChildren(VERTEX_TYPE a,int w);
+	bool Deleted();
+	void Delete();
 };
 
 #endif

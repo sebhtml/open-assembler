@@ -85,6 +85,7 @@ class DeBruijnAssembler{
 	void writeContig_Amos(vector<map<int,map<char,int> > >*currentReadPositions,vector<VERTEX_TYPE>*path,ofstream*file,int i);
 
 
+	int DFS_VISIT(uint64_t a,int maxDepth);
 
 	void ThreadReads(VertexData*aData,hash_set<int>*usedReads,hash_set<int>*readsInRange,
 		hash_map<int,int>*readsReadPosition,hash_map<int,int>*readsContigPositions,hash_map<int,char>*readsReadStrands,
