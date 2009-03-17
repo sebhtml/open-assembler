@@ -425,10 +425,10 @@ void DeBruijnAssembler::Walk_In_GRAPH(){
 			cout<<path.size()<<" vertices"<<endl;
 			if(path.size()<=2)
 				continue;
-			writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
+			//writeContig_Amos(&currentReadPositions,&path,&amosFile,contigId);
 			writeContig_fasta(&path,&contigsFileStream,contigId);
-			writeContig_Coverage(&currentReadPositions,&path,&coverageStream,contigId);
-			writeContig_RepeatAnnotation(&repeatAnnotations,contigId,&repeatAnnotation,&path);
+			//writeContig_Coverage(&currentReadPositions,&path,&coverageStream,contigId);
+			//writeContig_RepeatAnnotation(&repeatAnnotations,contigId,&repeatAnnotation,&path);
 			//m_contig_paths.push_back(path);
 			cout<<"Contig"<<contigId<<endl;
 			contigId++;
@@ -490,13 +490,14 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 			return;
 		}
 		contig.push_back(currentVertex);
-		repeatAnnotations->push_back(-1);
+		//repeatAnnotations->push_back(-1);
 		//cout<<idToWord(currentVertex,m_wordSize)<<endl;
 		aData->assemble();
 		
+		/*
 		map<int,map<char,int> > readPositions;
 		currentReadPositions->push_back(readPositions);
-
+		*/
 		addAnnotations(aData,&usedReads,&readsInRange,
 			&readsReadPosition,&readsContigPositions,&readsReadStrands,
 			&contig,currentReadPositions);
@@ -510,7 +511,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 
 
 
-		bool skipThoroughtCheck=false;
+		bool skipThoroughtCheck=true;
 
 		ThreadReads(aData,&usedReads,&readsInRange,
 			&readsReadPosition,&readsContigPositions,&readsReadStrands,
@@ -960,7 +961,7 @@ void DeBruijnAssembler::addAnnotations(VertexData*aData,hash_set<int>*usedReads,
 				(*readsReadPosition)[readId]=readPosition;
 				(*readsContigPositions)[readId]=contig->size()-1;
 				(*readsReadStrands)[readId]=readStrand;
-				(*currentReadPositions)[contig->size()-1][readId][readStrand]=readPosition;
+				//(*currentReadPositions)[contig->size()-1][readId][readStrand]=readPosition;
 			}
 		}
 	}
