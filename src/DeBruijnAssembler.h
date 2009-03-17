@@ -48,6 +48,7 @@ using namespace std;
 
 class DeBruijnAssembler{
 	int m_coverage_mean;
+	bool m_Solexa_detected;
 	string m_graphFile;
 	string m_minimumCoverageParameter;
 	string m_onlyFirstMer;

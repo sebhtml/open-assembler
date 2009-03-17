@@ -52,6 +52,7 @@ int abs_f(int a){
 
 DeBruijnAssembler::DeBruijnAssembler(){
 	m_DEBUG=false;
+	m_Solexa_detected=false;
 }
 
 void DeBruijnAssembler::setWordSize(int k){
@@ -71,7 +72,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	cout<<"k+1 = "<<m_wordSize+1<<endl;
 	SortedList myList;
 	int last_vertices_size=-1;
-
+	int seq36=0;
 	for(int i=0;i<(int)sequenceData->size();i++){
 		if(i%100000==0){
 			cout<<"Reads: "<<i<<" / "<<sequenceData->size()<<endl;
@@ -79,6 +80,8 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		if(i%1000000==0)
 			myList.sort();
 		string readSequence=sequenceData->at(i)->getSeq();
+		if(readSequence.length()<50)
+			seq36++;
 		for(int p=0;p<readSequence.length();p++){
 			string word=readSequence.substr(p,m_wordSize+1);
 			if(word.length()==m_wordSize+1&&isValidDNA(word.c_str())){
@@ -88,6 +91,8 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		}
 	}	
 
+	if(seq36>=1000000)
+		m_Solexa_detected=true;
 	cout<<"Reads: "<<sequenceData->size()<<" / "<<sequenceData->size()<<endl;
 	myList.sort();
 
@@ -530,6 +535,8 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 
 
 		double alpha=1.1;
+		if(m_Solexa_detected)
+			alpha=1.3;
 		if(children.size()==2){
 			int scoreA=sumScores[children[0]];
 			int scoreB=sumScores[children[1]];
