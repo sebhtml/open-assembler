@@ -1,11 +1,13 @@
 \documentclass{article}
+\usepackage[utf8x]{inputenc}
 
 
 \usepackage{fullpage}
 
 \begin{document}
 
-Manual for http://denovoassembler.sf.net/ \\
+Manual for 'ADNeur'\\
+http://denovoassembler.sf.net/ \\
 Sébastien Boisvert \\
 
 \begin{verbatim}
@@ -20,15 +22,15 @@ r290 | boiseb01 | 2009-03-15 20:09:01 -0400 (dim, 15 mar 2009) | 1 line
 \tableofcontents
 \section{Installation}
 
-The dependencies are a POSIX (GNU/Linux) system, ruby, g++, make, coreutils, etc.
+The dependencies are a POSIX (GNU/Linux) system, ruby, g++, make, coreutils, etc. All these software are available as packages in any GNU/Linux distribution.
 
 To install the software, uncompress the archive. Then, type ./configure;make in
 the directory. After that, add the src directory to your path.
-You need to install the ruby interpreter.
+You need to install the ruby interpreter (http://ruby-lang.org/).
 
 \section{Overview}
 
-The assembler is implemented in various independant modules.
+The assembler is implemented in various independent modules.
 To use the assembler, just use the wrapper DNA.rb, which will
 do almost everything for you.
 
@@ -42,7 +44,7 @@ To use paired-end with sff files, you must extract relevant information using
 
 \begin{verbatim}
 [boiseb01@ls30 unamed-assembly]$ DNA.rb 
-Welcome to DNA, the de novo assembler
+Welcome to ADNeur, the de novo assembler
 DNA.rb is an assembler that calls the c++ modules
 usage:
 DNA.rb [-wordSize 21] [-minimumCoverage 2] -directory output <sequence files (fasta or sff or fastq)
@@ -198,7 +200,8 @@ Example for SRA000156:
 \subsection{Repeats}
 
 The 'contigs-repeats.txt' file contains repeat information from the assembly.
-A vertex is considered as a repeat if it has "too many annotations".
+A vertex is considered as a repeat if it has "too many annotations", i.e much 
+more than the median coverage number.
 
 \subsection{Coverage}
 
@@ -233,6 +236,7 @@ plot(r[[1]],log(r[[2]]),xlab='Coverage',ylab='Count',main='Coverage distribution
 \subsection{ABI SOLiD}
 
 The software was not tested with this technology, but it should *work*.
+(Data welcomed!).
 
 \subsection{Hybrid assemblies}
 
@@ -250,13 +254,14 @@ DNA.rb -directory HybridAssembly -minimumCoverage 10 454_1.fasta 454_2.fasta 454
 
 The assembler is licensed under the terms of the general public license, version 3 or later.
 
+Publication resulting from usage of ADNeur should cite our website and hopefully soon our own publication (in preparation).
+
 \section{Implementation}
 
-All the core modules are in C++. The mers are represented with 'uint64\_t' on 64 bits. They are collected along with their  count from reads.
-Don't bother trying to use the assembler on 32-bits architectures, it probably won't work. Also, it is currently only tested on
+All the core modules are in C++. The mers are represented with 'uint64\_t' on 64 bits. They are collected along with their  counts from reads. ADNeur needs a 64-bit processor.
+Also, it is currently only tested on
 'x86\_64' architecture (http://amd.com/, http://intel.com/). 
 All assembly operations are performed in 'uint64\_t'-space, using mostly bit shifts.
 
-The DNA.rb wrapper eases assembly processes although you might want to fully understand how the whole thing works at some point.
-
+The DNA.rb wrapper eases assembly processes.
 \end{document}
