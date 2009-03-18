@@ -620,7 +620,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 
 
 
-		bool skipThoroughtCheck=true;
+		bool skipThoroughtCheck=false;
 
 		ThreadReads(aData,&usedReads,&readsInRange,
 			&readsReadPosition,&readsContigPositions,&readsReadStrands,
@@ -638,7 +638,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 */
 
 
-		double alpha=1.1;
+		double alpha=1.3;
 		if(m_Solexa_detected)
 			alpha=1.3;
 		if(children.size()==2){
