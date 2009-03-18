@@ -26,11 +26,15 @@
 #include<stdint.h>
 
 class AnnotationElement{
+	uint32_t m_readId;
+	POSITION_TYPE m_readPosition;
+	uint8_t m_readStrand;  // TODO: replace  this with 2 objects instead
 public:
-	uint32_t readId;
-	POSITION_TYPE readPosition;
-	uint8_t readStrand;  // TODO: replace  this with 2 objects instead
-
+	AnnotationElement(uint32_t readId,uint16_t readPosition,uint8_t readStrand);
+	uint32_t getReadId();
+	uint16_t getReadPosition();
+	uint8_t getReadStrand();
+	void print();
 };
 
 

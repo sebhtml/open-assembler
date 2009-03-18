@@ -6,13 +6,14 @@ bin_PROGRAMS =   dna_ConvertSffToFasta dna_MergeContigs dna_BuildGraph dna_Scaff
 dna_BuildGraph_SOURCES = De_Bruijn_De_Novo_Assembler_main.cpp  DeBruijnAssembler.h  Read.cpp \
 DeBruijnAssembler.cpp                               Read.h Loader.cpp Loader.h  SffLoader.h SffLoader.cpp \
 VertexData.h VertexData.cpp  SequenceDataFull.h SequenceDataFull.cpp CoverageDistribution.h CoverageDistribution.cpp \
-SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp Merger.h Merger.cpp    common_functions.h common_functions.cpp
+SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp Merger.h Merger.cpp    common_functions.h common_functions.cpp \
+AnnotationElement.h AnnotationElement.cpp
 
 dna_ExtractContigs_SOURCES = extract_contigs_main.cpp  DeBruijnAssembler.h  Read.cpp \
 DeBruijnAssembler.cpp                               Read.h Loader.cpp Loader.h  SffLoader.h SffLoader.cpp \
 VertexData.h VertexData.cpp  SequenceDataFull.h SequenceDataFull.cpp CoverageDistribution.h CoverageDistribution.cpp \
-SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp Merger.h Merger.cpp    common_functions.h common_functions.cpp
-
+SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp Merger.h Merger.cpp    common_functions.h common_functions.cpp \
+AnnotationElement.h AnnotationElement.cpp
 
 
 dna_KeepLargeContigs_SOURCES = keepLargeContigs_main.cpp Read.h Read.cpp Loader.cpp Loader.h common_functions.h common_functions.cpp SffLoader.h  SffLoader.cpp
@@ -23,17 +24,24 @@ splitter_main.cpp Loader.cpp Read.cpp DeBruijnAssembler.cpp VertexData.cpp Seque
 CoverageDistribution.h CoverageDistribution.cpp  
 
 dna_MergeContigs_SOURCES = merger_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp  CoverageDistribution.h CoverageDistribution.cpp \
-SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp Merger.h Merger.cpp   common_functions.h common_functions.cpp
+SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp Merger.h Merger.cpp   common_functions.h common_functions.cpp \
+AnnotationElement.h AnnotationElement.cpp
 
 
 dna_ScaffoldContigs_SOURCES =   CoverageDistribution.h CoverageDistribution.cpp scaffolder_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp  SequenceDataFull.cpp \
  SortedList.h SortedList.cpp VertexData.h VertexData.cpp   GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp   common_functions.h common_functions.cpp \
-Hit.h Hit.cpp HitPair.h HitPair.cpp
+Hit.h Hit.cpp HitPair.h HitPair.cpp \
+AnnotationElement.h AnnotationElement.cpp
+
+
 
 
 dna_ConvertSffToFasta_SOURCES = SffLoader.cpp SffLoader.h Read.h Read.cpp DeBruijnAssembler.cpp DeBruijnAssembler.h sffPairedToFasta_main.cpp  \
 CustomMap.hpp  Loader.cpp Loader.h SequenceDataFull.h SequenceDataFull.cpp  CoverageDistribution.h CoverageDistribution.cpp \
-SortedList.h SortedList.cpp VertexData.cpp VertexData.h  GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp   common_functions.h common_functions.cpp
+SortedList.h SortedList.cpp VertexData.cpp VertexData.h  GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp   common_functions.h common_functions.cpp \
+AnnotationElement.h AnnotationElement.cpp
+
+
 
 
 
@@ -41,5 +49,5 @@ dna_JoinContigs_SOURCES =  DeBruijnAssembler.h  Read.cpp module_join_main.cpp \
 DeBruijnAssembler.cpp                               Read.h Loader.cpp Loader.h  SffLoader.h SffLoader.cpp \
 VertexData.h VertexData.cpp  SequenceDataFull.h SequenceDataFull.cpp CoverageDistribution.h CoverageDistribution.cpp \
 SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp Merger.h Merger.cpp   common_functions.h common_functions.cpp Hit.h Hit.cpp \
-HitPair.h HitPair.cpp
-
+HitPair.h HitPair.cpp \
+AnnotationElement.h AnnotationElement.cpp

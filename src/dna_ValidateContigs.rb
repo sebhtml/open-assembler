@@ -11,7 +11,7 @@ reference=ARGV[0]
 contigs=ARGV[1]
 output=ARGV[2]
 
-system "#blat #{reference} #{contigs} #{output}_blat"
+system "blat #{reference} #{contigs} #{output}_blat"
 system "cat #{contigs}|grep '>'|awk '{print $1}'|sed 's/>//' >  #{contigs}.names"
 
 contigNames=[]

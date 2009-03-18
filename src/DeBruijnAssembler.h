@@ -90,7 +90,7 @@ class DeBruijnAssembler{
 	void ThreadReads(VertexData*aData,hash_set<int>*usedReads,hash_set<int>*readsInRange,
 		hash_map<int,int>*readsReadPosition,hash_map<int,int>*readsContigPositions,hash_map<int,char>*readsReadStrands,
 		vector<uint64_t>*contig,
-		map<uint64_t,int>*sumScores,map<uint64_t,vector<int> >*annotationsForEach,
+		map<uint64_t,int>*sumScores,map<uint64_t,vector<AnnotationElement> >*annotationsForEach,
 		vector<uint64_t>*children,bool skipThoroughtCheck,
 		vector<map<int,map<char,int> > >* currentReadPositions);
 

@@ -43,10 +43,7 @@ void VertexData::assemble(){
 void VertexData::addAnnotation(uint32_t read,POSITION_TYPE position,uint8_t strand){
 	if(m_annotations==NULL)
 		m_annotations=new vector<AnnotationElement>;
-	AnnotationElement element;
-	element.readId=read;
-	element.readPosition=position;
-	element.readStrand=strand;
+	AnnotationElement element(read,position,strand);
 	m_annotations->push_back(element);
 }
 

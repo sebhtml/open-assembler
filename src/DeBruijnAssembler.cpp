@@ -309,7 +309,7 @@ void DeBruijnAssembler::writeGraph(){
 		if(annotations!=NULL){
 			f<<annotations->size()<<"\n";
 			for(vector<AnnotationElement>::iterator u=annotations->begin();u!=annotations->end();u++){
-				f<<(*u).readId<<" "<<(*u).readStrand<<" "<<(*u).readPosition<<"\n";
+				f<<(*u).getReadId()<<" "<<(*u).getReadStrand()<<" "<<(*u).getReadPosition()<<"\n";
 			}
 		}
 
@@ -616,7 +616,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 		children=aData->getChildren(currentVertex,m_wordSize);
 		
 		map<uint64_t,int> sumScores;
-		map<uint64_t,vector<int> > annotationsForEach;
+		map<uint64_t,vector<AnnotationElement> > annotationsForEach;
 
 
 
@@ -638,7 +638,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 */
 
 
-		double alpha=1.3;
+		double alpha=1.1;
 		if(m_Solexa_detected)
 			alpha=1.3;
 		if(children.size()==2){
@@ -656,14 +656,14 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 
 		if(children.size()>1){  // reduce it...
 			//cout<<"MORE THAN 1"<<endl;
-			for(map<uint64_t,vector<int> >::iterator i=annotationsForEach.begin();i!=annotationsForEach.end();i++){
-				uint64_t currentVertex=i->first;
+			for(vector<uint64_t>::iterator i=children.begin();i!=children.end();i++){
+				uint64_t currentVertex=*i;
 				int currentScore=sumScores[currentVertex];
 
 				// try with sum
 				bool isBest=true;
-				for(map<uint64_t,vector<int> >::iterator j=annotationsForEach.begin();j!=annotationsForEach.end();j++){
-					uint64_t otherVertex=j->first;
+				for(vector<uint64_t>::iterator j=children.begin();j!=children.end();j++){
+					uint64_t otherVertex=*j;
 					int otherScore=sumScores[otherVertex];
 					if(currentVertex!=otherVertex && currentScore < alpha*otherScore){
 						isBest=false;
@@ -673,11 +673,10 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 				if(isBest){
 					children.clear();
 					children.push_back(currentVertex);
-					if(getDebug())
-						cout<<"GOT BEST USING SUM "<<idToWord(currentVertex,m_wordSize)<<endl;
 					break;
 				}
 
+/*
 				// try with number
 				isBest=true;
 				currentScore=annotationsForEach[currentVertex].size();
@@ -697,7 +696,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 						cout<<"GOT BEST USING NUMBER"<<idToWord(currentVertex,m_wordSize)<<endl;
 					break;
 				}
-
+*/
 			}
 		}
 		
@@ -723,7 +722,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 				second[m_wordSize-1]==second[m_wordSize-2]){
 					if(getDebug())
 						cout<<"HOMOPOLYMER, n="<<iii<<endl;
-					if(annotationsForEach[children[0]]>annotationsForEach[children[1]]){
+					if(annotationsForEach[children[0]].size()>annotationsForEach[children[1]].size()){
 						children.clear();
 						children.push_back(children[0]);
 					}else{
@@ -742,8 +741,16 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 				break;
 			}
 		}
-
-
+		
+		if(children.size()==1){
+			uint64_t next=children[0];
+			cout<<"Adding "<<idToWord(next,m_wordSize)<<endl;
+			cout<<"Annotations: "<<annotationsForEach[next].size()<<endl;
+			for(int h=0;h<annotationsForEach[next].size();h++){
+				annotationsForEach[next][h].print();
+			}
+			cout<<endl;
+		}
 	}
 	cout<<"STOP <<CHILDREN="<<children.size()<<endl;
 	//cout<<"CONTIG LENGTH [FINAL] "<<contig.size()<<endl;
@@ -806,7 +813,7 @@ void DeBruijnAssembler::indexReadStrand(int readId,char strand,SequenceDataFull*
 				if(theChildren.size()>1)
 					hasMixedParents=true;
 			}
-			if(/*m_data.get(wordInBits)->NotTrivial(wordInBits,m_wordSize)||*/(strand=='F'&&readPosition==sequenceData->at(readId)->getStartForward())||
+			if(m_data.get(wordInBits)->Is_1_1()==false||(strand=='F'&&readPosition==sequenceData->at(readId)->getStartForward())||
 			(strand=='R'&&readPosition==sequenceData->at(readId)->getStartForward())||false)
 				m_data.get(wordInBits)->addAnnotation(readId,readPosition,strand);
 		}
@@ -1060,9 +1067,9 @@ void DeBruijnAssembler::addAnnotations(VertexData*aData,hash_set<int>*usedReads,
 	vector<AnnotationElement>*annotations=aData->getAnnotations();
 	if(annotations->size()<m_REPEAT_DETECTION){
 		for(int i=0;i<annotations->size();i++){
-			int readId=annotations->at(i).readId;
-			char readStrand=annotations->at(i).readStrand;
-			int readPosition=annotations->at(i).readPosition;
+			int readId=annotations->at(i).getReadId();
+			char readStrand=annotations->at(i).getReadStrand();
+			int readPosition=annotations->at(i).getReadPosition();
 			//int readFirstPosition=m_sequenceData->at(readId)->getStartForward();
 			//if(readStrand=='R')
 				//readFirstPosition=m_sequenceData->at(readId)->getStartReverse();
@@ -1081,7 +1088,7 @@ void DeBruijnAssembler::addAnnotations(VertexData*aData,hash_set<int>*usedReads,
 void DeBruijnAssembler::ThreadReads(VertexData*aData,hash_set<int>*usedReads,hash_set<int>*readsInRange,
 	hash_map<int,int>*readsReadPosition,hash_map<int,int>*readsContigPositions,hash_map<int,char>*readsReadStrands,
 	vector<uint64_t>*contig,
-	map<uint64_t,int>*sumScores,map<uint64_t,vector<int> >*annotationsForEach,vector<uint64_t>*children,bool skipThoroughtCheck,
+	map<uint64_t,int>*sumScores,map<uint64_t,vector<AnnotationElement> >*annotationsForEach,vector<uint64_t>*children,bool skipThoroughtCheck,
 		vector<map<int,map<char,int> > >* currentReadPositions){
 
 
@@ -1122,9 +1129,10 @@ void DeBruijnAssembler::ThreadReads(VertexData*aData,hash_set<int>*usedReads,has
 			uint64_t readVertex=m_sequenceData->at(readId)->Vertex(inferedReadPosition,m_wordSize,readStrand);
 			//cout<<"READ IS  "<<readSequence.substr(inferedReadPosition,m_wordSize)<<endl;
 			//if(aWord==childSequence){
-			if(childVertex==readVertex&&nucleotidePositionInRead>=20){
-				//cout<<"In range, threading"<<endl;
-				(*annotationsForEach)[childVertex].push_back(nucleotidePositionInRead);
+			if(childVertex==readVertex/*&&nucleotidePositionInRead>=20*/){
+				//cout<<"In range, threading"<<endl;A
+				AnnotationElement e(readId,nucleotidePositionInRead,readStrand);
+				(*annotationsForEach)[childVertex].push_back(e);
 				(*sumScores)[childVertex]+=nucleotidePositionInRead;
 				// check paired information
 				if(m_paired_reads.count(readId)>0){
@@ -1139,7 +1147,8 @@ void DeBruijnAssembler::ThreadReads(VertexData*aData,hash_set<int>*usedReads,has
 							distanceInContig<=distance+windowSemiSize){
 							//cout<<"distance for mates "<<distanceInContig<<endl;
 							//cout<<childSequence<<endl;
-							(*annotationsForEach)[childVertex].push_back(distanceInContig);
+							AnnotationElement e(readId,distanceInContig,readStrand);
+							(*annotationsForEach)[childVertex].push_back(e);
 							(*sumScores)[childVertex]+=distanceInContig;
 						}
 					}
@@ -1150,14 +1159,16 @@ void DeBruijnAssembler::ThreadReads(VertexData*aData,hash_set<int>*usedReads,has
 			(*readsInRange).erase(readNotInRangeAnymore[i]);
 		int theScore=(*annotationsForEach)[childVertex].size();
 
-		if(children->size()>1&&getDebug()){
+		if(children->size()>1){
 			cout<<"Vertex: "<<idToWord(childVertex,m_wordSize)<<endl;
 			cout<<"SUM="<<(*sumScores)[childVertex]<<endl;
 			cout<<"n="<<(*annotationsForEach)[childVertex].size()<<endl;
 			cout<<"LIST ";
 
-			for(int i=0;i<(*annotationsForEach)[childVertex].size();i++)
-				cout<<" "<<(*annotationsForEach)[childVertex][i];
+			for(int i=0;i<(*annotationsForEach)[childVertex].size();i++){
+				cout<<" ";
+				(*annotationsForEach)[childVertex][i].print();
+			}
 			cout<<endl;
 		}
 	}
