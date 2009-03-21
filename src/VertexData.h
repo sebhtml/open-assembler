@@ -64,6 +64,8 @@ public:
 	bool hasChild(VERTEX_TYPE suffix);
 	VertexData();
 	~VertexData();
+	void addToCount(uint16_t a);
+	int getCount();
 	bool IsAssembled();
 	void assemble();
 	bool hasManyChildren(VERTEX_TYPE a,int w);

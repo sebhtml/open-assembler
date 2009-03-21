@@ -49,4 +49,8 @@ char getLastSymbol(VERTEX_TYPE i,int w);
 
 void coutBIN(uint64_t a);
 
+uint64_t getKPrefix(uint64_t a,int k);
+uint64_t getKSuffix(uint64_t a,int k);
+
+
 #endif

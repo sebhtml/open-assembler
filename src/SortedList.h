@@ -50,6 +50,7 @@ class SortedList{
 public:
 	void add(VERTEX_TYPE a);
 	vector<VERTEX_TYPE> elementsWithALeastCCoverage(int c);
+	vector<SortableElement>*getCountableElements();
 	map<int,int>getDistributionOfCoverage();
 	void sort();
 	SortedList();

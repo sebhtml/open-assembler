@@ -34,6 +34,13 @@ VertexData::VertexData(){
 	m_assembled=false;
 	m_trivial=false;
 	m_deleted=false;
+	m_count=0;
+}
+
+void VertexData::addToCount(uint16_t a){
+	uint16_t newValue=m_count+a;
+	if(m_count<newValue)
+		m_count+=a;
 }
 
 void VertexData::assemble(){
@@ -150,3 +157,9 @@ void VertexData::Delete(){
 bool VertexData::Deleted(){
 	return m_deleted;
 }
+
+int VertexData::getCount(){
+	return m_count;
+}
+
+

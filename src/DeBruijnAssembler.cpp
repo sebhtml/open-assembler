@@ -123,7 +123,6 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	
 	vector<VERTEX_TYPE>*solidMers=new vector<VERTEX_TYPE>;
 	*solidMers=myList.elementsWithALeastCCoverage(m_minimumCoverage);
-	myList.clear();
 	cout<<"c-confident mers: "<<solidMers->size()<<", c="<<m_minimumCoverage<<endl;
 	if(solidMers->size()==0){
 		cout<<"Error: mers are depleted..."<<endl;
@@ -158,16 +157,34 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	cout<<endl;
 	m_data.makeMemory();
 
+	cout<<"********** Setting vertex counts"<<endl;
+	cout<<endl;
+	vector<SortableElement>*theVertexCounts=myList.getCountableElements();
+	for(int i=0;i<theVertexCounts->size();i++){
+		uint64_t kPlusOneMer=theVertexCounts->at(i).getKMer();
+		uint16_t theCount=theVertexCounts->at(i).getCount();
+		uint64_t kPrefix=getKPrefix(kPlusOneMer,m_wordSize);
+		uint64_t kSuffix=getKSuffix(kPlusOneMer,m_wordSize);
+		m_data.get(kPrefix)->addToCount(theCount);
+		m_data.get(kSuffix)->addToCount(theCount);
+	}
+
+
+	myList.clear();
+
+
 	cout<<"********** Creating edges..."<<endl;
 	cout<<endl;
 	string edgesFile=m_assemblyDirectory+"/Edges.txt";
 	ofstream edgesStream(edgesFile.c_str());
 	for(vector<VERTEX_TYPE>::iterator i=solidMers->begin();i!=solidMers->end();i++){
 		VERTEX_TYPE node=*i;
-		string wordString=idToWord(node,m_wordSize+1);
-		edgesStream<<wordString<<endl;
-		VERTEX_TYPE prefix=wordId(wordString.substr(0,m_wordSize).c_str());
-		VERTEX_TYPE suffix=wordId(wordString.substr(1,m_wordSize).c_str());
+		//string wordString=idToWord(node,m_wordSize+1);
+		//edgesStream<<wordString<<endl;
+		//VERTEX_TYPE prefix=wordId(wordString.substr(0,m_wordSize).c_str());
+		//VERTEX_TYPE suffix=wordId(wordString.substr(1,m_wordSize).c_str());
+		uint64_t prefix=getKPrefix(node,m_wordSize);
+		uint64_t suffix=getKSuffix(node,m_wordSize);
 		m_data.get(prefix)->addChild(suffix,m_wordSize);
 		m_data.get(suffix)->addParent(prefix,m_wordSize);
 	}
@@ -607,9 +624,11 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 		map<int,map<char,int> > readPositions;
 		currentReadPositions->push_back(readPositions);
 		*/
-		addAnnotations(aData,&usedReads,&readsInRange,
-			&readsReadPosition,&readsContigPositions,&readsReadStrands,
-			&contig,currentReadPositions);
+		if(aData->getCount()<m_REPEAT_DETECTION){
+			addAnnotations(aData,&usedReads,&readsInRange,
+				&readsReadPosition,&readsContigPositions,&readsReadStrands,
+				&contig,currentReadPositions);
+		}
 
 
 		// process annotations
@@ -1142,12 +1161,12 @@ void DeBruijnAssembler::ThreadReads(VertexData*aData,hash_set<int>*usedReads,has
 						int lastContigPositionForPairedMate=(*readsContigPositions)[otherReadNumber];
 						int distance=pairedInformation.m_distance;
 						int windowSemiSize=0.20*distance;
-						int distanceInContig=contig->size()-lastContigPositionForPairedMate-nucleotidePositionInRead;
+						int distanceInContig=contig->size()-lastContigPositionForPairedMate/-nucleotidePositionInRead;
 						if(distance-windowSemiSize<=distanceInContig&&
 							distanceInContig<=distance+windowSemiSize){
 							//cout<<"distance for mates "<<distanceInContig<<endl;
 							//cout<<childSequence<<endl;
-							AnnotationElement e(readId,distanceInContig,readStrand);
+							AnnotationElement e(readId,distanceInContig+nucleotidePositionInRead,readStrand);
 							(*annotationsForEach)[childVertex].push_back(e);
 							(*sumScores)[childVertex]+=distanceInContig;
 						}

@@ -137,3 +137,13 @@ void coutBIN(uint64_t a){
 	}
 	cout<<endl;
 }
+
+// here simply mask some bits
+uint64_t getKPrefix(uint64_t a,int k){
+	return (a<<(64-2*(k+1)+2))>>(64-2*(k+1)+2);
+}
+
+uint64_t getKSuffix(uint64_t a,int k){
+	return a>>2;
+}
+

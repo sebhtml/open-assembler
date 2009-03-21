@@ -141,3 +141,8 @@ SortableElement::SortableElement(uint64_t kmer,uint16_t count){
 	m_kmer=kmer;
 	m_count=count;
 }
+
+
+vector<SortableElement>*SortedList::getCountableElements(){
+	return m_list;
+}
