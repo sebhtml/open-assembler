@@ -43,7 +43,7 @@ int main(int argc,char*argv[]){
 	vector<string> files;
 	ifstream input(filesFile.c_str());
 	cout<<endl;
-	cout<<"Loading files from "<<filesFile<<endl;
+	cout<<"(load-files-from-file "<<filesFile<<")"<<endl;
 	string aFile;
 	if(!input){
 		cout<<"InputFiles.txt is not present.."<<endl;	

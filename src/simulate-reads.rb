@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 
 if ARGV.size==0
-	puts "You must provide a file"
+	puts "You must provide a file and a read length"
 	exit
 end
 
@@ -42,22 +42,17 @@ end
 chromosomes<< seq
 f.close
 
-leftFile=File.open ARGV[0]+"_1.fasta","w+"
-rightFile=File.open ARGV[0]+"_2.fasta","w+"
-
-sequencedLength=36
-insertSize=150
-readLength=insertSize+sequencedLength
+coverage=25
+readLength=ARGV[1].to_i
+errors=4
 readID=1
-errors=0
 chromosomes.each do |genome|
 	gSize=genome.length
 	position=0
 	while position<gSize
-		print "."
-		2.times do |t|
+		coverage.times do |t|
 			read_length=readLength
-			start=position
+			start=position+rand(read_length)-read_length/2
 			if start<0
 				start=0
 			end
@@ -81,19 +76,14 @@ chromosomes.each do |genome|
 				end
 			end
 			if rand(2)==0
-				sequence=revComp sequence
+				puts ">#{readID}_#{start}_#{read_length}_F_#{errorsInRead}"
+				puts sequence
+			else
+				puts ">#{readID}_#{start}_#{read_length}_R_#{errorsInRead}"
+				puts revComp(sequence)
 			end
-			leftFile.puts ">r#{readID}_1"
-			leftFile.puts sequence[0..(sequencedLength-1)]
-			rightFile.puts ">r#{readID}_2"
-			rightFile.puts sequence[(sequence.length-sequencedLength)..(sequence.length-1)]
 			readID+=1
 		end
-		position+=sequencedLength/2
+		position+=readLength
 	end
 end
-
-leftFile.close
-rightFile.close
-
-puts ""

@@ -74,7 +74,7 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	int last_vertices_size=-1;
 	int seq36=0;
 	for(int i=0;i<(int)sequenceData->size();i++){
-		if(i%100000==0){
+		if(i%10000==0){
 			cout<<"Reads: "<<i<<" / "<<sequenceData->size()<<endl;
 		}
 		if(i%1000000==0)
@@ -111,12 +111,13 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 
 	if(m_minimumCoverageParameter!="auto"){
 		m_minimumCoverage=atoi(m_minimumCoverageParameter.c_str());
-		cout<<"Setting minimumCoverage <- "<<m_minimumCoverage<<endl;
+		cout<<"(set-variable 'minimumCoverage "<<m_minimumCoverage<<")"<<endl;
 	}
-	m_REPEAT_DETECTION=5*m_coverage_mean;
+	int multiplier=5;
+	m_REPEAT_DETECTION=multiplier*m_coverage_mean;
 	if(m_minimumCoverage>m_coverage_mean)
-		m_REPEAT_DETECTION=5*m_minimumCoverage;
-	(cout)<<"REPEAT_DETECTION_COVERAGE =  "<<m_REPEAT_DETECTION<<endl;
+		m_REPEAT_DETECTION=multiplier*m_minimumCoverage;
+	(cout)<<"(set-variable 'REPEAT_DETECTION_COVERAGE "<<m_REPEAT_DETECTION<<")"<<endl;
 
 	uint64_t total_bases=0;
 	//uint64_t solid_bases=0;
@@ -137,9 +138,9 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	SortedList graphNodesList;
 	for(vector<VERTEX_TYPE>::iterator i=solidMers->begin();i!=solidMers->end();i++){
 		VERTEX_TYPE node=*i;
-		string wordString=idToWord(node,m_wordSize+1);
-		VERTEX_TYPE prefix=wordId(wordString.substr(0,m_wordSize).c_str());
-		VERTEX_TYPE suffix=wordId(wordString.substr(1,m_wordSize).c_str());
+		//string wordString=idToWord(node,m_wordSize+1);
+		VERTEX_TYPE prefix=getKPrefix(node,m_wordSize);
+		VERTEX_TYPE suffix=getKSuffix(node,m_wordSize);//wordId(wordString.substr(1,m_wordSize).c_str());
 		graphNodesList.add(prefix);
 		graphNodesList.add(suffix);
 	}
@@ -160,27 +161,41 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 	cout<<"********** Setting vertex counts"<<endl;
 	cout<<endl;
 	vector<SortableElement>*theVertexCounts=myList.getCountableElements();
+	string edgesFile=m_assemblyDirectory+"/Edges.txt";
+	ofstream edgesStream(edgesFile.c_str());
 	for(int i=0;i<theVertexCounts->size();i++){
+		if(i%10000==0){
+			cout<<"(setting-vertex-count "<<i<<" "<<theVertexCounts->size()<<")"<<endl;
+		}
 		uint64_t kPlusOneMer=theVertexCounts->at(i).getKMer();
 		uint16_t theCount=theVertexCounts->at(i).getCount();
+		if(theCount<m_minimumCoverage)
+			continue;
+
+
+		edgesStream<<idToWord(kPlusOneMer,m_wordSize+1)<<" "<<theCount<<endl;
 		uint64_t kPrefix=getKPrefix(kPlusOneMer,m_wordSize);
 		uint64_t kSuffix=getKSuffix(kPlusOneMer,m_wordSize);
+/*
+		cout<<"k+1-mer: "<<idToWord(kPlusOneMer,m_wordSize+1)<<endl;
+		cout<<"         "<<idToWord(kPrefix,m_wordSize)<<endl;
+		cout<<"          "<<idToWord(kSuffix,m_wordSize)<<endl;
+*/
 		m_data.get(kPrefix)->addToCount(theCount);
 		m_data.get(kSuffix)->addToCount(theCount);
 	}
 
+	cout<<"(setting-vertex-count "<<theVertexCounts->size()<<" "<<theVertexCounts->size()<<")"<<endl;
+	edgesStream.close();
 
 	myList.clear();
 
 
 	cout<<"********** Creating edges..."<<endl;
 	cout<<endl;
-	string edgesFile=m_assemblyDirectory+"/Edges.txt";
-	ofstream edgesStream(edgesFile.c_str());
 	for(vector<VERTEX_TYPE>::iterator i=solidMers->begin();i!=solidMers->end();i++){
 		VERTEX_TYPE node=*i;
 		//string wordString=idToWord(node,m_wordSize+1);
-		//edgesStream<<wordString<<endl;
 		//VERTEX_TYPE prefix=wordId(wordString.substr(0,m_wordSize).c_str());
 		//VERTEX_TYPE suffix=wordId(wordString.substr(1,m_wordSize).c_str());
 		uint64_t prefix=getKPrefix(node,m_wordSize);
@@ -188,7 +203,6 @@ void DeBruijnAssembler::build_From_Scratch(SequenceDataFull*sequenceData){
 		m_data.get(prefix)->addChild(suffix,m_wordSize);
 		m_data.get(suffix)->addParent(prefix,m_wordSize);
 	}
-	edgesStream.close();
 	cout<<solidMers->size()<<" edges"<<endl;
 	solidMers->clear();
 	delete solidMers;
@@ -248,13 +262,13 @@ void DeBruijnAssembler::load_graphFrom_file(){
 	f>>n;
 	for(int i=0;i<n;i++){
 		if(i%1000000==0){
-			cout<<"Loading vertices: "<<i<<" / "<<n<<endl;
+			cout<<"(load-vertices "<<i<<" "<<n<<")"<<endl;
 		}
 		VERTEX_TYPE a;
 		f>>a;
 		m_data.add(a);
 	}
-	cout<<"Loading vertices: "<<n<<" / "<<n<<endl;
+	cout<<"(load-vertices "<<n<<" "<<n<<")"<<endl;
 	int total_Edges=0;
 	m_data.makeMemory();
 	VertexData*dataPointer=m_data.getNodeData();
@@ -262,13 +276,17 @@ void DeBruijnAssembler::load_graphFrom_file(){
 	cout<<endl;
 	for(int i=0;i<n;i++){
 		if(i%1000000==0){
-			cout<<"Loading edges: "<<i<<" / "<<n<<endl;
+			cout<<"(load-edges "<<i<<" "<<n<<")"<<endl;
 		}
 		VERTEX_TYPE a;
 		f>>a;
+
+		uint16_t theCountForTheCurrentVertex;
+		f>>theCountForTheCurrentVertex;
 		int nAnnotations;
 		f>>nAnnotations;
 		VertexData*dataPointerVertex=&(dataPointer[i]);
+		dataPointerVertex->addToCount(theCountForTheCurrentVertex);
 		for(int k=0;k<nAnnotations;k++){
 			uint32_t readId;
 			uint8_t readStrand;
@@ -289,12 +307,12 @@ void DeBruijnAssembler::load_graphFrom_file(){
 		}
 	}
 
-	cout<<"Loading edges: "<<n<<" / "<<n<<endl;
+	cout<<"(load-edges "<<n<<" "<<n<<")"<<endl;
 	f.close();
 }
 
 void DeBruijnAssembler::writeGraph(){
-	cout<<"********** Writing graph file."<<endl;
+	cout<<"(step 'Writing graph file')"<<endl;
 
 	ofstream f(m_graphFile.c_str());
 	
@@ -303,7 +321,7 @@ void DeBruijnAssembler::writeGraph(){
 	int k=0;
 	for(int i=0;i<m_data.size();i++){
 		if(k%100000==0){
-			cout<<"Vertices: "<<k<<" / "<<m_data.size()<<"\n";
+			cout<<"(write-vertices "<<k<<" "<<m_data.size()<<")"<<endl;
 		}
 		f<<(*nodes)[i]<<"\n";
 		k++;
@@ -315,7 +333,7 @@ void DeBruijnAssembler::writeGraph(){
 	k=0;
 	for(int i=0;i<m_data.size();i++){
 		if(k%100000==0){
-			cout<<"Edges: "<<k<<" / "<<m_data.size()<<endl;
+			cout<<"Vertices: "<<k<<" / "<<m_data.size()<<endl;
 		}
 		k++;
 		VERTEX_TYPE prefix=(*nodes)[(i)];
@@ -323,6 +341,8 @@ void DeBruijnAssembler::writeGraph(){
 		VertexData*prefixData=&(theData[(i)]);
 		vector<VERTEX_TYPE>children=prefixData->getChildren(prefix,m_wordSize);
 		vector<AnnotationElement>*annotations=prefixData->getAnnotations();
+
+		f<<prefixData->getCount()<<endl;
 		if(annotations!=NULL){
 			f<<annotations->size()<<"\n";
 			for(vector<AnnotationElement>::iterator u=annotations->begin();u!=annotations->end();u++){
@@ -628,6 +648,8 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 			addAnnotations(aData,&usedReads,&readsInRange,
 				&readsReadPosition,&readsContigPositions,&readsReadStrands,
 				&contig,currentReadPositions);
+		}else{
+			cout<<"(discover-repeat-vertex (count "<<aData->getCount()<<")  (threshold "<<m_REPEAT_DETECTION<<"))"<<endl;
 		}
 
 
@@ -639,7 +661,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 
 
 
-		bool skipThoroughtCheck=false;
+		bool skipThoroughtCheck=true;
 
 		ThreadReads(aData,&usedReads,&readsInRange,
 			&readsReadPosition,&readsContigPositions,&readsReadStrands,
@@ -647,6 +669,81 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 			&sumScores,&annotationsForEach,&children,skipThoroughtCheck,
 			currentReadPositions);
 
+		if(children.size()>1){
+			// check if one has 0 annotation..
+			vector<uint64_t> withAnnotations;
+			for(vector<uint64_t>::iterator i=children.begin();i!=children.end();i++){
+				if(annotationsForEach[*i].size()>0){
+					withAnnotations.push_back(*i);
+				}
+			}
+			children=withAnnotations;
+		}
+
+		if(children.size()>1&&false){
+			cout<<endl;
+			cout<<"Position: "<<contig.size()<<endl;
+			for(vector<uint64_t>::iterator k=children.begin();k!=children.end();k++){
+					uint64_t childVertex=*k;
+				cout<<"Vertex: "<<idToWord(childVertex,m_wordSize)<<endl;
+				cout<<"SUM="<<(sumScores)[childVertex]<<endl;
+				int max=0;
+				cout<<"n="<<(annotationsForEach)[childVertex].size()<<endl;
+				cout<<"LIST ";
+
+				for(int i=0;i<(annotationsForEach)[childVertex].size();i++){
+					cout<<" ";
+					(annotationsForEach)[childVertex][i].print();
+					int thePositionForThisRead=(annotationsForEach)[childVertex][i].getReadPosition();
+					if(thePositionForThisRead>max)
+						max=thePositionForThisRead;
+				}
+				cout<<endl;
+				cout<<"MAX="<<max<<endl;
+			}
+
+			cout<<"(mega-debug-mode)"<<endl;
+			cout<<"show the path, and the reads for each possibility"<<endl;
+			cout<<children.size()<<" children (what a surprise!)"<<endl;
+			int mostFarAwayRead=0;
+			for(map<uint64_t,vector<AnnotationElement> >::iterator i=annotationsForEach.begin();i!=annotationsForEach.end();i++){
+				for(vector<AnnotationElement>::iterator j=i->second.begin();j!=i->second.end();j++){
+					int thePosition=(*j).getReadPosition();
+					if(thePosition>mostFarAwayRead)
+						mostFarAwayRead=thePosition;
+				}
+			}
+			cout<<"Displaying the mighty contig (path-size "<<contig.size()<<") (read-position "<<mostFarAwayRead<<")"<<endl;
+			string sequenceDNA=pathToDNA(&contig);
+			for(int p=0;p<m_wordSize-1;p++){
+				cout<<".";
+			}
+			int strPosition=sequenceDNA.length()-mostFarAwayRead;
+			if(strPosition>=0&&strPosition<sequenceDNA.length())
+				cout<<sequenceDNA.substr(strPosition)<<endl;
+
+			cout<<"Displaying reads."<<endl;
+			
+			for(map<uint64_t,vector<AnnotationElement> >::iterator i=annotationsForEach.begin();i!=annotationsForEach.end();i++){
+				cout<<"Child= "<<idToWord(i->first,m_wordSize)<<endl;
+				for(vector<AnnotationElement>::iterator j=i->second.begin();j!=i->second.end();j++){
+					int readNumber=(*j).getReadId();
+					string readSequence=m_sequenceData->at(readNumber)->getSeq();
+					char readStrand=(*j).getReadStrand();
+					int readPosition=(*j).getReadPosition();
+					if(readStrand=='R')
+						readSequence=reverseComplement(readSequence);
+			
+					int numberOfSpaces=mostFarAwayRead-readPosition;
+					cout<<"(align-read "<<readNumber<<" "<<readStrand<<" "<<readPosition<<")"<<endl;
+					for(int p=0;p<numberOfSpaces;p++){
+						cout<<".";
+					}
+					cout<<readSequence<<endl;
+				}
+			}
+
+		}
 		// annotate children
 	/*
 		if(children.size()>1){
@@ -657,19 +754,26 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 */
 
 
-		double alpha=1.1;
+		double alpha=1.01; // for sums
+		double beta=1.3; // for numbers 
+/*
 		if(m_Solexa_detected)
 			alpha=1.3;
+*/
 		if(children.size()==2){
-			int scoreA=sumScores[children[0]];
-			int scoreB=sumScores[children[1]];
+			uint64_t vertexA=children[0];
+			uint64_t vertexB=children[1];
+			int scoreA=sumScores[vertexA];
+			int scoreB=sumScores[vertexB];
+			int n_A=annotationsForEach[vertexA].size();
+			int n_B=annotationsForEach[vertexB].size();
 
-			if(scoreA >= alpha*scoreB){
+			if(scoreA >= alpha*scoreB || n_A >= beta*n_B){
 				children.clear();
-				children.push_back(children[0]);
-			}else if(scoreB >= alpha*scoreA){
+				children.push_back(vertexA);
+			}else if(scoreB >= alpha*scoreA || n_B >= beta*n_A ){
 				children.clear();
-				children.push_back(children[1]);
+				children.push_back(vertexB);
 			}
 		}
 
@@ -678,16 +782,23 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 			for(vector<uint64_t>::iterator i=children.begin();i!=children.end();i++){
 				uint64_t currentVertex=*i;
 				int currentScore=sumScores[currentVertex];
-
+				int current_n=annotationsForEach[currentVertex].size();
 				// try with sum
 				bool isBest=true;
 				for(vector<uint64_t>::iterator j=children.begin();j!=children.end();j++){
 					uint64_t otherVertex=*j;
 					int otherScore=sumScores[otherVertex];
+					int other_n=annotationsForEach[currentVertex].size();
 					if(currentVertex!=otherVertex && currentScore < alpha*otherScore){
 						isBest=false;
 						break;
 					}
+/*
+					if(currentVertex!=otherVertex &&  current_n < alpha*other_n){
+						isBest=false;
+						break;
+					}
+*/
 				}
 				if(isBest){
 					children.clear();
@@ -695,14 +806,13 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 					break;
 				}
 
-/*
 				// try with number
 				isBest=true;
 				currentScore=annotationsForEach[currentVertex].size();
-				for(map<uint64_t,vector<int> >::iterator j=annotationsForEach.begin();j!=annotationsForEach.end();j++){
-					uint64_t otherVertex=j->first;
+				for(vector<uint64_t>::iterator j=children.begin();j!=children.end();j++){
+					uint64_t otherVertex=*j;
 					int otherScore=annotationsForEach[otherVertex].size();
-					if(currentVertex!=otherVertex && currentScore < 1.5*otherScore){
+					if(currentVertex!=otherVertex && currentScore < beta*otherScore){
 						isBest=false;
 						break;
 					}
@@ -715,7 +825,6 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 						cout<<"GOT BEST USING NUMBER"<<idToWord(currentVertex,m_wordSize)<<endl;
 					break;
 				}
-*/
 			}
 		}
 		
@@ -762,6 +871,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 		}
 		
 		if(children.size()==1){
+		/*
 			uint64_t next=children[0];
 			cout<<"Adding "<<idToWord(next,m_wordSize)<<endl;
 			cout<<"Annotations: "<<annotationsForEach[next].size()<<endl;
@@ -769,6 +879,7 @@ void DeBruijnAssembler::version2_Walker(uint64_t  a,vector<uint64_t>*path,
 				annotationsForEach[next][h].print();
 			}
 			cout<<endl;
+*/
 		}
 	}
 	cout<<"STOP <<CHILDREN="<<children.size()<<endl;
@@ -1084,7 +1195,7 @@ void DeBruijnAssembler::addAnnotations(VertexData*aData,hash_set<int>*usedReads,
 	vector<uint64_t>*contig,
 		vector<map<int,map<char,int> > >* currentReadPositions){
 	vector<AnnotationElement>*annotations=aData->getAnnotations();
-	if(annotations->size()<m_REPEAT_DETECTION){
+	if(aData->getCount()<m_REPEAT_DETECTION){
 		for(int i=0;i<annotations->size();i++){
 			int readId=annotations->at(i).getReadId();
 			char readStrand=annotations->at(i).getReadStrand();
@@ -1111,10 +1222,6 @@ void DeBruijnAssembler::ThreadReads(VertexData*aData,hash_set<int>*usedReads,has
 		vector<map<int,map<char,int> > >* currentReadPositions){
 
 
-	if(children->size()>1){
-		cout<<endl;
-		cout<<"Position: "<<contig->size()<<endl;
-	}
 	for(vector<uint64_t>::iterator i=children->begin();i!=children->end();i++){
 		if(aData->Is_1_1()&&skipThoroughtCheck)
 			break;
@@ -1132,7 +1239,7 @@ void DeBruijnAssembler::ThreadReads(VertexData*aData,hash_set<int>*usedReads,has
 			int distanceInContig=currentContigPosition-lastContigPosition;
 			int inferedReadPosition=lastReadPosition+distanceInContig;
 			int nucleotidePositionInRead=inferedReadPosition;
-			if(nucleotidePositionInRead>=m_sequenceData->at(readId)->length()){
+			if(nucleotidePositionInRead>=m_sequenceData->at(readId)->length()-1){
 				//cout<<"OUT OF RANGE"<<endl;
 				readNotInRangeAnymore.push_back(readId);
 				continue;
@@ -1158,13 +1265,16 @@ void DeBruijnAssembler::ThreadReads(VertexData*aData,hash_set<int>*usedReads,has
 					PairedRead pairedInformation=m_paired_reads[readId];
 					int otherReadNumber=pairedInformation.m_readNumber;
 					if((*readsContigPositions).count(otherReadNumber)>0){
+						cout<<"Found paired information"<<endl;
 						int lastContigPositionForPairedMate=(*readsContigPositions)[otherReadNumber];
 						int distance=pairedInformation.m_distance;
 						int windowSemiSize=0.20*distance;
-						int distanceInContig=contig->size()-lastContigPositionForPairedMate/-nucleotidePositionInRead;
+						int distanceInContig=contig->size()-lastContigPositionForPairedMate-nucleotidePositionInRead-1;
+						cout<<"Distance in contig "<<distanceInContig<<endl;
+						cout<<"Distance: "<<distance<<endl;
 						if(distance-windowSemiSize<=distanceInContig&&
 							distanceInContig<=distance+windowSemiSize){
-							//cout<<"distance for mates "<<distanceInContig<<endl;
+							cout<<"distance for mates "<<distanceInContig<<endl;
 							//cout<<childSequence<<endl;
 							AnnotationElement e(readId,distanceInContig+nucleotidePositionInRead,readStrand);
 							(*annotationsForEach)[childVertex].push_back(e);
@@ -1178,17 +1288,5 @@ void DeBruijnAssembler::ThreadReads(VertexData*aData,hash_set<int>*usedReads,has
 			(*readsInRange).erase(readNotInRangeAnymore[i]);
 		int theScore=(*annotationsForEach)[childVertex].size();
 
-		if(children->size()>1){
-			cout<<"Vertex: "<<idToWord(childVertex,m_wordSize)<<endl;
-			cout<<"SUM="<<(*sumScores)[childVertex]<<endl;
-			cout<<"n="<<(*annotationsForEach)[childVertex].size()<<endl;
-			cout<<"LIST ";
-
-			for(int i=0;i<(*annotationsForEach)[childVertex].size();i++){
-				cout<<" ";
-				(*annotationsForEach)[childVertex][i].print();
-			}
-			cout<<endl;
-		}
 	}
 }

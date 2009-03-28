@@ -6,6 +6,6 @@ do
 	path=$(pwd)
 	cd $i
 	name=$(echo $i|sed 's/jeudi//'|sed 's/\///g'|sed 's/\.//g')
-	echo  "$name & $(bash ~/denovoassembler/trunk/scripts/get_latex_line.sh) "
+	echo  "$name & $(bash ~/denovoassembler/trunk/src/get_latex_line.sh) "
 	cd $path
 done

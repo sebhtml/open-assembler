@@ -6,10 +6,16 @@ puts "This program gets paired information"
 puts "usage: "
 puts "dna_GetPairedInformation -directory <directory> file1 file2 [....] filen"
 puts "it is provided as is and might require changes as it uses default values"
-puts "Default insert sizes: "
-puts "   Illumina/Solexa: 150"
+puts "Default distances: "
+puts "   Illumina/Solexa: 164"
 puts "   Roche/454: 2500"
-puts "To edit insert sizes, simply edit <directory>/PairedReads.txt"
+puts "IMPORTANT: distances are from the beginning of the left read to the beginning of the right read."
+puts "For instance, fragment size of 200 with read length of 36, using Illumina technology,
+will generate an average distance of 164 (200-36)"
+puts "If you want the distanec on a per-library basis, you can encode it in the file name"
+
+puts "Supported file schemes:"
+puts "200x36x36-xxx, where 200-36 is the distance"
 
 files=[]
 directory=nil
@@ -61,6 +67,11 @@ pairedFile.puts "#{fileHash.size}"
 fileHash.each do |group,files|
 	if files.size==2
 		distance=200-36
+		if files[0] =~ /(\d+)x(\d+)x(\d+)-(.)*/
+			fragmentSize=$1.to_i
+			readLength=$2.to_i
+			distance=fragmentSize-readLength
+		end
 		if files[0].include? 'sff'
 			distance=2500
 		end

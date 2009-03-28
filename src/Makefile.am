@@ -18,10 +18,10 @@ AnnotationElement.h AnnotationElement.cpp
 
 dna_KeepLargeContigs_SOURCES = keepLargeContigs_main.cpp Read.h Read.cpp Loader.cpp Loader.h common_functions.h common_functions.cpp SffLoader.h  SffLoader.cpp
 
-dna_SplitReads_SOURCES =  LightVertex.h LightVertex.cpp  \
-SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp GraphDataLight.h GraphDataLight.cpp \
-splitter_main.cpp Loader.cpp Read.cpp DeBruijnAssembler.cpp VertexData.cpp SequenceDataFull.cpp SffLoader.cpp \
-CoverageDistribution.h CoverageDistribution.cpp  
+#dna_SplitReads_SOURCES =  LightVertex.h LightVertex.cpp  \
+#SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp GraphDataLight.h GraphDataLight.cpp \
+#splitter_main.cpp Loader.cpp Read.cpp DeBruijnAssembler.cpp VertexData.cpp SequenceDataFull.cpp SffLoader.cpp \
+#CoverageDistribution.h CoverageDistribution.cpp  
 
 dna_MergeContigs_SOURCES = merger_main.cpp  Read.cpp DeBruijnAssembler.cpp Loader.cpp SffLoader.cpp VertexData.cpp SequenceDataFull.cpp  CoverageDistribution.h CoverageDistribution.cpp \
 SortedList.h SortedList.cpp GraphData.h GraphData.cpp BinarySearch.h BinarySearch.cpp Merger.h Merger.cpp   common_functions.h common_functions.cpp \

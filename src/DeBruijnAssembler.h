@@ -20,7 +20,6 @@
 #ifndef _DeBruijnAssembler
 #define _DeBruijnAssembler
 
-#define MAP_TYPE map
 
 #define SOFTWARE_VERSION "dna-0.0.0-pre-alpha-dev"
 

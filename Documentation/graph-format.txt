@@ -5,6 +5,7 @@ Vertices: <NumberOfVertices>
 
 Data: <NumberOfVertices>
 <Vertice1>
+<NumberOfOccurences>
 <NumberOfAnnotations>
 	<ReadNumber> <ReadStrand> <ReadPositionOnStrand>
 	...

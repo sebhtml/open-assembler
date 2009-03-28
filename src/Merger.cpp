@@ -44,7 +44,7 @@
 using namespace std;
 
 Merger::Merger(){
-	m_DEBUG=false;
+	m_DEBUG=true;
 	m_wordSize=31;
 }
 
@@ -281,10 +281,10 @@ vector<Read*> Merger::reverseOverlapTailToTail(vector<Read*> contigSequences){
 				if((AlignmentEndInSubject-AlignmentStartInSubject)<100)
 					isTheSame=false;
 				if(m_DEBUG){
-					cout<<AlignmentEndInQuery-AlignmentStartInQuery<<endl;
-					cout<<AlignmentEndInSubject-AlignmentStartInSubject<<endl;
-					cout<<isTheSame<<endl;
-					cout<<found<<endl;
+					cout<<"QueryLength: "<<AlignmentEndInQuery-AlignmentStartInQuery<<endl;
+					cout<<"SubjectLength: "<<AlignmentEndInSubject-AlignmentStartInSubject<<endl;
+					cout<<"IsTheSame: "<<isTheSame<<endl;
+					cout<<"Found: "<<found<<endl;
 				}
 				if(isTheSame&&contigUsage.count(i)==0&&contigUsage.count(hits[j])==0){
 					//cout<<"Alignment! "<<AlignmentEndInQuery-AlignmentStartInQuery<<endl;
@@ -716,5 +716,6 @@ vector<Read*> Merger::reverseMerge(vector<Read*> contigSequences){
 }
 
 vector<Read*>Merger::mergeContigs(vector<Read*>contigs){
+	//return reverseMerge(mergeForward(contigs));
 	return reverseOverlapTailToTail(forwardOverlapTailToHead(reverseOverlapHeadToHead(reverseMerge(mergeForward(contigs)))));
 }

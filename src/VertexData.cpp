@@ -39,6 +39,7 @@ VertexData::VertexData(){
 
 void VertexData::addToCount(uint16_t a){
 	uint16_t newValue=m_count+a;
+	//cout<<"this is the very value, right now: "<<a<<endl;
 	if(m_count<newValue)
 		m_count+=a;
 }
@@ -159,7 +160,8 @@ bool VertexData::Deleted(){
 }
 
 int VertexData::getCount(){
-	return m_count;
+	return 0;
+	//return m_count;
 }
 
 

@@ -66,8 +66,8 @@ dna_KeepLargeContigs #{directory}/contigs.fasta 500 #{directory}/2LargeContigs.f
 date > #{directory} > dna_MergeContigs.START
 dna_MergeContigs  #{directory}/2LargeContigs.fasta  #{directory}/3MergedContigs.fasta > #{directory}/dna_MergeContigs.log
 
-date > #{directory} > dna_JoinContigs.START
-ln -s #{directory}/3MergedContigs.fasta #{directory}/4JoinedContigs.fasta
+#date > #{directory} > dna_JoinContigs.START
+#ln -s #{directory}/3MergedContigs.fasta #{directory}/4JoinedContigs.fasta
 #dna_JoinContigs #{k}  #{directory}/3MergedContigs.fasta #{directory}/4JoinedContigs.fasta #{files.join ' '} > #{directory}/dna_JoinContigs.log
 
 date > #{directory}/END
